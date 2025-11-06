@@ -1,0 +1,65 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from ..database import get_db 
+from . import schema, model
+
+
+router = APIRouter(
+    prefix="/semesters",
+    tags=["Semesters"],
+)
+
+# create semester
+@router.post("/", status_code=201)
+def create_semester(semester: schema.SemesterCreate, db: Session = Depends(get_db)):
+    db_semester = model.Semester(
+        description = semester.description
+    )
+    
+    db.add(db_semester)
+    db.commit()
+    db.refresh(db_semester)
+    return {"message": "Semester created successfully"}
+
+# read semester
+@router.get("/{semester_id}", response_model=schema.SemesterRead)
+def read_semester(semester_id : int, db : Session = Depends(get_db)):
+    semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
+    
+    if not semester:
+        raise HTTPException(status_code=404, detail="Semester not found")
+    
+    return semester
+
+# update semester
+
+@router.patch("/{semester_id}", response_model=schema.SemesterRead)
+def update_semester(semester_id : int, semester_data: schema.SemesterUpdate, db : Session = Depends(get_db)):
+    db_semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
+    
+    if not db_semester:
+        raise HTTPException(status_code=404, detail="Semester not found")
+    
+    update_data = semester_data.model_dump(exclude_unset=True)
+    
+    for key, value in update_data.items():
+        setattr(db_semester, key, value)
+        
+    # db.add(db_semester)
+    db.commit()
+    db.refresh(db_semester)
+    
+    return db_semester
+    
+# delete semester
+@router.delete("/{semester_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_semester(semester_id : int, db : Session = Depends(get_db)):
+    db_semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
+    
+    if not db_semester:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Semester not found")
+    
+    db.delete(db_semester)
+    db.commit()
+    
+    return
