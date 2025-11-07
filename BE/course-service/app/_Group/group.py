@@ -4,15 +4,13 @@ from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model as GroupModel
 from .._Course import model as CourseModel
-from ..config import ACCOUNT_SERVICE_BASE_URL
+from ..config import INSTRUCTOR_BASE_URL
 
 router = APIRouter(
     prefix="/groups",
     tags=["Groups"],
 )
 
-#TODO change endpoint and create account service
-# ACCOUNT_SERVICE_BASE_URL = "http://localhost:8001/accounts/instructors"
 
 # create group
 @router.post("/", status_code=201)

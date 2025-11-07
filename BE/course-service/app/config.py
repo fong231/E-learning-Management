@@ -10,4 +10,5 @@ SECRET_KEY = "your-super-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
-ACCOUNT_SERVICE_BASE_URL = "http://localhost:8001/accounts/instructors"
+INSTRUCTOR_BASE_URL = "http://localhost:8001/accounts/instructors"
+STUDENT_BASE_URL = "http://localhost:8001/accounts/students"

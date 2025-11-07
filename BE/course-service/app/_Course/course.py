@@ -4,22 +4,22 @@ from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model as CourseModel
 from .._Semester import model as SemesterModel
-from ..config import ACCOUNT_SERVICE_BASE_URL
+from ..config import INSTRUCTOR_BASE_URL
 
 router = APIRouter(
     prefix="/courses",
     tags=["Courses"],
 )
 
-#TODO change endpoint and create account service
-# ACCOUNT_SERVICE_BASE_URL = "http://localhost:8001/accounts/instructors"
-
 # create course
 @router.post("/", status_code=201)
 def create_course(course: schema.CourseCreate, db: Session = Depends(get_db)):
+    """
+    require instructre id and semester id
+    """
     
     instructor_id = course.instructorID
-    validation = f"{ACCOUNT_SERVICE_BASE_URL}/{instructor_id}"
+    validation = f"{INSTRUCTOR_BASE_URL}/{instructor_id}"
     
     try:
         respone = requests.get(validation)
