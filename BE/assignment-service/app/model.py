@@ -1,17 +1,22 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, Numeric, String, DateTime, Float, Integer, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
+import uuid
 from datetime import datetime
 from .database import Base
-import uuid
 
+class Assignment(Base):
+    __tablename__ = "Assignments"
 
-class Ticket(Base):
-    __tablename__ = "tickets"
+    assignmentID = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    event_id = Column(String, nullable=False)
-    user_id = Column(String, nullable=False)
-    qr_code = Column(String, nullable=False, unique=True)
-    status = Column(String, default="pending")  # pending, confirmed, cancelled
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    start_date = Column(DateTime)
+    deadline = Column(DateTime, nullable=False)
+    late_deadline = Column(DateTime)
+
+    size_limit = Column(Numeric(10, 2)) 
+
+    file_format = Column(String(100))
+    
+    # external
+    groupID = Column(Integer, nullable=True, index=True) # in another service - refer to course service
+    contentID = Column(Integer, nullable=True, index=True) # in another service - refer to course service

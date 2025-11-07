@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
 from ..database import get_db 
-from . import schema, model as CourseModel
+from . import schema, model
 from .._Semester import model as SemesterModel
 from ..config import INSTRUCTOR_BASE_URL
 
@@ -13,7 +13,7 @@ router = APIRouter(
 
 # create course
 @router.post("/", status_code=201)
-def create_course(course: schema.CourseCreate, db: Session = Depends(get_db)):
+def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
     """
     require instructre id and semester id
     """
@@ -51,7 +51,7 @@ def create_course(course: schema.CourseCreate, db: Session = Depends(get_db)):
                 detail=f"Semester with ID '{semester_id}' not found."
             )
     
-    db_course = CourseModel.Course(
+    db_course = model.Course(
         instructorID = instructor_id,
         description = course.description,
         semesterID = course.semesterID,
@@ -65,8 +65,8 @@ def create_course(course: schema.CourseCreate, db: Session = Depends(get_db)):
 
 # read course
 @router.get("/{course_id}", response_model=schema.CourseRead)
-def read_course(course_id : int, db : Session = Depends(get_db)):
-    course = db.query(CourseModel.Course).filter(CourseModel.Course.courseID == course_id).first()
+def read(course_id : int, db : Session = Depends(get_db)):
+    course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
     
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -75,8 +75,8 @@ def read_course(course_id : int, db : Session = Depends(get_db)):
 
 # update course
 @router.patch("/{course_id}", response_model=schema.CourseRead)
-def update_course(course_id : int, course_data: schema.CourseUpdate, db : Session = Depends(get_db)):
-    db_course = db.query(CourseModel.Course).filter(CourseModel.Course.courseID == course_id).first()
+def update(course_id : int, course_data: schema.CourseUpdate, db : Session = Depends(get_db)):
+    db_course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
     
     if not db_course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -93,8 +93,8 @@ def update_course(course_id : int, course_data: schema.CourseUpdate, db : Sessio
     
 # delete course
 @router.delete("/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_course(course_id : int, db : Session = Depends(get_db)):
-    db_course = db.query(CourseModel.Course).filter(CourseModel.Course.courseID == course_id).first()
+def delete(course_id : int, db : Session = Depends(get_db)):
+    db_course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
     
     if not db_course:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")

@@ -1,7 +1,6 @@
 from typing import Optional, Literal
 from pydantic import BaseModel
 
-### 1. GroupBase: Các trường cơ bản được chia sẻ ###
 class GroupBase(BaseModel):
     courseID: Optional[int] = None
 

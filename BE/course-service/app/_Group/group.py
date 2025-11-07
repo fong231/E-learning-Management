@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
 from ..database import get_db 
-from . import schema, model as GroupModel
+from . import schema, model
 from .._Course import model as CourseModel
 from ..config import INSTRUCTOR_BASE_URL
 
@@ -11,10 +11,9 @@ router = APIRouter(
     tags=["Groups"],
 )
 
-
 # create group
 @router.post("/", status_code=201)
-def create_group(group: schema.GroupCreate, db: Session = Depends(get_db)):
+def create(group: schema.GroupCreate, db: Session = Depends(get_db)):
     course_id = group.courseID
     if course_id is not None:
         course = db.query(CourseModel.Course).filter(CourseModel.Course.courseID == course_id).first()
@@ -25,7 +24,7 @@ def create_group(group: schema.GroupCreate, db: Session = Depends(get_db)):
                 detail=f"Course with ID '{course_id}' not found."
             )
     
-    db_group = GroupModel.Group(
+    db_group = model.Group(
         courseID = course_id
     )
     
@@ -36,8 +35,8 @@ def create_group(group: schema.GroupCreate, db: Session = Depends(get_db)):
 
 # read group
 @router.get("/{group_id}", response_model=schema.GroupRead)
-def read_course(group_id : int, db : Session = Depends(get_db)):
-    group = db.query(GroupModel.Group).filter(GroupModel.Group.groupID == group_id).first()
+def read(group_id : int, db : Session = Depends(get_db)):
+    group = db.query(model.Group).filter(model.Group.groupID == group_id).first()
     
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -46,8 +45,8 @@ def read_course(group_id : int, db : Session = Depends(get_db)):
 
 # update group
 @router.patch("/{group_id}", response_model=schema.GroupRead)
-def update_course(group_id : int, group_data: schema.GroupUpdate, db : Session = Depends(get_db)):
-    db_group = db.query(GroupModel.Group).filter(GroupModel.Group.groupID == group_id).first()
+def update(group_id : int, group_data: schema.GroupUpdate, db : Session = Depends(get_db)):
+    db_group = db.query(model.Group).filter(model.Group.groupID == group_id).first()
     
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -64,8 +63,8 @@ def update_course(group_id : int, group_data: schema.GroupUpdate, db : Session =
     
 # delete group
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_course(group_id : int, db : Session = Depends(get_db)):
-    db_group = db.query(GroupModel.Group).filter(GroupModel.Group.groupID == group_id).first()
+def delete(group_id : int, db : Session = Depends(get_db)):
+    db_group = db.query(model.Group).filter(model.Group.groupID == group_id).first()
     
     if not db_group:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")

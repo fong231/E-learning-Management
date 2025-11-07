@@ -1,7 +1,6 @@
 from typing import Optional, Literal
 from pydantic import BaseModel
 
-### 1. CourseBase: Các trường cơ bản được chia sẻ ###
 class CourseBase(BaseModel):
     number_of_sessions: Literal['10', '15']
 

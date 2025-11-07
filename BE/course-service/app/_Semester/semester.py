@@ -11,7 +11,7 @@ router = APIRouter(
 
 # create semester
 @router.post("/", status_code=201)
-def create_semester(semester: schema.SemesterCreate, db: Session = Depends(get_db)):
+def create(semester: schema.SemesterCreate, db: Session = Depends(get_db)):
     db_semester = model.Semester(
         description = semester.description
     )
@@ -23,7 +23,7 @@ def create_semester(semester: schema.SemesterCreate, db: Session = Depends(get_d
 
 # read semester
 @router.get("/{semester_id}", response_model=schema.SemesterRead)
-def read_semester(semester_id : int, db : Session = Depends(get_db)):
+def read(semester_id : int, db : Session = Depends(get_db)):
     semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
     
     if not semester:
@@ -32,9 +32,8 @@ def read_semester(semester_id : int, db : Session = Depends(get_db)):
     return semester
 
 # update semester
-
 @router.patch("/{semester_id}", response_model=schema.SemesterRead)
-def update_semester(semester_id : int, semester_data: schema.SemesterUpdate, db : Session = Depends(get_db)):
+def update(semester_id : int, semester_data: schema.SemesterUpdate, db : Session = Depends(get_db)):
     db_semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
     
     if not db_semester:
@@ -53,7 +52,7 @@ def update_semester(semester_id : int, semester_data: schema.SemesterUpdate, db 
     
 # delete semester
 @router.delete("/{semester_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_semester(semester_id : int, db : Session = Depends(get_db)):
+def delete(semester_id : int, db : Session = Depends(get_db)):
     db_semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
     
     if not db_semester:

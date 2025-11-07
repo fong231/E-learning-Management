@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
-from .._Group import schema as GroupSchema, model as GroupModel
+from .._Group import model as GroupModel
 import requests
 from ..config import STUDENT_BASE_URL
 
@@ -62,7 +62,7 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
     
 # Remove Student
 @router.delete("/{group_id}/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_semester(group_id : int, student_id : int, db : Session = Depends(get_db)):
+def remove_student(group_id : int, student_id : int, db : Session = Depends(get_db)):
     association = db.query(model.StudentGroupAssociation).filter(
         model.StudentGroupAssociation.groupID == group_id,
         model.StudentGroupAssociation.studentID == student_id
