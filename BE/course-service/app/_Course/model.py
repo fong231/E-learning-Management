@@ -19,3 +19,4 @@ class Course(Base):
     # relationship
     semester = relationship("Semester", back_populates="course")
     group = relationship("Group", back_populates="course")
+    course_material = relationship("CourseMaterialAssociation", back_populates="course")

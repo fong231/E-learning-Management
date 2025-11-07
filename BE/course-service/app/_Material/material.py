@@ -14,22 +14,18 @@ router = APIRouter(
 # create material
 @router.post("/", status_code=201)
 def create(material: schema.MaterialCreate, db: Session = Depends(get_db)):
-    material_id = material.materialID
+    content_id = material.contentID
     
     # check if content id exist
-    if material_id is not None:
-        material = db.query(Learning_ContentModel.Learning_Content).filter(
-            Learning_ContentModel.Learning_Content.contentID == material_id).first()
+    if content_id is not None:
+        material = db.query(Learning_ContentModel.LearningContent).filter(
+            Learning_ContentModel.LearningContent.contentID == content_id).first()
         
         if material is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
     
-    # check duplicate in material
-    if db.query(model.Material).filter(model.Material.materialID == material_id).first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Material with ID '{material_id}' already exists.")
-    
     db_material = model.Material(
-        materialID = material_id,
+        contentID = content_id,
         title = material.title,
         description = material.description
     )
@@ -38,6 +34,7 @@ def create(material: schema.MaterialCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_material)
     return {"message": "Material created successfully"}
+
 
 # read material
 @router.get("/{material_id}", response_model=schema.MaterialRead)

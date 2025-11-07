@@ -8,7 +8,7 @@ class GroupCreate(GroupBase):
     pass
 
 class GroupRead(GroupBase):
-    groupdID: int
+    groupID: int
     
     class Config:
         from_attributes = True 

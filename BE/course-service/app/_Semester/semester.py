@@ -24,7 +24,7 @@ def create(semester: schema.SemesterCreate, db: Session = Depends(get_db)):
 # read semester
 @router.get("/{semester_id}", response_model=schema.SemesterRead)
 def read(semester_id : int, db : Session = Depends(get_db)):
-    semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
+    semester = db.query(model.Semester).filter(model.Semester.semesterID == semester_id).first()
     
     if not semester:
         raise HTTPException(status_code=404, detail="Semester not found")
@@ -34,7 +34,7 @@ def read(semester_id : int, db : Session = Depends(get_db)):
 # update semester
 @router.patch("/{semester_id}", response_model=schema.SemesterRead)
 def update(semester_id : int, semester_data: schema.SemesterUpdate, db : Session = Depends(get_db)):
-    db_semester = db.query(model.Semester).filter(model.Semester.id == semester_id).first()
+    db_semester = db.query(model.Semester).filter(model.Semester.semesterID == semester_id).first()
     
     if not db_semester:
         raise HTTPException(status_code=404, detail="Semester not found")

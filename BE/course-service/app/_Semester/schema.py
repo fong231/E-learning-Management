@@ -8,7 +8,7 @@ class SemesterCreate(SemesterBase):
     pass
 
 class SemesterRead(SemesterBase):
-    id: int
+    semesterID: int
     
     class Config:
         from_attributes = True

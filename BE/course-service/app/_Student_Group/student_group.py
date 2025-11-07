@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
@@ -7,7 +7,7 @@ import requests
 from ..config import STUDENT_BASE_URL
 
 router = APIRouter(
-    prefix="/groupss",
+    prefix="/groups",
     tags=["groups-students"],
 )
 
@@ -23,23 +23,7 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
     student_id = association.studentID
     
     # check student exist
-    try:
-        respone = requests.get(f"{STUDENT_BASE_URL}/{student_id}")
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail= f"Student ID '{student_id}' not found"
-            )
-        elif respone.status_code != status.HTTP_200_OK:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Account Service communication failed."
-            )
-    except requests.exceptions.RequestException:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
-            detail="Account Service Unavailable"
-        )
+    # is_valid_respone("Student", student_id)
     
     # check if this asociation already existed
     existing_association = db.query(model.StudentGroupAssociation).filter(
@@ -59,6 +43,26 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
     db.commit()
     db.refresh(db_association)
     return {"message": f"Student {student_id} enrolled in Group {group_id} successfully."}
+
+@router.get("/{group_id}/students")
+def get_students_in_group(
+    group_id : int,
+    offset : int = Query(0, ge=0),
+    limit : int = Query(20, ge=1, le=100),
+    db : Session = Depends(get_db)):
+    
+    #TODO query to the account service to get student
+    group = db.query(model.StudentGroupAssociation).filter(model.StudentGroupAssociation.groupID == group_id).first()
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+    
+    base_query = db.query(model.StudentGroupAssociation.studentID).filter(
+        model.StudentGroupAssociation.groupID == group_id
+    )
+    
+    students = base_query.offset(offset).limit(limit).all()
+    
+    return [student_id[0] for student_id in students]
     
 # Remove Student
 @router.delete("/{group_id}/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -75,3 +79,24 @@ def remove_student(group_id : int, student_id : int, db : Session = Depends(get_
     db.commit()
     
     return
+
+# helper function
+def is_valid_respone(name : str, url : str):
+    """
+    request to the given endpoint to check if the item exist
+    """
+    try:
+        respone = requests.get(url)
+        
+        if respone.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{name} with ID '{respone}' not found"
+            )
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Service is currently unavailable: {str(e)}"
+        )
+        
+    return True

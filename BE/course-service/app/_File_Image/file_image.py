@@ -9,6 +9,7 @@ import os
 import uuid
 import shutil
 from datetime import datetime, timezone
+from fastapi.responses import FileResponse
 
 UPLOAD_DIR = "static/uploads"
 
@@ -29,8 +30,8 @@ async def create(
     
     # check if content id exist
     if content_id is not None:
-        resource = db.query(Learning_ContentModel.Learning_Content).filter(
-            Learning_ContentModel.Learning_Content.contentID == content_id).first()
+        resource = db.query(Learning_ContentModel.LearningContent).filter(
+            Learning_ContentModel.LearningContent.contentID == content_id).first()
         
         if resource is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
@@ -63,6 +64,42 @@ async def create(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error during creation: {e}")
     db.refresh(db_resource)
     return {"message": "Resource created successfully"}
+
+#view image
+@router.get("/image/{resource_id}")
+def get_image(resource_id: int, db: Session = Depends(get_db)):
+    # 1. Look up the file record using its primary key
+    resource = db.query(model.FileImage).filter(
+        model.FileImage.resourceID == resource_id
+    ).first()
+
+    if not resource:
+        raise HTTPException(status_code=404, detail="Image resource not found")
+
+    # 2. Get the file path
+    file_path = resource.path
+
+    # 3. Sanity check: Ensure the file exists on the disk
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found on server disk")
+
+    # 4. Determine the media type (MIME type) based on the file extension
+    #    This is important for the browser to display the image correctly
+    #    We can use a simple check or the mimetypes library for robustness
+    
+    # Simple example for common types:
+    if file_path.endswith('.png'):
+        media_type = 'image/png'
+    elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+        media_type = 'image/jpeg'
+    else:
+        media_type = 'application/octet-stream' # Default for unknown types
+
+    return FileResponse(
+        path=file_path, 
+        media_type=media_type, 
+        filename=os.path.basename(file_path) # Optional: suggests the file name to the client
+    )
 
 # read resource
 @router.get("/{resource_id}/{content_id}", response_model=schema.FileImageRead)

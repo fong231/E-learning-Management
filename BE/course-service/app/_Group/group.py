@@ -51,12 +51,22 @@ def update(group_id : int, group_data: schema.GroupUpdate, db : Session = Depend
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
     
+    course_id = group_data.courseID
+    course = db.query(CourseModel.Course).filter(CourseModel.Course.courseID == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
     update_data = group_data.model_dump(exclude_unset=True)
     
     for key, value in update_data.items():
         setattr(db_group, key, value)
-        
-    db.commit()
+    
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error: {e}")
+    
     db.refresh(db_group)
     
     return db_group
@@ -73,3 +83,24 @@ def delete(group_id : int, db : Session = Depends(get_db)):
     db.commit()
     
     return
+
+# helper function
+def is_valid_respone(name : str, url : str):
+    """
+    request to the given endpoint to check if the item exist
+    """
+    try:
+        respone = requests.get(url)
+        
+        if respone.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{name} with ID '{respone}' not found"
+            )
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Service is currently unavailable: {str(e)}"
+        )
+        
+    return True

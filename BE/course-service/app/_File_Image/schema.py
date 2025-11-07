@@ -4,10 +4,8 @@ from datetime import datetime
 
 class FileImageBase(BaseModel):
     path: str
-
     contentID: int
-
-    uploaded_at: Optional[datetime] = None
+    upload_at: Optional[datetime] = None
     
 class FileImageCreate(FileImageBase):
     path: str
@@ -19,7 +17,7 @@ class FileImageUpdate(BaseModel):
 class FileImageRead(FileImageBase):
     resourceID: int
 
-    uploaded_at: datetime 
+    upload_at: datetime 
     
     class Config:
         from_attributes = True

@@ -2,13 +2,12 @@ from typing import Optional, Literal
 from pydantic import BaseModel
 
 class MaterialBase(BaseModel):
-    materialID: int
     title: str
+    contentID: int
     description: Optional[str] = None
 
 class MaterialCreate(MaterialBase):
-    title: str
-    materialID: int
+    pass
 
 class MaterialRead(MaterialBase):
     class Config:

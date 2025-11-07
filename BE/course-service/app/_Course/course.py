@@ -12,34 +12,17 @@ router = APIRouter(
 )
 
 # create course
-@router.post("/", status_code=201)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
     """
     require instructre id and semester id
     """
     
     instructor_id = course.instructorID
-    validation = f"{INSTRUCTOR_BASE_URL}/{instructor_id}"
+    url = f"{INSTRUCTOR_BASE_URL}/{instructor_id}"
     
-    try:
-        respone = requests.get(validation)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Instructor with ID '{instructor_id}' not found"
-            )
-        elif respone.status_code != status.HTTP_200_OK:
-            raise HTTPException(
-                status_code = status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Failed to communicate with Account Service. Status: {respone.status_code}"
-            )
-        
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Account Service is currently unavailable: {str(e)}"
-        )
+    # turn on/off for test
+    # is_valid_respone("Instructor", url
         
     semester_id = course.semesterID
     if semester_id is not None:
@@ -81,6 +64,16 @@ def update(course_id : int, course_data: schema.CourseUpdate, db : Session = Dep
     if not db_course:
         raise HTTPException(status_code=404, detail="Course not found")
     
+    semester_id = course_data.semesterID
+    if semester_id is not None:
+        semester = db.query(SemesterModel.Semester).filter(SemesterModel.Semester.semesterID == semester_id).first()
+        
+        if not semester:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Semester with ID '{semester_id}' not found."
+            )
+    
     update_data = course_data.model_dump(exclude_unset=True)
     
     for key, value in update_data.items():
@@ -103,3 +96,24 @@ def delete(course_id : int, db : Session = Depends(get_db)):
     db.commit()
     
     return
+
+# helper function
+def is_valid_respone(name : str, url : str):
+    """
+    request to the given endpoint to check if the item exist
+    """
+    try:
+        respone = requests.get(url)
+        
+        if respone.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{name} with ID '{respone}' not found"
+            )
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Service is currently unavailable: {str(e)}"
+        )
+        
+    return True

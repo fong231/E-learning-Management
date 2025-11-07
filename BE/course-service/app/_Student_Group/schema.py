@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 class StudentGroupAssociationBase(BaseModel):
     studentID: int
-    groupID: int
 
 class StudentGroupAssociationCreate(StudentGroupAssociationBase):
     pass
