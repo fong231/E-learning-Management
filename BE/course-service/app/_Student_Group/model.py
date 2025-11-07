@@ -13,4 +13,4 @@ class StudentGroupAssociation(Base):
     groupID = Column(Integer, ForeignKey('Groups.groupID', ondelete='CASCADE'), primary_key=True)
     
     # Relationship
-    group = relationship("Group", back_populates="student_associations")
+    group = relationship("Group", back_populates="student_association")

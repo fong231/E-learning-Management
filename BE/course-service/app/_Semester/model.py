@@ -9,3 +9,5 @@ class Semester(Base):
     
     semesterID = Column(Integer, primary_key=True, index=True)
     description = Column(Text)
+    
+    course = relationship("Course", back_populates="semester")

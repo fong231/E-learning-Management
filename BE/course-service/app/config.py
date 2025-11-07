@@ -12,3 +12,4 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 INSTRUCTOR_BASE_URL = "http://localhost:8001/accounts/instructors"
 STUDENT_BASE_URL = "http://localhost:8001/accounts/students"
+CONTENT_BASE_URL = "http://localhost:8001/accounts/contents"
