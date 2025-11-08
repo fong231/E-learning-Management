@@ -12,3 +12,5 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 GROUP_BASE_URL = "http://localhost:8001/groups"
 CONTENT_BASE_URL = "http://localhost:8001/contents"
+STUDENT_GROUP_BASE_URL = "http://localhost:8001/groups"
+STUDENT_BASE_URL = "http://localhost:8002/students"

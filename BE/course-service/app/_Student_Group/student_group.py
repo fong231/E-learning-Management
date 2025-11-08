@@ -67,6 +67,19 @@ def get_students_in_group(
     students = base_query.offset(offset).limit(limit).all()
     
     return [student_id[0] for student_id in students]
+
+# get student in group
+@router.get("/{group_id}/students/{student_id}")
+def get_student_in_group(group_id : int, student_id : int, db : Session = Depends(get_db)):
+    association = db.query(model.StudentGroupAssociation).filter(
+        model.StudentGroupAssociation.groupID == group_id,
+        model.StudentGroupAssociation.studentID == student_id
+    ).first()
+    
+    if not association:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found in this group.")
+        
+    return {"studentID": association.studentID, "groupID": association.groupID}
     
 # Remove Student
 @router.delete("/{group_id}/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
