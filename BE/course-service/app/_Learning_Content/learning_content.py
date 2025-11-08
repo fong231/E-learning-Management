@@ -13,13 +13,9 @@ router = APIRouter(
 # create content
 @router.post("/", status_code=201)
 def create(content: schema.Learning_ContentCreate, db: Session = Depends(get_db)):
-    db_content = model.LearningContent(
-        title = content.title,
-        description = content.description
-    )
+    db_content = model.LearningContent(**content.model_dump())
     
     db.add(db_content)
-    db.commit()
     db.refresh(db_content)
     return {"message": "Content created successfully"}
 
@@ -65,22 +61,15 @@ def delete(content_id : int, db : Session = Depends(get_db)):
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

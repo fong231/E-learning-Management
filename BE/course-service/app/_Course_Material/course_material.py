@@ -21,6 +21,7 @@ def enroll_material(course_id : int, association: schema.CourseMaterialCreate, d
         if not course:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     
+    #check material exist
     material_id = association.materialID
     if material_id is not None:
         material = db.query(MaterialModel.Material).filter(MaterialModel.Material.materialID == material_id).first()
@@ -42,7 +43,6 @@ def enroll_material(course_id : int, association: schema.CourseMaterialCreate, d
     )
     
     db.add(db_association)
-    db.commit()
     db.refresh(db_association)
     return {"message": f"Material {material_id} enrolled in Course {course_id} successfully."}
     
@@ -58,6 +58,19 @@ def remove_material(course_id : int, material_id : int, db : Session = Depends(g
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found in this Course.")
         
     db.delete(association)
-    db.commit()
     
     return
+
+# helper function
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

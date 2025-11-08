@@ -24,7 +24,7 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create(
     file : UploadFile = File(..., description="File content to upload."),
-    content_id : int = Form(..., description="id of this content."),
+    content_id : int = Form(..., description="ID of this content."),
     db: Session = Depends(get_db)
 ):
     
@@ -57,11 +57,7 @@ async def create(
     )
     
     db.add(db_resource)
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error during creation: {e}")
+
     db.refresh(db_resource)
     return {"message": "Resource created successfully"}
 
@@ -74,20 +70,16 @@ def get_image(resource_id: int, db: Session = Depends(get_db)):
     ).first()
 
     if not resource:
-        raise HTTPException(status_code=404, detail="Image resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image resource not found")
 
     # 2. Get the file path
     file_path = resource.path
 
     # 3. Sanity check: Ensure the file exists on the disk
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found on server disk")
-
-    # 4. Determine the media type (MIME type) based on the file extension
-    #    This is important for the browser to display the image correctly
-    #    We can use a simple check or the mimetypes library for robustness
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found on server disk")
     
-    # Simple example for common types:
+    # Simple test for common types:
     if file_path.endswith('.png'):
         media_type = 'image/png'
     elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
@@ -109,7 +101,7 @@ def read(resource_id : int, content_id : int, db : Session = Depends(get_db)):
         model.FileImage.contentID == content_id).first()
     
     if not resource:
-        raise HTTPException(status_code=404, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
     
     return resource
 
@@ -121,14 +113,13 @@ def update(resource_id : int, content_id : int,resource_data: schema.FileImageUp
         model.FileImage.contentID == content_id).first()
     
     if not db_resource:
-        raise HTTPException(status_code=404, detail="Resource not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
     
     update_data = resource_data.model_dump(exclude_unset=True)
     
     for key, value in update_data.items():
         setattr(db_resource, key, value)
-        
-    db.commit()
+
     db.refresh(db_resource)
     
     return db_resource
@@ -144,27 +135,19 @@ def delete(resource_id : int, content_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
     
     db.delete(db_material)
-    db.commit()
-    
+
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

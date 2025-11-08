@@ -20,9 +20,13 @@ def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
     
     instructor_id = course.instructorID
     url = f"{INSTRUCTOR_BASE_URL}/{instructor_id}"
-    
-    # turn on/off for test
-    # is_valid_respone("Instructor", url
+
+    # check instructor existence in another service
+    try:
+        if not check_service_availability("instructor", url):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Instructor not found")
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
         
     semester_id = course.semesterID
     if semester_id is not None:
@@ -34,15 +38,9 @@ def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
                 detail=f"Semester with ID '{semester_id}' not found."
             )
     
-    db_course = model.Course(
-        instructorID = instructor_id,
-        description = course.description,
-        semesterID = course.semesterID,
-        number_of_sessions = course.number_of_sessions
-    )
+    db_course = model.Course(**course.model_dump())
     
     db.add(db_course)
-    db.commit()
     db.refresh(db_course)
     return {"message": "Course created successfully"}
 
@@ -52,7 +50,7 @@ def read(course_id : int, db : Session = Depends(get_db)):
     course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
     
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     
     return course
 
@@ -62,7 +60,7 @@ def update(course_id : int, course_data: schema.CourseUpdate, db : Session = Dep
     db_course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
     
     if not db_course:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     
     semester_id = course_data.semesterID
     if semester_id is not None:
@@ -78,8 +76,7 @@ def update(course_id : int, course_data: schema.CourseUpdate, db : Session = Dep
     
     for key, value in update_data.items():
         setattr(db_course, key, value)
-        
-    db.commit()
+
     db.refresh(db_course)
     
     return db_course
@@ -93,27 +90,19 @@ def delete(course_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     
     db.delete(db_course)
-    db.commit()
     
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 # create material
-@router.post("/", status_code=201)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create(material: schema.MaterialCreate, db: Session = Depends(get_db)):
     content_id = material.contentID
     
@@ -24,14 +24,9 @@ def create(material: schema.MaterialCreate, db: Session = Depends(get_db)):
         if material is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
     
-    db_material = model.Material(
-        contentID = content_id,
-        title = material.title,
-        description = material.description
-    )
+    db_material = model.Material(**material.model_dump())
     
     db.add(db_material)
-    db.commit()
     db.refresh(db_material)
     return {"message": "Material created successfully"}
 
@@ -42,7 +37,7 @@ def read(material_id : int, db : Session = Depends(get_db)):
     material = db.query(model.Material).filter(model.Material.materialID == material_id).first()
     
     if not material:
-        raise HTTPException(status_code=404, detail="Material not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found")
     
     return material
 
@@ -52,14 +47,13 @@ def update(material_id : int, course_data: schema.MaterialUpdate, db : Session =
     db_material = db.query(model.Material).filter(model.Material.materialID == material_id).first()
     
     if not db_material:
-        raise HTTPException(status_code=404, detail="Material not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found")
     
     update_data = course_data.model_dump(exclude_unset=True)
     
     for key, value in update_data.items():
         setattr(db_material, key, value)
-        
-    db.commit()
+
     db.refresh(db_material)
     
     return db_material
@@ -73,27 +67,19 @@ def delete(material_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found")
     
     db.delete(db_material)
-    db.commit()
     
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

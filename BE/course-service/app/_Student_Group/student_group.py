@@ -21,9 +21,14 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
     
     student_id = association.studentID
+    student_url = f"{STUDENT_BASE_URL}/{student_id}"
     
     # check student exist
-    # is_valid_respone("Student", student_id)
+    try:
+        if not check_service_availability("student", student_url):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
     
     # check if this asociation already existed
     existing_association = db.query(model.StudentGroupAssociation).filter(
@@ -40,7 +45,6 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
     )
     
     db.add(db_association)
-    db.commit()
     db.refresh(db_association)
     return {"message": f"Student {student_id} enrolled in Group {group_id} successfully."}
 
@@ -76,27 +80,19 @@ def remove_student(group_id : int, student_id : int, db : Session = Depends(get_
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found in this group.")
         
     db.delete(association)
-    db.commit()
     
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

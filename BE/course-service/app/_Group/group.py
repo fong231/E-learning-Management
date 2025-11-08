@@ -12,24 +12,21 @@ router = APIRouter(
 )
 
 # create group
-@router.post("/", status_code=201)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create(group: schema.GroupCreate, db: Session = Depends(get_db)):
+    
     course_id = group.courseID
     if course_id is not None:
         course = db.query(CourseModel.Course).filter(CourseModel.Course.courseID == course_id).first()
-        
         if not course:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Course with ID '{course_id}' not found."
             )
     
-    db_group = model.Group(
-        courseID = course_id
-    )
+    db_group = model.Group(**group.model_dump())
     
     db.add(db_group)
-    db.commit()
     db.refresh(db_group)
     return {"message": "Group created successfully"}
 
@@ -60,13 +57,7 @@ def update(group_id : int, group_data: schema.GroupUpdate, db : Session = Depend
     
     for key, value in update_data.items():
         setattr(db_group, key, value)
-    
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error: {e}")
-    
+
     db.refresh(db_group)
     
     return db_group
@@ -80,27 +71,19 @@ def delete(group_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
     
     db.delete(db_group)
-    db.commit()
     
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            return False 
+        raise
+    except requests.RequestException as e:
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")
