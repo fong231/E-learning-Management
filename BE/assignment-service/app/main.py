@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .dependencies.conditional_auth import conditional_get_current_user
-import assignment
+from ._Assignment import assignment
 
 Base.metadata.create_all(bind=engine)
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
-from .database import get_db 
+from ..database import get_db 
 from . import schema, model
-from .config import CONTENT_BASE_URL, GROUP_BASE_URL
+from ..config import CONTENT_BASE_URL, GROUP_BASE_URL
 
 router = APIRouter(
     prefix="/assignments",
@@ -22,8 +22,8 @@ def create(assignment: schema.AssignmentCreate, db: Session = Depends(get_db)):
     group_url = f"{GROUP_BASE_URL}/{group_id}"
     content_url = f"{CONTENT_BASE_URL}/{content_id}"
     
-    is_valid_respone("group", group_url)
-    is_valid_respone("content", content_url)
+    is_valid_response("group", group_url)
+    is_valid_response("content", content_url)
     
     db_assignment = model.Assignment(
         groupID = group_id,
@@ -37,9 +37,8 @@ def create(assignment: schema.AssignmentCreate, db: Session = Depends(get_db)):
     )
     
     db.add(db_assignment)
-    db.commit()
     db.refresh(db_assignment)
-    return {"message": "Course created successfully"}
+    return {"message": "Assignment created successfully"}
 
 # read assignment
 @router.get("/{assignment_id}", response_model=schema.AssignmentRead)
@@ -83,22 +82,19 @@ def delete(assignment_id : int, db : Session = Depends(get_db)):
     return
 
 # helper function
-def is_valid_respone(name : str, url : str):
-    """
-    request to the given endpoint to check if the item exist
-    """
+def check_service_availability(name: str, url: str) -> bool:
+    """Requests the endpoint to check if the external item exists."""
     try:
-        respone = requests.get(url)
-        
-        if respone.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{name} with ID '{respone}' not found"
-            )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service is currently unavailable: {str(e)}"
-        )
-        
-    return True
+        response = requests.get(url, timeout=5) # Add timeout for safety
+        response.raise_for_status() # Raises HTTPException for 4xx/5xx status codes
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            # Raise a custom exception or just return False to handle in the endpoint
+            return False 
+        # Re-raise other HTTP errors (e.g., 401, 500)
+        raise
+    except requests.RequestException as e:
+        # Catch connection errors, timeouts, etc.
+        # Raise a specific error that the endpoint can catch and map to 503
+        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

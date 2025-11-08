@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 import os
 
 DB_PATH = "assignment.db"
@@ -19,5 +20,9 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise
     finally:
         db.close()
