@@ -4,14 +4,26 @@ from typing import Annotated, Optional
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-# from .._Authenticate.model import TokenData
+from .._Authenticate.model import TokenData
 from sqlalchemy.orm import Session
-# from .._Account import model as AccountModel
-from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, TOKEN_URL
+from .._Account import model as AccountModel
+from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..database import get_db
 
 # Define the OAuth2 scheme (FastAPI standard for login)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """Generates the JWT."""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 def decode_access_token(token: str):
     """Decodes and validates the JWT."""
@@ -50,17 +62,16 @@ async def get_current_active_user(token: Annotated[str, Depends(oauth2_scheme)],
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        # token_data = TokenData(username=username)
+        token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
     
     # Get user from the 'database'
-    # user = db.query(AccountModel.Account).filter(AccountModel.Account.username == token_data.username).first()
-    # if user is None:
-    #     raise credentials_exception
+    user = db.query(AccountModel.Account).filter(AccountModel.Account.username == token_data.username).first()
+    if user is None:
+        raise credentials_exception
     # if user.disabled:
     #     raise HTTPException(status_code=400, detail="Inactive user")
     
-    # return user
-    return payload
+    return user
         

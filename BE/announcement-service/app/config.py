@@ -8,10 +8,9 @@ AUTH_REQUIRED = False
 # JWT settings (kept here for easy access)
 SECRET_KEY = "your-super-secret-key" 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
-INSTRUCTOR_BASE_URL = "http://localhost:8001/accounts/instructors"
-STUDENT_BASE_URL = "http://localhost:8001/accounts/students"
-CONTENT_BASE_URL = "http://localhost:8001/accounts/contents"
-
-TOKEN_URL = "http://localhost:8001/auth/login"
+GROUP_BASE_URL = "http://localhost:8001/groups"
+CONTENT_BASE_URL = "http://localhost:8001/contents"
+STUDENT_GROUP_BASE_URL = "http://localhost:8001/groups"
+STUDENT_BASE_URL = "http://localhost:8002/students"

@@ -1,74 +1,43 @@
+# app/auth.py
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
+from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from pwdlib import PasswordHash
-from pydantic import BaseModel
+# from .._Authenticate.model import TokenData
+from sqlalchemy.orm import Session
+# from .._Account import model as AccountModel
+from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, TOKEN_URL
+from ..database import get_db
 
-# Assuming config is one level up
-from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+# Define the OAuth2 scheme (FastAPI standard for login)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
 
-# --- Setup ---
-pwd_context = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+def decode_access_token(token: str):
+    """Decodes and validates the JWT."""
+    try:
+        # 1. Decode the token using the secret key
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        # 2. Extract the user identifier
+        username: int = payload.get("sub")
+        if username is None:
+            raise JWTError("Invalid credentials", status_code=status.HTTP_401_UNAUTHORIZED)
+            
+        return payload
+        
+    except JWTError as e:
+        # Handles expiration and invalid signature errors
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-# --- Models ---
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    
-class TokenData(BaseModel):
-    username: str | None = None
-    
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-
-class UserInDB(User):
-    hashed_password: str
-
-# --- Mock Database ---
-fake_users_db = {
-    "john.doe": {
-        "username": "john.doe",
-        "full_name": "John Doe",
-        "email": "john.doe@example.com",
-        "hashed_password": pwd_context.hash("mypassword"), 
-        "disabled": False,
-    }
-}
-
-# --- Utility Functions ---
-def verify_password(plain_password, hashed_password):
-    """Verifies a plain password against a hashed one."""
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_user(db, username: str) -> Optional[UserInDB]:
-    """Retrieves a user from the mock database."""
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-    return None
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    """Creates a new JWT access token."""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-# --- Main Dependency (The Authenticator) ---
-async def get_current_active_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+async def get_current_active_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
     """
-    Decodes and validates the JWT token, raising 401 if invalid or missing.
+    Decodes the JWT token to get the current user.
+    This function acts as a dependency for protected endpoints.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -81,16 +50,17 @@ async def get_current_active_user(token: Annotated[str, Depends(oauth2_scheme)])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        # token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
     
     # Get user from the 'database'
-    user = get_user(fake_users_db, username=token_data.username)
-    if user is None:
-        raise credentials_exception
-    if user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    # user = db.query(AccountModel.Account).filter(AccountModel.Account.username == token_data.username).first()
+    # if user is None:
+    #     raise credentials_exception
+    # if user.disabled:
+    #     raise HTTPException(status_code=400, detail="Inactive user")
     
-    # Returns the User model (excluding the hashed password)
-    return User(**user.model_dump(exclude={"hashed_password"}))
+    # return user
+    return payload
+        

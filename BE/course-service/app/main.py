@@ -9,22 +9,23 @@ from ._Learning_Content import learning_content
 from ._Student_Group import student_group
 from ._Material import material
 from ._Course_Material import course_material
-from .dependencies.conditional_auth import conditional_get_current_user
+# from .dependencies.conditional_auth import conditional_get_current_user
+from .dependencies.auth import get_current_active_user
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Course Service")
 
-# TODO , add auth with jwt
-# app.include_router(semester.router, dependencies=[Depends(conditional_get_current_user)])
-app.include_router(semester.router)
-app.include_router(course.router)
-app.include_router(file_image.router)
-app.include_router(group.router)
-app.include_router(learning_content.router)
-app.include_router(student_group.router)
-app.include_router(course_material.router)
-app.include_router(material.router)
+#TODO fix the db commit issue
+
+app.include_router(semester.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(course.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(file_image.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(group.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(learning_content.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(student_group.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(course_material.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(material.router, dependencies=[Depends(get_current_active_user)])
 
 app.add_middleware(
     CORSMiddleware,
