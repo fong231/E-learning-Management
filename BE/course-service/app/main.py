@@ -15,6 +15,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Course Service")
 
+# TODO , add auth with jwt
 # app.include_router(semester.router, dependencies=[Depends(conditional_get_current_user)])
 app.include_router(semester.router)
 app.include_router(course.router)
