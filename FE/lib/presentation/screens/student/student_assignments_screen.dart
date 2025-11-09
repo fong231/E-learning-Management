@@ -8,7 +8,7 @@ class StudentAssignmentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bài tập'),
+        title: const Text('Assignments'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -21,10 +21,10 @@ class StudentAssignmentsScreen extends StatelessWidget {
                 backgroundColor: AppTheme.accentColor.withOpacity(0.1),
                 child: const Icon(Icons.assignment, color: AppTheme.accentColor),
               ),
-              title: Text('Bài tập ${index + 1}'),
-              subtitle: Text('Hạn nộp: ${DateTime.now().add(Duration(days: index + 1)).day}/${DateTime.now().month}'),
+              title: Text('Assignment ${index + 1}'),
+              subtitle: Text('Deadline: ${DateTime.now().add(Duration(days: index + 1)).day}/${DateTime.now().month}'),
               trailing: Chip(
-                label: Text(index % 2 == 0 ? 'Chưa nộp' : 'Đã nộp'),
+                label: Text(index % 2 == 0 ? 'Not Submitted' : 'Submitted'),
                 backgroundColor: index % 2 == 0
                     ? AppTheme.warningColor.withOpacity(0.2)
                     : AppTheme.successColor.withOpacity(0.2),

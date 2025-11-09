@@ -35,10 +35,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Tổng quan'),
-            Tab(text: 'Tài liệu'),
-            Tab(text: 'Bài tập'),
-            Tab(text: 'Thảo luận'),
+            Tab(text: 'Overview'),
+            Tab(text: 'Materials'),
+            Tab(text: 'Assignments'),
+            Tab(text: 'Discussion'),
           ],
         ),
       ),
@@ -80,13 +80,13 @@ class _OverviewTab extends StatelessWidget {
                   const SizedBox(height: 16),
                   _InfoRow(
                     icon: Icons.person,
-                    label: 'Giảng viên',
+                    label: 'Instructor',
                     value: course.instructorName ?? 'N/A',
                   ),
                   const SizedBox(height: 12),
                   _InfoRow(
                     icon: Icons.calendar_today,
-                    label: 'Học kỳ',
+                    label: 'Semester',
                     value: course.semesterName ?? 'N/A',
                   ),
                   const SizedBox(height: 12),
@@ -99,7 +99,7 @@ class _OverviewTab extends StatelessWidget {
                     const SizedBox(height: 12),
                     _InfoRow(
                       icon: Icons.event,
-                      label: 'Bắt đầu',
+                      label: 'Start',
                       value: '${course.startDate!.day}/${course.startDate!.month}/${course.startDate!.year}',
                     ),
                   ],
@@ -107,7 +107,7 @@ class _OverviewTab extends StatelessWidget {
                     const SizedBox(height: 12),
                     _InfoRow(
                       icon: Icons.event_available,
-                      label: 'Kết thúc',
+                      label: 'End',
                       value: '${course.endDate!.day}/${course.endDate!.month}/${course.endDate!.year}',
                     ),
                   ],
@@ -124,7 +124,7 @@ class _OverviewTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mô tả',
+                      'Description',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -230,10 +230,10 @@ class _AssignmentsTab extends StatelessWidget {
               backgroundColor: AppTheme.accentColor.withOpacity(0.1),
               child: const Icon(Icons.assignment, color: AppTheme.accentColor),
             ),
-            title: Text('Bài tập ${index + 1}'),
-            subtitle: Text('Hạn nộp: ${DateTime.now().add(Duration(days: index + 1)).day}/${DateTime.now().month}'),
+            title: Text('Assignment ${index + 1}'),
+            subtitle: Text('Deadline: ${DateTime.now().add(Duration(days: index + 1)).day}/${DateTime.now().month}'),
             trailing: Chip(
-              label: const Text('Chưa nộp'),
+              label: const Text('Not Submitted'),
               backgroundColor: AppTheme.warningColor.withOpacity(0.2),
             ),
             onTap: () {

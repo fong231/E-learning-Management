@@ -138,13 +138,13 @@ class QuestionModel {
   String get levelDisplay {
     switch (level) {
       case 'easy_question':
-        return 'Dễ';
+        return 'Easy';
       case 'medium_question':
-        return 'Trung bình';
+        return 'Medium';
       case 'hard_question':
-        return 'Khó';
+        return 'Hard';
       default:
-        return 'Trung bình';
+        return 'Medium';
     }
   }
 }

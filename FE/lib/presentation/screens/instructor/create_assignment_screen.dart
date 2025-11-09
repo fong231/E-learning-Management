@@ -104,8 +104,8 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                 prefixIcon: Icon(Icons.book),
               ),
               items: [
-                DropdownMenuItem(value: 1, child: Text('Lập trình di động')),
-                DropdownMenuItem(value: 2, child: Text('Cơ sở dữ liệu')),
+                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
+                DropdownMenuItem(value: 2, child: Text('Database')),
                 DropdownMenuItem(value: 3, child: Text('Mạng máy tính')),
               ],
               onChanged: (value) {
@@ -231,7 +231,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Tạo bài tập'),
+                  : const Text('Create Assignment'),
             ),
           ],
         ),

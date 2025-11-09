@@ -32,10 +32,10 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
     _courses = [
       CourseModel(
         id: 1,
-        name: 'Lập trình di động',
-        description: 'Học lập trình ứng dụng di động với Flutter',
+        name: 'Mobile Programming',
+        description: 'Learn mobile app development with Flutter',
         instructorId: 1,
-        instructorName: 'Nguyễn Văn A',
+        instructorName: 'John Doe',
         semesterId: 1,
         semesterName: 'HK1 2024-2025',
         numberOfSessions: 15,
@@ -43,10 +43,10 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
       ),
       CourseModel(
         id: 2,
-        name: 'Cơ sở dữ liệu',
-        description: 'Thiết kế và quản lý cơ sở dữ liệu',
+        name: 'Database',
+        description: 'Database design and management',
         instructorId: 2,
-        instructorName: 'Trần Thị B',
+        instructorName: 'Jane Smith',
         semesterId: 1,
         semesterName: 'HK1 2024-2025',
         numberOfSessions: 15,
@@ -63,7 +63,7 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Khóa học của tôi'),
+        title: const Text('My Courses'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -87,7 +87,7 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Chưa có khóa học nào',
+                        'No courses yet',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -157,7 +157,7 @@ class _CourseCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          course.instructorName ?? 'Giảng viên',
+                          course.instructorName ?? 'Instructor',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: AppTheme.textSecondaryColor,
                               ),
@@ -182,7 +182,7 @@ class _CourseCard extends StatelessWidget {
                 children: [
                   _InfoChip(
                     icon: Icons.calendar_today,
-                    label: course.semesterName ?? 'Học kỳ',
+                    label: course.semesterName ?? 'Semester',
                   ),
                   const SizedBox(width: 8),
                   _InfoChip(

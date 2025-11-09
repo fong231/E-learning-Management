@@ -7,7 +7,7 @@ class StudentForumScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Diễn đàn'),
+        title: const Text('Forum'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),

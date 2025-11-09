@@ -99,7 +99,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Mô tả',
+                labelText: 'Description',
                 hintText: 'Nhập mô tả khóa học',
                 prefixIcon: Icon(Icons.description),
               ),
@@ -191,7 +191,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Tạo khóa học'),
+                  : const Text('Create Course'),
             ),
           ],
         ),

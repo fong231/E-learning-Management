@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Đăng nhập thất bại'),
+          content: Text(authProvider.error ?? 'Login failed'),
           backgroundColor: AppTheme.errorColor,
         ),
       );
@@ -86,13 +86,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Chào mừng trở lại!',
+                    'Welcome Back!',
                     style: Theme.of(context).textTheme.displaySmall,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Đăng nhập để tiếp tục',
+                    'Login to continue',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppTheme.textSecondaryColor,
                         ),
@@ -106,15 +106,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
-                      hintText: 'Nhập email của bạn',
+                      hintText: 'Enter your email',
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập email';
+                        return 'Please enter email';
                       }
                       if (!value.contains('@')) {
-                        return 'Email không hợp lệ';
+                        return 'Invalid email';
                       }
                       return null;
                     },
@@ -126,8 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Mật khẩu',
-                      hintText: 'Nhập mật khẩu của bạn',
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -144,10 +144,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
+                        return 'Please enter password';
                       }
                       if (value.length < 6) {
-                        return 'Mật khẩu phải có ít nhất 6 ký tự';
+                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
@@ -162,11 +162,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         // TODO: Navigate to forgot password screen
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Chức năng đang phát triển'),
+                            content: Text('Feature under development'),
                           ),
                         );
                       },
-                      child: const Text('Quên mật khẩu?'),
+                      child: const Text('Forgot Password?'),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -187,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               )
-                            : const Text('Đăng nhập'),
+                            : const Text('Login'),
                       );
                     },
                   ),
@@ -198,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Chưa có tài khoản? ',
+                        'Don\'t have an account? ',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       TextButton(
@@ -209,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text('Đăng ký ngay'),
+                        child: const Text('Register Now'),
                       ),
                     ],
                   ),

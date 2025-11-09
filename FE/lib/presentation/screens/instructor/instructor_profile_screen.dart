@@ -14,7 +14,7 @@ class InstructorProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cá nhân'),
+        title: const Text('Profile'),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -41,7 +41,7 @@ class InstructorProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    user?.username ?? 'Giảng viên',
+                    user?.username ?? 'Instructor',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -65,38 +65,38 @@ class InstructorProfileScreen extends StatelessWidget {
             ),
             _ProfileMenuItem(
               icon: Icons.lock_outline,
-              title: 'Đổi mật khẩu',
+              title: 'Change Password',
               onTap: () {},
             ),
             _ProfileMenuItem(
               icon: Icons.settings_outlined,
-              title: 'Cài đặt',
+              title: 'Settings',
               onTap: () {},
             ),
             _ProfileMenuItem(
               icon: Icons.help_outline,
-              title: 'Trợ giúp',
+              title: 'Help',
               onTap: () {},
             ),
             const Divider(),
             _ProfileMenuItem(
               icon: Icons.logout,
-              title: 'Đăng xuất',
+              title: 'Logout',
               textColor: AppTheme.errorColor,
               onTap: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Đăng xuất'),
+                    title: const Text('Logout'),
                     content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Hủy'),
+                        child: const Text('Cancel'),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Đăng xuất'),
+                        child: const Text('Logout'),
                       ),
                     ],
                   ),

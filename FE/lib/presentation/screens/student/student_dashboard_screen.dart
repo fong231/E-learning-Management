@@ -44,27 +44,27 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: 'Trang chủ',
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book_outlined),
             activeIcon: Icon(Icons.book),
-            label: 'Khóa học',
+            label: 'Courses',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
             activeIcon: Icon(Icons.assignment),
-            label: 'Bài tập',
+            label: 'Assignments',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.quiz_outlined),
             activeIcon: Icon(Icons.quiz),
-            label: 'Bài kiểm tra',
+            label: 'Quizzes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
             activeIcon: Icon(Icons.person),
-            label: 'Cá nhân',
+            label: 'Profile',
           ),
         ],
       ),
@@ -82,7 +82,7 @@ class StudentHomeTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trang chủ'),
+        title: const Text('Home'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -113,14 +113,14 @@ class StudentHomeTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Xin chào,',
+                    'Hello,',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: Colors.white70,
                         ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.username ?? 'Sinh viên',
+                    user?.username ?? 'Student',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -128,7 +128,7 @@ class StudentHomeTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Chào mừng bạn đến với hệ thống LMS',
+                    'Welcome to the LMS system',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.white70,
                         ),
@@ -140,7 +140,7 @@ class StudentHomeTab extends StatelessWidget {
 
             // Quick Actions
             Text(
-              'Truy cập nhanh',
+              'Quick Access',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
@@ -153,7 +153,7 @@ class StudentHomeTab extends StatelessWidget {
               children: [
                 _QuickActionCard(
                   icon: Icons.message_outlined,
-                  title: 'Tin nhắn',
+                  title: 'Messages',
                   color: Colors.blue,
                   onTap: () {
                     Navigator.of(context).push(
@@ -165,7 +165,7 @@ class StudentHomeTab extends StatelessWidget {
                 ),
                 _QuickActionCard(
                   icon: Icons.forum_outlined,
-                  title: 'Diễn đàn',
+                  title: 'Forum',
                   color: Colors.orange,
                   onTap: () {
                     Navigator.of(context).push(
@@ -177,7 +177,7 @@ class StudentHomeTab extends StatelessWidget {
                 ),
                 _QuickActionCard(
                   icon: Icons.smart_toy_outlined,
-                  title: 'AI Trợ lý',
+                  title: 'AI Assistant',
                   color: Colors.purple,
                   onTap: () {
                     Navigator.of(context).push(
@@ -189,12 +189,12 @@ class StudentHomeTab extends StatelessWidget {
                 ),
                 _QuickActionCard(
                   icon: Icons.calendar_today_outlined,
-                  title: 'Lịch học',
+                  title: 'Schedule',
                   color: Colors.green,
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Chức năng đang phát triển'),
+                        content: Text('Feature under development'),
                       ),
                     );
                   },
@@ -205,32 +205,32 @@ class StudentHomeTab extends StatelessWidget {
 
             // Recent Activities
             Text(
-              'Hoạt động gần đây',
+              'Recent Activities',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
             _buildActivityCard(
               context,
               icon: Icons.assignment,
-              title: 'Bài tập mới',
-              subtitle: 'Bạn có 3 bài tập sắp đến hạn',
-              time: '2 giờ trước',
+              title: 'New Assignment',
+              subtitle: 'You have 3 assignments due soon',
+              time: '2 hours ago',
             ),
             const SizedBox(height: 12),
             _buildActivityCard(
               context,
               icon: Icons.announcement,
-              title: 'Thông báo mới',
-              subtitle: 'Lịch thi cuối kỳ đã được cập nhật',
-              time: '5 giờ trước',
+              title: 'New Notification',
+              subtitle: 'Final exam schedule has been updated',
+              time: '5 hours ago',
             ),
             const SizedBox(height: 12),
             _buildActivityCard(
               context,
               icon: Icons.quiz,
-              title: 'Bài kiểm tra',
-              subtitle: 'Kết quả bài kiểm tra đã có',
-              time: '1 ngày trước',
+              title: 'Quizzes',
+              subtitle: 'Quiz results are available',
+              time: '1 day ago',
             ),
           ],
         ),

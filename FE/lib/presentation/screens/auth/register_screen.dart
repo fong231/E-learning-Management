@@ -52,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đăng ký thành công! Vui lòng đăng nhập.'),
+          content: Text('Registration successful! Please login.'),
           backgroundColor: AppTheme.successColor,
         ),
       );
@@ -60,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Đăng ký thất bại'),
+          content: Text(authProvider.error ?? 'Registration failed'),
           backgroundColor: AppTheme.errorColor,
         ),
       );
@@ -71,7 +71,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đăng ký tài khoản'),
+        title: const Text('Register Account'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -92,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Bạn là:',
+                        'You are:',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
@@ -100,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           Expanded(
                             child: RadioListTile<String>(
-                              title: const Text('Sinh viên'),
+                              title: const Text('Student'),
                               value: 'student',
                               groupValue: _selectedRole,
                               onChanged: (value) {
@@ -112,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           Expanded(
                             child: RadioListTile<String>(
-                              title: const Text('Giảng viên'),
+                              title: const Text('Instructor'),
                               value: 'instructor',
                               groupValue: _selectedRole,
                               onChanged: (value) {
@@ -133,13 +133,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _usernameController,
                   decoration: const InputDecoration(
-                    labelText: 'Tên người dùng',
-                    hintText: 'Nhập tên người dùng',
+                    labelText: 'Username',
+                    hintText: 'Enter username',
                     prefixIcon: Icon(Icons.person_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập tên người dùng';
+                      return 'Please enter username';
                     }
                     return null;
                   },
@@ -152,15 +152,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    hintText: 'Nhập email của bạn',
+                    hintText: 'Enter your email',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập email';
+                      return 'Please enter email';
                     }
                     if (!value.contains('@')) {
-                      return 'Email không hợp lệ';
+                      return 'Invalid email';
                     }
                     return null;
                   },
@@ -172,8 +172,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                    labelText: 'Số điện thoại',
-                    hintText: 'Nhập số điện thoại',
+                    labelText: 'Phone Number',
+                    hintText: 'Enter phone number',
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                 ),
@@ -183,8 +183,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _addressController,
                   decoration: const InputDecoration(
-                    labelText: 'Địa chỉ',
-                    hintText: 'Nhập địa chỉ',
+                    labelText: 'Address',
+                    hintText: 'Enter address',
                     prefixIcon: Icon(Icons.location_on_outlined),
                   ),
                 ),
@@ -195,8 +195,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    labelText: 'Mật khẩu',
-                    hintText: 'Nhập mật khẩu',
+                    labelText: 'Password',
+                    hintText: 'Enter password',
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -213,10 +213,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập mật khẩu';
+                      return 'Please enter password';
                     }
                     if (value.length < 6) {
-                      return 'Mật khẩu phải có ít nhất 6 ký tự';
+                      return 'Password must be at least 6 characters';
                     }
                     return null;
                   },
@@ -228,8 +228,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
-                    labelText: 'Xác nhận mật khẩu',
-                    hintText: 'Nhập lại mật khẩu',
+                    labelText: 'Confirm Password',
+                    hintText: 'Re-enter password',
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -246,10 +246,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng xác nhận mật khẩu';
+                      return 'Please confirm password';
                     }
                     if (value != _passwordController.text) {
-                      return 'Mật khẩu không khớp';
+                      return 'Passwords do not match';
                     }
                     return null;
                   },
@@ -272,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               ),
                             )
-                          : const Text('Đăng ký'),
+                          : const Text('Register'),
                     );
                   },
                 ),

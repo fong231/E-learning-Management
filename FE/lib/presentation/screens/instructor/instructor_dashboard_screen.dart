@@ -39,22 +39,22 @@ class _InstructorDashboardScreenState extends State<InstructorDashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
             activeIcon: Icon(Icons.dashboard),
-            label: 'Tổng quan',
+            label: 'Overview',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book_outlined),
             activeIcon: Icon(Icons.book),
-            label: 'Khóa học',
+            label: 'Courses',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_outlined),
             activeIcon: Icon(Icons.people),
-            label: 'Sinh viên',
+            label: 'Student',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
             activeIcon: Icon(Icons.person),
-            label: 'Cá nhân',
+            label: 'Profile',
           ),
         ],
       ),
@@ -72,7 +72,7 @@ class InstructorHomeTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tổng quan'),
+        title: const Text('Overview'),
         actions: [
           IconButton(
             icon: const Icon(Icons.message_outlined),
@@ -103,14 +103,14 @@ class InstructorHomeTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Xin chào,',
+                    'Hello,',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: Colors.white70,
                         ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.username ?? 'Giảng viên',
+                    user?.username ?? 'Instructor',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -130,7 +130,7 @@ class InstructorHomeTab extends StatelessWidget {
 
             // Statistics
             Text(
-              'Thống kê',
+              'Statistics',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
@@ -139,7 +139,7 @@ class InstructorHomeTab extends StatelessWidget {
                 Expanded(
                   child: _StatCard(
                     icon: Icons.book,
-                    title: 'Khóa học',
+                    title: 'Courses',
                     value: '5',
                     color: AppTheme.primaryColor,
                   ),
@@ -148,7 +148,7 @@ class InstructorHomeTab extends StatelessWidget {
                 Expanded(
                   child: _StatCard(
                     icon: Icons.people,
-                    title: 'Sinh viên',
+                    title: 'Student',
                     value: '120',
                     color: AppTheme.accentColor,
                   ),
@@ -161,7 +161,7 @@ class InstructorHomeTab extends StatelessWidget {
                 Expanded(
                   child: _StatCard(
                     icon: Icons.assignment,
-                    title: 'Bài tập',
+                    title: 'Assignments',
                     value: '15',
                     color: Colors.orange,
                   ),
@@ -170,7 +170,7 @@ class InstructorHomeTab extends StatelessWidget {
                 Expanded(
                   child: _StatCard(
                     icon: Icons.quiz,
-                    title: 'Bài kiểm tra',
+                    title: 'Quizzes',
                     value: '8',
                     color: AppTheme.secondaryColor,
                   ),
@@ -212,14 +212,14 @@ class InstructorHomeTab extends StatelessWidget {
 
             // Recent Activities
             Text(
-              'Hoạt động gần đây',
+              'Recent Activities',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
             _buildActivityCard(
               context,
               icon: Icons.assignment_turned_in,
-              title: 'Bài tập mới được nộp',
+              title: 'Assignment mới được nộp',
               subtitle: '5 sinh viên đã nộp bài tập',
               time: '1 giờ trước',
             ),
@@ -227,7 +227,7 @@ class InstructorHomeTab extends StatelessWidget {
             _buildActivityCard(
               context,
               icon: Icons.message,
-              title: 'Tin nhắn mới',
+              title: 'New Message',
               subtitle: 'Sinh viên Nguyễn Văn A đã gửi tin nhắn',
               time: '3 giờ trước',
             ),

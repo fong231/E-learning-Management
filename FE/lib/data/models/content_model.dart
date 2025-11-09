@@ -62,7 +62,7 @@ class LearningContentModel {
       case 'video':
         return 'Video';
       case 'document':
-        return 'Tài liệu';
+        return 'Materials';
       case 'slide':
         return 'Slide';
       case 'link':

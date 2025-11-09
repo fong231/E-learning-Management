@@ -104,15 +104,15 @@ class NotificationModel {
   String get typeDisplay {
     switch (type) {
       case 'announcement':
-        return 'Thông báo';
+        return 'Notifications';
       case 'deadline':
         return 'Hạn chót';
       case 'feedback':
         return 'Phản hồi';
       case 'submission':
-        return 'Nộp bài';
+        return 'Submit';
       case 'message':
-        return 'Tin nhắn';
+        return 'Messages';
       default:
         return 'Khác';
     }

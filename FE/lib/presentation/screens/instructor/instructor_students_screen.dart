@@ -8,7 +8,7 @@ class InstructorStudentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sinh viên'),
+        title: const Text('Student'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),

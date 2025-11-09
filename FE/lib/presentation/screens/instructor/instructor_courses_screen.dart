@@ -8,7 +8,7 @@ class InstructorCoursesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Khóa học của tôi'),
+        title: const Text('My Courses'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -35,7 +35,7 @@ class InstructorCoursesScreen extends StatelessWidget {
                   ),
                   const PopupMenuItem(
                     value: 'delete',
-                    child: Text('Xóa'),
+                    child: Text('Delete'),
                   ),
                 ],
               ),
@@ -46,7 +46,7 @@ class InstructorCoursesScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         icon: const Icon(Icons.add),
-        label: const Text('Tạo khóa học'),
+        label: const Text('Create Course'),
       ),
     );
   }

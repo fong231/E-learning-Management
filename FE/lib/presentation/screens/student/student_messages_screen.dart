@@ -8,7 +8,7 @@ class StudentMessagesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tin nhắn'),
+        title: const Text('Messages'),
       ),
       body: ListView.builder(
         itemCount: 6,
@@ -18,8 +18,8 @@ class StudentMessagesScreen extends StatelessWidget {
               backgroundColor: AppTheme.primaryColor,
               child: Text('GV${index + 1}'),
             ),
-            title: Text('Giảng viên ${index + 1}'),
-            subtitle: Text('Tin nhắn mới nhất...'),
+            title: Text('Instructor ${index + 1}'),
+            subtitle: Text('Latest message...'),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

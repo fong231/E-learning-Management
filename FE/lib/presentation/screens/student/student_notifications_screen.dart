@@ -8,11 +8,11 @@ class StudentNotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thông báo'),
+        title: const Text('Notifications'),
         actions: [
           TextButton(
             onPressed: () {},
-            child: const Text('Đánh dấu đã đọc'),
+            child: const Text('Mark as Read'),
           ),
         ],
       ),
@@ -77,9 +77,9 @@ class StudentNotificationsScreen extends StatelessWidget {
       case 0:
         return 'Thông báo mới từ giảng viên';
       case 1:
-        return 'Bài tập mới được giao';
+        return 'Assignment mới được giao';
       case 2:
-        return 'Tin nhắn mới';
+        return 'New Message';
       default:
         return 'Cập nhật hệ thống';
     }

@@ -8,7 +8,7 @@ class StudentQuizzesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bài kiểm tra'),
+        title: const Text('Quizzes'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -25,7 +25,7 @@ class StudentQuizzesScreen extends StatelessWidget {
               subtitle: Text('Thời gian: 30 phút • ${index + 10} câu hỏi'),
               trailing: ElevatedButton(
                 onPressed: () {},
-                child: const Text('Làm bài'),
+                child: const Text('Take Quiz'),
               ),
             ),
           );

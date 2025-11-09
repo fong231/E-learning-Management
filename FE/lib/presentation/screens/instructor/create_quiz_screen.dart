@@ -113,7 +113,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo bài kiểm tra'),
+        title: const Text('Create Quiz'),
       ),
       body: Form(
         key: _formKey,
@@ -127,8 +127,8 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                 prefixIcon: Icon(Icons.book),
               ),
               items: [
-                DropdownMenuItem(value: 1, child: Text('Lập trình di động')),
-                DropdownMenuItem(value: 2, child: Text('Cơ sở dữ liệu')),
+                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
+                DropdownMenuItem(value: 2, child: Text('Database')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -162,7 +162,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Mô tả',
+                labelText: 'Description',
                 prefixIcon: Icon(Icons.description),
               ),
               maxLines: 3,
@@ -288,7 +288,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Tạo bài kiểm tra'),
+                  : const Text('Create Quiz'),
             ),
           ],
         ),
@@ -334,7 +334,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
             TextField(
               controller: _questionController,
               decoration: const InputDecoration(
-                labelText: 'Câu hỏi',
+                labelText: 'Question',
                 hintText: 'Nhập nội dung câu hỏi',
               ),
               maxLines: 3,
@@ -343,7 +343,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
             TextField(
               controller: _pointsController,
               decoration: const InputDecoration(
-                labelText: 'Điểm',
+                labelText: 'Score',
               ),
               keyboardType: TextInputType.number,
             ),
@@ -356,15 +356,15 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
               items: const [
                 DropdownMenuItem(
                   value: AppConstants.levelEasy,
-                  child: Text('Dễ'),
+                  child: Text('Easy'),
                 ),
                 DropdownMenuItem(
                   value: AppConstants.levelMedium,
-                  child: Text('Trung bình'),
+                  child: Text('Medium'),
                 ),
                 DropdownMenuItem(
                   value: AppConstants.levelHard,
-                  child: Text('Khó'),
+                  child: Text('Hard'),
                 ),
               ],
               onChanged: (value) {
@@ -379,7 +379,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () {
@@ -394,7 +394,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
               Navigator.pop(context);
             }
           },
-          child: const Text('Thêm'),
+          child: const Text('Add'),
         ),
       ],
     );
