@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// update UI
+// update UI to reflect changes
 
 void main() {
   runApp(const MyApp());
