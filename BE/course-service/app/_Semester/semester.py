@@ -18,6 +18,7 @@ def create(semester: schema.SemesterCreate, db: Session = Depends(get_db)):
     )
     
     db.add(db_semester)
+    db.commit()
     db.refresh(db_semester)
     return {"message": "Semester created successfully"}
 
@@ -43,7 +44,8 @@ def update(semester_id : int, semester_data: schema.SemesterUpdate, db : Session
     
     for key, value in update_data.items():
         setattr(db_semester, key, value)
-        
+    
+    db.commit()
     db.refresh(db_semester)
     
     return db_semester
@@ -57,6 +59,7 @@ def delete(semester_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Semester not found")
     
     db.delete(db_semester)
+    db.commit()
     
     return
 

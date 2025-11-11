@@ -33,6 +33,7 @@ def create(annoucement: schema.AnnoucementCreate, db: Session = Depends(get_db))
     db_annoucement = model.Annoucement(**annoucement.model_dump())
     
     db.add(db_annoucement)
+    db.commit()
     db.refresh(db_annoucement)
     
     return {"message": "Annoucement created successfully"}
@@ -60,6 +61,7 @@ def update(annoucement_id : int, assignment_data: schema.AnnoucementUpdate, db :
     for key, value in update_data.items():
         setattr(db_annoucement, key, value)
 
+    db.commit()
     db.refresh(db_annoucement)
     
     return db_annoucement
@@ -73,6 +75,7 @@ def delete(annoucement_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Annoucement not found")
     
     db.delete(db_annoucement)
+    db.commit()
 
     return
 

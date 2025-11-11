@@ -57,7 +57,7 @@ async def create(
     )
     
     db.add(db_resource)
-
+    db.commit()
     db.refresh(db_resource)
     return {"message": "Resource created successfully"}
 
@@ -120,6 +120,7 @@ def update(resource_id : int, content_id : int,resource_data: schema.FileImageUp
     for key, value in update_data.items():
         setattr(db_resource, key, value)
 
+    db.commit()
     db.refresh(db_resource)
     
     return db_resource
@@ -135,6 +136,7 @@ def delete(resource_id : int, content_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
     
     db.delete(db_material)
+    db.commit()
 
     return
 

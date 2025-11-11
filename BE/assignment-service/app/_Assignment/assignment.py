@@ -35,6 +35,7 @@ def create(assignment: schema.AssignmentCreate, db: Session = Depends(get_db)):
     db_assignment = model.Assignment(**assignment.model_dump())
     
     db.add(db_assignment)
+    db.commit()
     db.refresh(db_assignment)
     
     return {"message": "Assignment created successfully"}
@@ -61,7 +62,8 @@ def update(assignment_id : int, assignment_data: schema.AssignmentUpdate, db : S
     
     for key, value in update_data.items():
         setattr(db_assignment, key, value)
-
+    
+    db.commit()
     db.refresh(db_assignment)
     
     return db_assignment
@@ -75,6 +77,7 @@ def delete(assignment_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
     
     db.delete(db_assignment)
+    db.commit()
 
     return
 

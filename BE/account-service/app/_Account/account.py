@@ -37,6 +37,7 @@ def reset_password(account_data: schema.AccountUpdate, db : Session = Depends(ge
     for key, value in update_data.items():
         setattr(db_account, key, value)
 
+    db.commit()
     db.refresh(db_account)
     
     return db_account
@@ -50,6 +51,7 @@ def delete(customer_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
     
     db.delete(db_customer)
+    db.commit()
     
     return
 

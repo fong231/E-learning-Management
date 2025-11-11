@@ -27,6 +27,7 @@ def create(material: schema.MaterialCreate, db: Session = Depends(get_db)):
     db_material = model.Material(**material.model_dump())
     
     db.add(db_material)
+    db.commit()
     db.refresh(db_material)
     return {"message": "Material created successfully"}
 
@@ -54,6 +55,7 @@ def update(material_id : int, course_data: schema.MaterialUpdate, db : Session =
     for key, value in update_data.items():
         setattr(db_material, key, value)
 
+    db.commit()
     db.refresh(db_material)
     
     return db_material
@@ -67,6 +69,7 @@ def delete(material_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found")
     
     db.delete(db_material)
+    db.commit()
     
     return
 

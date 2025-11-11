@@ -16,6 +16,7 @@ def create(content: schema.Learning_ContentCreate, db: Session = Depends(get_db)
     db_content = model.LearningContent(**content.model_dump())
     
     db.add(db_content)
+    db.commit()
     db.refresh(db_content)
     return {"message": "Content created successfully"}
 

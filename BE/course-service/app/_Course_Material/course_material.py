@@ -43,6 +43,7 @@ def enroll_material(course_id : int, association: schema.CourseMaterialCreate, d
     )
     
     db.add(db_association)
+    db.commit()
     db.refresh(db_association)
     return {"message": f"Material {material_id} enrolled in Course {course_id} successfully."}
     
@@ -58,6 +59,7 @@ def remove_material(course_id : int, material_id : int, db : Session = Depends(g
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found in this Course.")
         
     db.delete(association)
+    db.commit()
     
     return
 

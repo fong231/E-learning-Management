@@ -22,7 +22,8 @@ def create(question: schema.QuestionCreate, db: Session = Depends(get_db)):
     db_question = model.Question(**question.model_dump())
     
     db.add(db_question)
-
+    db.commit()
+    
     db.refresh(db_question)
     return {"message": "Question created successfully"}
 
@@ -48,7 +49,8 @@ def update(question_id : int, assignment_data: schema.QuestionUpdate, db : Sessi
     
     for key, value in update_data.items():
         setattr(db_question, key, value)
-
+    
+    db.commit()
     db.refresh(db_question)
     
     return db_question
@@ -62,6 +64,7 @@ def delete(question_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
     
     db.delete(db_question)
+    db.commit()
 
     return
 

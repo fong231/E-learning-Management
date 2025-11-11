@@ -41,6 +41,7 @@ def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
     db_course = model.Course(**course.model_dump())
     
     db.add(db_course)
+    db.commit()
     db.refresh(db_course)
     return {"message": "Course created successfully"}
 
@@ -77,6 +78,7 @@ def update(course_id : int, course_data: schema.CourseUpdate, db : Session = Dep
     for key, value in update_data.items():
         setattr(db_course, key, value)
 
+    db.commit()
     db.refresh(db_course)
     
     return db_course
@@ -90,6 +92,7 @@ def delete(course_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     
     db.delete(db_course)
+    db.commit()
     
     return
 

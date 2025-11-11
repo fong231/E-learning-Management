@@ -107,7 +107,7 @@ def register(account: schema.AccountCreate, db: Session = Depends(get_db)):
     )
     
     db.add(db_account)
-    db.flush()
+    db.commit()
     db.refresh(db_account)
     return {"message": "Account registered successfully"}
 

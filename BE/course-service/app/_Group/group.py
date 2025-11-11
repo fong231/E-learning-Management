@@ -27,6 +27,7 @@ def create(group: schema.GroupCreate, db: Session = Depends(get_db)):
     db_group = model.Group(**group.model_dump())
     
     db.add(db_group)
+    db.commit()
     db.refresh(db_group)
     return {"message": "Group created successfully"}
 
@@ -58,6 +59,7 @@ def update(group_id : int, group_data: schema.GroupUpdate, db : Session = Depend
     for key, value in update_data.items():
         setattr(db_group, key, value)
 
+    db.commit()
     db.refresh(db_group)
     
     return db_group

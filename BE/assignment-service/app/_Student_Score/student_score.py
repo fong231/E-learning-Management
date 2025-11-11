@@ -37,6 +37,7 @@ def create(student_scores: schema.StudentScoreCreate, db: Session = Depends(get_
     db_student_score = model.StudentScore(**student_scores.model_dump())
     
     db.add(db_student_score)
+    db.commit()
     db.refresh(db_student_score)
     
     return {"message": "Student's Score created successfully"}
@@ -71,6 +72,7 @@ def update(group_id : int, student_id : int, quiz_id, assignment_data: schema.St
     for key, value in update_data.items():
         setattr(db_student_score, key, value)
 
+    db.commit()
     db.refresh(db_student_score)
     
     return db_student_score
@@ -82,6 +84,7 @@ def delete(group_id : int, student_id : int, quiz_id, db : Session = Depends(get
     db_student_score = read(group_id, student_id, quiz_id, db)
     
     db.delete(db_student_score)
+    db.commit()
 
     return
 

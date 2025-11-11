@@ -45,6 +45,7 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
     )
     
     db.add(db_association)
+    db.commit()
     db.refresh(db_association)
     return {"message": f"Student {student_id} enrolled in Group {group_id} successfully."}
 
@@ -93,6 +94,7 @@ def remove_student(group_id : int, student_id : int, db : Session = Depends(get_
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found in this group.")
         
     db.delete(association)
+    db.commit()
     
     return
 

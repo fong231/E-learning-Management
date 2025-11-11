@@ -16,7 +16,7 @@ def create(quiz: schema.QuizCreate, db: Session = Depends(get_db)):
     db_quiz = model.Quiz(**quiz.model_dump())
     
     db.add(db_quiz)
-
+    db.commit()
     db.refresh(db_quiz)
     return {"message": "Quiz created successfully"}
 
@@ -42,7 +42,8 @@ def update(quiz_id : int, quiz_data: schema.QuizUpdate, db : Session = Depends(g
     
     for key, value in update_data.items():
         setattr(db_quiz, key, value)
-
+    
+    db.commit()
     db.refresh(db_quiz)
     
     return db_quiz
@@ -56,6 +57,7 @@ def delete(quiz_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found")
     
     db.delete(db_quiz)
+    db.commit()
     
     return
 

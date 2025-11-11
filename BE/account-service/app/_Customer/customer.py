@@ -22,6 +22,7 @@ def create_customer(customer: schema.CustomerCreate, db: Session):
     db_customer = model.Customer(**customer.model_dump())
     
     db.add(db_customer)
+    db.commit()
     return db_customer
 
 # create customer
@@ -63,6 +64,7 @@ def update(customer_id : int, customer_data: schema.CustomerUpdate, db : Session
     for key, value in update_data.items():
         setattr(db_customer, key, value)
 
+    db.commit()
     db.refresh(db_customer)
     
     return db_customer
@@ -76,6 +78,7 @@ def delete(customer_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
     
     db.delete(db_customer)
+    db.commit()
     
     return
 
