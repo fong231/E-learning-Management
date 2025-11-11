@@ -1,17 +1,38 @@
 -- Drop existing tables if exists (in reverse order of dependencies)
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Get all table names
-SET @tables = NULL;
-SELECT GROUP_CONCAT('`', table_name, '`') INTO @tables
-FROM information_schema.tables
-WHERE table_schema = DATABASE();
+DROP TABLE IF EXISTS `Customers`;
+DROP TABLE IF EXISTS `Accounts`;
+DROP TABLE IF EXISTS `Instructors`;
+DROP TABLE IF EXISTS `Students`;
 
--- Drop all tables
-SET @sql = CONCAT('DROP TABLE IF EXISTS ', @tables);
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+DROP TABLE IF EXISTS `Semesters`;
+DROP TABLE IF EXISTS `Courses`;
+DROP TABLE IF EXISTS `Groups`;
+
+DROP TABLE IF EXISTS `Learning_Content`;
+DROP TABLE IF EXISTS `Materials`;
+DROP TABLE IF EXISTS `Files_Images`;
+
+DROP TABLE IF EXISTS `Student_Group`;
+DROP TABLE IF EXISTS `Course_Materials`;
+
+DROP TABLE IF EXISTS `Assignments`;
+
+DROP TABLE IF EXISTS `Quizzes`;
+DROP TABLE IF EXISTS `Questions`;
+DROP TABLE IF EXISTS `Student_Score`;
+
+DROP TABLE IF EXISTS `Announcements`;
+
+DROP TABLE IF EXISTS `Topics`;
+DROP TABLE IF EXISTS `Topic_Chats`;
+DROP TABLE IF EXISTS `Topic_Files`;
+DROP TABLE IF EXISTS `Comments`;
+
+DROP TABLE IF EXISTS `Messages`;
+
+DROP TABLE IF EXISTS `Notifications`;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -294,8 +315,8 @@ CREATE TRIGGER check_message_only_between_instructor_and_student
 BEFORE INSERT ON `Messages`
 FOR EACH ROW
 BEGIN
-    IF (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.senderID) = 'instructor' AND (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.receiverID) = 'student'
-        OR (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.senderID) = 'student' AND (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.receiverID) = 'instructor' THEN
+    IF (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.senderID) = 'instructor' AND (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.receiverID) = 'instructor'
+        OR (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.senderID) = 'student' AND (SELECT `role` FROM `Customers` WHERE `customerID` = NEW.receiverID) = 'student' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Messages can only be sent between instructors and students.';
     END IF;
 END$$
@@ -614,17 +635,12 @@ INSERT INTO `Messages` (`messageID`, `content`, `senderID`, `receiverID`, `creat
 (3, 'I''m not sure how to implement the main method', 1, 101, '2024-09-22 14:10:00'),
 (4, 'Check the lecture slides from Week 1, there''s an example', 101, 1, '2024-09-22 14:15:00'),
 
--- Student to Student
-(5, 'Hey Jane, did you finish the assignment?', 2, 3, '2024-09-25 20:00:00'),
-(6, 'Not yet, working on it now. Want to study together?', 3, 2, '2024-09-25 20:05:00'),
-(7, 'Sure! Let''s meet in the library tomorrow', 2, 3, '2024-09-25 20:10:00'),
-
 -- More instructor messages
-(8, 'Dr. Sarah, when will you post the quiz results?', 3, 102, '2024-10-06 10:00:00'),
-(9, 'Results will be posted by end of day today', 102, 3, '2024-10-06 10:30:00'),
+(5, 'Dr. Sarah, when will you post the quiz results?', 3, 102, '2024-10-06 10:00:00'),
+(6, 'Results will be posted by end of day today', 102, 3, '2024-10-06 10:30:00'),
 
-(10, 'Professor Lee, can I submit my project one day late?', 4, 103, '2024-10-15 16:00:00'),
-(11, 'Yes, but there will be a 10% penalty', 103, 4, '2024-10-15 16:30:00');
+(7, 'Professor Lee, can I submit my project one day late?', 4, 103, '2024-10-15 16:00:00'),
+(8, 'Yes, but there will be a 10% penalty', 103, 4, '2024-10-15 16:30:00');
 
 -- ============================================
 -- 22. NOTIFICATIONS
