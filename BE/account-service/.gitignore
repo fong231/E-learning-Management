@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cấu hình editor / OS
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Virtual environment
+env/
+venv/
+.venv/
+ENV/
+
+# Python packages
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# SQLite / Database local files
+*.sqlite3
+*.db
+*.db-journal
+
+# dotenv / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# PyInstaller
+*.manifest
+*.spec
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# coverage
+.coverage
+htmlcov/
+.nox/
+
+# pytest
+.pytest_cache/

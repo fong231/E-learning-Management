@@ -1,0 +1,23 @@
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+class FileImageBase(BaseModel):
+    path: str
+    contentID: int
+    upload_at: Optional[datetime] = None
+    
+class FileImageCreate(FileImageBase):
+    path: str
+    contentID: str
+    
+class FileImageUpdate(BaseModel):
+    path: Optional[str] = None
+
+class FileImageRead(FileImageBase):
+    resourceID: int
+
+    upload_at: datetime 
+    
+    class Config:
+        from_attributes = True
