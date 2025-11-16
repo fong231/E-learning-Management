@@ -74,7 +74,7 @@ class _OverviewTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Thông tin khóa học',
+                    'Course Information',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
@@ -92,8 +92,8 @@ class _OverviewTab extends StatelessWidget {
                   const SizedBox(height: 12),
                   _InfoRow(
                     icon: Icons.class_,
-                    label: 'Số buổi học',
-                    value: '${course.numberOfSessions} buổi',
+                    label: 'Sessions',
+                    value: '${course.numberOfSessions} lesson',
                   ),
                   if (course.startDate != null) ...[
                     const SizedBox(height: 12),
@@ -199,8 +199,8 @@ class _MaterialsTab extends StatelessWidget {
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
               child: const Icon(Icons.description, color: AppTheme.primaryColor),
             ),
-            title: Text('Bài giảng ${index + 1}'),
-            subtitle: Text('Buổi ${index + 1}'),
+            title: Text('Materials ${index + 1}'),
+            subtitle: Text('Lesson ${index + 1}'),
             trailing: const Icon(Icons.download),
             onTap: () {
               // TODO: Open material
@@ -264,8 +264,8 @@ class _DiscussionTab extends StatelessWidget {
               backgroundColor: Colors.orange.withOpacity(0.1),
               child: const Icon(Icons.forum, color: Colors.orange),
             ),
-            title: Text('Chủ đề thảo luận ${index + 1}'),
-            subtitle: Text('${index + 5} phản hồi'),
+            title: Text('Topic ${index + 1}'),
+            subtitle: Text('${index + 5} replies'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: Open discussion

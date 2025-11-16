@@ -21,17 +21,17 @@ class InstructorCoursesScreen extends StatelessWidget {
                 backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                 child: const Icon(Icons.book, color: AppTheme.primaryColor),
               ),
-              title: Text('Khóa học ${index + 1}'),
-              subtitle: Text('${(index + 1) * 20} sinh viên • ${index + 10} bài tập'),
+              title: Text('Course ${index + 1}'),
+              subtitle: Text('${(index + 1) * 20} students • ${index + 10} assignments'),
               trailing: PopupMenuButton(
                 itemBuilder: (context) => [
                   const PopupMenuItem(
                     value: 'edit',
-                    child: Text('Chỉnh sửa'),
+                    child: Text('Edit'),
                   ),
                   const PopupMenuItem(
                     value: 'students',
-                    child: Text('Danh sách sinh viên'),
+                    child: Text('Students List'),
                   ),
                   const PopupMenuItem(
                     value: 'delete',

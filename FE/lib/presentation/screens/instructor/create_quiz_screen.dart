@@ -84,7 +84,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
 
     if (_questions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng thêm ít nhất 1 câu hỏi')),
+        const SnackBar(content: Text('Please add at least one question')),
       );
       return;
     }
@@ -102,7 +102,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tạo bài kiểm tra thành công!')),
+        const SnackBar(content: Text('Create quiz successfully!')),
       );
       
       Navigator.of(context).pop();
@@ -137,7 +137,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               },
               validator: (value) {
                 if (value == null) {
-                  return 'Vui lòng chọn khóa học';
+                  return 'Please select a course';
                 }
                 return null;
               },
@@ -147,12 +147,12 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Tiêu đề *',
+                labelText: 'Title *',
                 prefixIcon: Icon(Icons.quiz),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập tiêu đề';
+                  return 'Please enter title';
                 }
                 return null;
               },
@@ -175,13 +175,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                   child: TextFormField(
                     controller: _durationController,
                     decoration: const InputDecoration(
-                      labelText: 'Thời gian (phút) *',
+                      labelText: 'Duration (minutes) *',
                       prefixIcon: Icon(Icons.timer),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập thời gian';
+                        return 'Please enter duration';
                       }
                       return null;
                     },
@@ -192,13 +192,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                   child: TextFormField(
                     controller: _attemptsController,
                     decoration: const InputDecoration(
-                      labelText: 'Số lần làm *',
+                      labelText: 'Number of attempts *',
                       prefixIcon: Icon(Icons.repeat),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập số lần';
+                        return 'Please enter number of attempts';
                       }
                       return null;
                     },
@@ -211,11 +211,11 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
-              title: const Text('Thời gian bắt đầu'),
+              title: const Text('Start Time'),
               subtitle: Text(
                 _startTime != null
                     ? '${_startTime!.day}/${_startTime!.month}/${_startTime!.year} ${_startTime!.hour}:${_startTime!.minute.toString().padLeft(2, '0')}'
-                    : 'Chưa chọn',
+                    : 'Not selected',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _selectDateTime(context, true),
@@ -225,11 +225,11 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available),
-              title: const Text('Thời gian kết thúc'),
+              title: const Text('End Time'),
               subtitle: Text(
                 _endTime != null
                     ? '${_endTime!.day}/${_endTime!.month}/${_endTime!.year} ${_endTime!.hour}:${_endTime!.minute.toString().padLeft(2, '0')}'
-                    : 'Chưa chọn',
+                    : 'Not selected',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _selectDateTime(context, false),
@@ -240,13 +240,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Câu hỏi (${_questions.length})',
+                  'Questions (${_questions.length})',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 ElevatedButton.icon(
                   onPressed: _addQuestion,
                   icon: const Icon(Icons.add),
-                  label: const Text('Thêm câu hỏi'),
+                  label: const Text('Add Question'),
                 ),
               ],
             ),
@@ -262,7 +262,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                     child: Text('${index + 1}'),
                   ),
                   title: Text(question.questionText),
-                  subtitle: Text('Điểm: ${question.points}'),
+                  subtitle: Text('Score: ${question.points}'),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
@@ -326,7 +326,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Thêm câu hỏi'),
+      title: const Text('Add Question'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -335,7 +335,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
               controller: _questionController,
               decoration: const InputDecoration(
                 labelText: 'Question',
-                hintText: 'Nhập nội dung câu hỏi',
+                hintText: 'Enter question text',
               ),
               maxLines: 3,
             ),
@@ -351,7 +351,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
             DropdownButtonFormField<String>(
               value: _selectedLevel,
               decoration: const InputDecoration(
-                labelText: 'Độ khó',
+                labelText: 'Level',
               ),
               items: const [
                 DropdownMenuItem(

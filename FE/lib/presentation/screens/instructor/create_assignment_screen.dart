@@ -61,7 +61,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
     if (_dueDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn hạn nộp bài')),
+        const SnackBar(content: Text('Choose due date')),
       );
       return;
     }
@@ -79,7 +79,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tạo bài tập thành công!')),
+        const SnackBar(content: Text('Create assignment successfully!')),
       );
       
       Navigator.of(context).pop();
@@ -90,7 +90,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo bài tập mới'),
+        title: const Text('Create Assignment'),
       ),
       body: Form(
         key: _formKey,
@@ -100,13 +100,13 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             DropdownButtonFormField<int>(
               value: _selectedCourseId,
               decoration: const InputDecoration(
-                labelText: 'Khóa học *',
+                labelText: 'Course *',
                 prefixIcon: Icon(Icons.book),
               ),
               items: [
                 DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
                 DropdownMenuItem(value: 2, child: Text('Database')),
-                DropdownMenuItem(value: 3, child: Text('Mạng máy tính')),
+                DropdownMenuItem(value: 3, child: Text('Computer Network')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -115,7 +115,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               },
               validator: (value) {
                 if (value == null) {
-                  return 'Vui lòng chọn khóa học';
+                  return 'Please select a course';
                 }
                 return null;
               },
@@ -125,13 +125,13 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Tiêu đề bài tập *',
-                hintText: 'Nhập tiêu đề bài tập',
+                labelText: 'Assignment Title *',
+                hintText: 'Enter assignment title',
                 prefixIcon: Icon(Icons.assignment),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập tiêu đề bài tập';
+                  return 'Please enter assignment title';
                 }
                 return null;
               },
@@ -141,14 +141,14 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Mô tả *',
-                hintText: 'Nhập mô tả chi tiết bài tập',
+                labelText: 'Description',
+                hintText: 'Enter assignment description',
                 prefixIcon: Icon(Icons.description),
               ),
               maxLines: 5,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập mô tả bài tập';
+                  return 'Please enter assignment description';
                 }
                 return null;
               },
@@ -158,17 +158,17 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             TextFormField(
               controller: _maxScoreController,
               decoration: const InputDecoration(
-                labelText: 'Điểm tối đa *',
-                hintText: 'Nhập điểm tối đa',
+                labelText: 'Max Score *',
+                hintText: 'Enter max score',
                 prefixIcon: Icon(Icons.grade),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập điểm tối đa';
+                  return 'Please enter max score';
                 }
                 if (double.tryParse(value) == null) {
-                  return 'Vui lòng nhập số hợp lệ';
+                  return 'Please enter a valid number';
                 }
                 return null;
               },
@@ -178,11 +178,11 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
-              title: const Text('Hạn nộp bài *'),
+              title: const Text('Due Date *'),
               subtitle: Text(
                 _dueDate != null
                     ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year} ${_dueDate!.hour}:${_dueDate!.minute.toString().padLeft(2, '0')}'
-                    : 'Chưa chọn',
+                    : 'Not selected',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _selectDueDate(context),
@@ -201,7 +201,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                         const Icon(Icons.attach_file, color: AppTheme.primaryColor),
                         const SizedBox(width: 8),
                         Text(
-                          'Tài liệu đính kèm',
+                          'Attachment',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ],
@@ -212,7 +212,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                         // TODO: Implement file picker
                       },
                       icon: const Icon(Icons.upload_file),
-                      label: const Text('Chọn file'),
+                      label: const Text('Upload File'),
                     ),
                   ],
                 ),
