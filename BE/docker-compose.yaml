@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # NOTE: The 'db' service is intentionally REMOVED to force connections to your Host's MySQL.
+
+  # --- MICROSERVICES ---
+  # Build paths updated from ./BE/service-name/ to ./service-name/
+
+  auth-service:
+    build: ./authenticate-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_AUTH} # Specify the name this service uses
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    restart: always
+
+  account-service:
+    build: ./account-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_ACCOUNT}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+
+  employee-service:
+    build: ./employee-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_EMPLOYEE}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+
+  organization-service:
+    build: ./organization-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_ORGANIZATION}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003
+    ports:
+      - "8003:8003"
+
+  project-service:
+    build: ./project-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_PROJECT}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8004
+    ports:
+      - "8004:8004"
+
+  task-service:
+    build: ./task-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_TASK}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8005
+    ports:
+      - "8005:8005"
+
+  scheduler-service:
+    build: ./scheduler-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_SCHEDULER}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8006
+    ports:
+      - "8006:8006"
+
+  storage-service:
+    build: ./storage-service/ # Path corrected
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_STORAGE}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8007
+    ports:
+      - "8007:8007"
