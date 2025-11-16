@@ -12,6 +12,7 @@ class AppConstants {
   static const String notificationsEndpoint = '/notifications';
   static const String topicsEndpoint = '/topics';
   static const String announcementsEndpoint = '/announcements';
+  // thêm endpoint ở đây
   
   // Storage Keys
   static const String tokenKey = 'auth_token';
