@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const InstructorDashboardScreen()),
+      MaterialPageRoute(builder: (_) => const StudentDashboardScreen()),
     );
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);

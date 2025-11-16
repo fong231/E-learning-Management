@@ -6,6 +6,10 @@ import 'instructor_courses_screen.dart';
 import 'instructor_students_screen.dart';
 import 'instructor_messages_screen.dart';
 import 'instructor_profile_screen.dart';
+import 'create_course_screen.dart';
+import 'create_assignment_screen.dart';
+import 'create_quiz_screen.dart';
+import 'create_announcement_screen.dart';
 
 class InstructorDashboardScreen extends StatefulWidget {
   const InstructorDashboardScreen({super.key});
@@ -188,25 +192,49 @@ class InstructorHomeTab extends StatelessWidget {
             _QuickActionButton(
               icon: Icons.add_circle_outline,
               title: 'Create New Course',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateCourseScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _QuickActionButton(
               icon: Icons.assignment_add,
               title: 'Create New Assignment',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateAssignmentScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _QuickActionButton(
               icon: Icons.quiz,
               title: 'Create New Quiz',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateQuizScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _QuickActionButton(
               icon: Icons.announcement,
               title: 'Create New Announcement',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateAnnouncementScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
 

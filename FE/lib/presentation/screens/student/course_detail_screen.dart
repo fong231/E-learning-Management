@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/course_model.dart';
 
@@ -100,7 +101,8 @@ class _OverviewTab extends StatelessWidget {
                     _InfoRow(
                       icon: Icons.event,
                       label: 'Start',
-                      value: '${course.startDate!.day}/${course.startDate!.month}/${course.startDate!.year}',
+                      value:
+                          '${course.startDate!.day}/${course.startDate!.month}/${course.startDate!.year}',
                     ),
                   ],
                   if (course.endDate != null) ...[
@@ -108,7 +110,8 @@ class _OverviewTab extends StatelessWidget {
                     _InfoRow(
                       icon: Icons.event_available,
                       label: 'End',
-                      value: '${course.endDate!.day}/${course.endDate!.month}/${course.endDate!.year}',
+                      value:
+                          '${course.endDate!.day}/${course.endDate!.month}/${course.endDate!.year}',
                     ),
                   ],
                 ],
@@ -166,13 +169,10 @@ class _InfoRow extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                    ),
+                  color: AppTheme.textSecondaryColor,
+                ),
               ),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              Text(value, style: Theme.of(context).textTheme.bodyLarge),
             ],
           ),
         ),
@@ -197,7 +197,10 @@ class _MaterialsTab extends StatelessWidget {
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-              child: const Icon(Icons.description, color: AppTheme.primaryColor),
+              child: const Icon(
+                Icons.description,
+                color: AppTheme.primaryColor,
+              ),
             ),
             title: Text('Materials ${index + 1}'),
             subtitle: Text('Lesson ${index + 1}'),
@@ -231,7 +234,9 @@ class _AssignmentsTab extends StatelessWidget {
               child: const Icon(Icons.assignment, color: AppTheme.accentColor),
             ),
             title: Text('Assignment ${index + 1}'),
-            subtitle: Text('Deadline: ${DateTime.now().add(Duration(days: index + 1)).day}/${DateTime.now().month}'),
+            subtitle: Text(
+              'Deadline: ${DateTime.now().add(Duration(days: index + 1)).day}/${DateTime.now().month}',
+            ),
             trailing: Chip(
               label: const Text('Not Submitted'),
               backgroundColor: AppTheme.warningColor.withOpacity(0.2),
@@ -276,4 +281,3 @@ class _DiscussionTab extends StatelessWidget {
     );
   }
 }
-
