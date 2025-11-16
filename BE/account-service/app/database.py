@@ -7,7 +7,7 @@ DB_USER = os.environ.get("DB_USER", "root")
 DB_PASS = os.environ.get("DB_PASS", "") # Empty default password
 DB_HOST = os.environ.get("DB_HOST", "db") # Default is the Docker service name 'db'
 DB_PORT = os.environ.get("DB_PORT", "3306")
-DB_NAME = os.environ.get("DB_NAME_ACCOUNT", "account-service")
+DB_NAME = os.environ.get("DB_NAME", "elearning_db")
 
 SQLALCHEMY_DATABASE_URL = (
     f"mysql+mysqlconnector://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
