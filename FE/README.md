@@ -188,4 +188,4 @@ MIT License
 
 - Nguyễn Thế Phong - 523H0076
 - Nguyễn Huỳnh Hải Đăng - 523H0010
-- Lê Minh Khả - 523H0036
+- Lê Minh Kha - 523H0036
