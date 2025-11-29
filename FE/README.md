@@ -48,7 +48,7 @@ lib/
 
 - Flutter SDK: >= 3.0.0
 - Dart SDK: >= 3.0.0
-- Backend API: http://localhost:8080
+- Backend API: http://localhost:80
 
 ## Cài đặt
 
@@ -87,7 +87,7 @@ flutter run
 
 ## Cấu trúc Backend API
 
-Backend API cần chạy tại `http://localhost:8080` với các endpoints:
+Backend API cần chạy tại `http://localhost:80` với các endpoints:
 
 - `POST /api/auth/login` - Đăng nhập
 - `POST /api/auth/register` - Đăng ký
@@ -114,8 +114,8 @@ Backend API cần chạy tại `http://localhost:8080` với các endpoints:
 - Password: student123
 
 ### Giảng viên
-- Email: instructor@example.com
-- Password: instructor123
+- Email: admin
+- Password: admin
 
 ## Màn hình chính
 
@@ -172,8 +172,7 @@ flutter build web --release
 ## Troubleshooting
 
 ### Lỗi kết nối API
-- Kiểm tra backend đang chạy tại http://localhost:8080
-- Kiểm tra firewall/antivirus
+- Kiểm tra backend đang chạy tại http://localhost:80
 
 ### Lỗi AI Chatbot
 - Kiểm tra API key đã được cấu hình đúng
