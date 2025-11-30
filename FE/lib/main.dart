@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: MaterialApp(
-        title: 'LMS - Hệ thống quản lý học tập',
+        title: 'LMS - Learning Management System',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const LoginScreen(),

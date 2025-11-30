@@ -28,7 +28,7 @@ class StudentNotificationsScreen extends StatelessWidget {
                 child: Icon(_getNotificationIcon(index), color: _getNotificationColor(index)),
               ),
               title: Text(_getNotificationTitle(index)),
-              subtitle: Text('${index + 1} giờ trước'),
+              subtitle: Text('${index + 1} hours ago'),
               trailing: !isRead
                   ? Container(
                       width: 8,
@@ -75,13 +75,13 @@ class StudentNotificationsScreen extends StatelessWidget {
   String _getNotificationTitle(int index) {
     switch (index % 4) {
       case 0:
-        return 'Thông báo mới từ giảng viên';
+        return 'New Announcement from Instructor ${index + 1}';
       case 1:
-        return 'Assignment mới được giao';
+        return 'Assignment ${index + 1} is due soon';
       case 2:
         return 'New Message';
       default:
-        return 'Cập nhật hệ thống';
+        return 'System Notification';
     }
   }
 }

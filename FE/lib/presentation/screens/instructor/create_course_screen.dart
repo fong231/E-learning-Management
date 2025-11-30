@@ -62,7 +62,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tạo khóa học thành công!')),
+        const SnackBar(content: Text('Create course successfully!')),
       );
       
       Navigator.of(context).pop();
@@ -73,7 +73,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo khóa học mới'),
+        title: const Text('Create Course'),
       ),
       body: Form(
         key: _formKey,
@@ -83,13 +83,13 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Tên khóa học *',
-                hintText: 'Nhập tên khóa học',
+                labelText: 'Course Name *',
+                hintText: 'Enter course name',
                 prefixIcon: Icon(Icons.book),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập tên khóa học';
+                  return 'Please enter course name';
                 }
                 return null;
               },
@@ -100,7 +100,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               controller: _descriptionController,
               decoration: const InputDecoration(
                 labelText: 'Description',
-                hintText: 'Nhập mô tả khóa học',
+                hintText: 'Enter course description',
                 prefixIcon: Icon(Icons.description),
               ),
               maxLines: 4,
@@ -110,7 +110,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             DropdownButtonFormField<int>(
               value: _selectedSemesterId,
               decoration: const InputDecoration(
-                labelText: 'Học kỳ *',
+                labelText: 'Semester *',
                 prefixIcon: Icon(Icons.calendar_today),
               ),
               items: [
@@ -125,7 +125,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               },
               validator: (value) {
                 if (value == null) {
-                  return 'Vui lòng chọn học kỳ';
+                  return 'Please select semester';
                 }
                 return null;
               },
@@ -135,17 +135,17 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             TextFormField(
               controller: _numberOfSessionsController,
               decoration: const InputDecoration(
-                labelText: 'Số buổi học *',
-                hintText: 'Nhập số buổi học',
+                labelText: 'Number of Sessions *',
+                hintText: 'Enter number of sessions',
                 prefixIcon: Icon(Icons.class_),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập số buổi học';
+                  return 'Please enter number of sessions';
                 }
                 if (int.tryParse(value) == null) {
-                  return 'Vui lòng nhập số hợp lệ';
+                  return 'Please enter a valid number';
                 }
                 return null;
               },
@@ -155,11 +155,11 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
-              title: const Text('Ngày bắt đầu'),
+              title: const Text('Start Date'),
               subtitle: Text(
                 _startDate != null
                     ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
-                    : 'Chưa chọn',
+                    : 'No date selected',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _selectDate(context, true),
@@ -169,11 +169,11 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available),
-              title: const Text('Ngày kết thúc'),
+              title: const Text('End Date'),
               subtitle: Text(
                 _endDate != null
                     ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                    : 'Chưa chọn',
+                    : 'No date selected',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _selectDate(context, false),

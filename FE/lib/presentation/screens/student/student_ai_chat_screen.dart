@@ -39,12 +39,12 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
     setState(() {
       _messages.add(
         ChatMessage(
-          text: 'Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp bạn:\n\n'
-              '• Giải đáp thắc mắc về bài học\n'
-              '• Hướng dẫn làm bài tập\n'
-              '• Tóm tắt nội dung học tập\n'
-              '• Gợi ý phương pháp học hiệu quả\n\n'
-              'Bạn cần tôi giúp gì?',
+          text: 'Hello! I am your AI assistant. I can help you with:\n\n'
+              '• Answer questions about the lessons\n'
+              '• Instructions on assignments\n'
+              '• Summarize learning content\n'
+              '• Suggestions for effective study methods\n\n'
+              'How can I help you?',
           isUser: false,
           timestamp: DateTime.now(),
         ),
@@ -88,7 +88,7 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
       setState(() {
         _messages.add(
           ChatMessage(
-            text: response.text ?? 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
+            text: response.text ?? 'Sorry, I am not able to answer that.',
             isUser: false,
             timestamp: DateTime.now(),
           ),
@@ -101,7 +101,7 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
       setState(() {
         _messages.add(
           ChatMessage(
-            text: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.\n\nLỗi: ${e.toString()}',
+            text: 'Sorry, an error occurred. Please try again later.\n\nError: ${e.toString()}',
             isUser: false,
             timestamp: DateTime.now(),
           ),
@@ -131,7 +131,7 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
           children: [
             Icon(Icons.smart_toy, color: AppTheme.primaryColor),
             SizedBox(width: 8),
-            Text('AI Trợ lý học tập'),
+            Text('AI Assistant'),
           ],
         ),
         actions: [
@@ -143,7 +143,7 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
                 _addWelcomeMessage();
               });
             },
-            tooltip: 'Xóa lịch sử chat',
+            tooltip: 'Clear chat history',
           ),
         ],
       ),
@@ -189,7 +189,7 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text('Đang suy nghĩ...'),
+                        const Text('Thinking...'),
                       ],
                     ),
                   ),
@@ -216,7 +216,7 @@ class _StudentAIChatScreenState extends State<StudentAIChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     decoration: InputDecoration(
-                      hintText: 'Nhập câu hỏi của bạn...',
+                      hintText: 'Type your message...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),

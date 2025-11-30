@@ -18,7 +18,7 @@ class InstructorMessagesScreen extends StatelessWidget {
               backgroundColor: AppTheme.accentColor,
               child: Text('SV${index + 1}'),
             ),
-            title: Text('Sinh viên ${index + 1}'),
+            title: Text('Student ${index + 1}'),
             subtitle: Text('Latest message...'),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,

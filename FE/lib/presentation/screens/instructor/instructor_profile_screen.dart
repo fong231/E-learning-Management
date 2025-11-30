@@ -60,7 +60,7 @@ class InstructorProfileScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _ProfileMenuItem(
               icon: Icons.person_outline,
-              title: 'Thông tin cá nhân',
+              title: 'Personal Information',
               onTap: () {},
             ),
             _ProfileMenuItem(
@@ -88,7 +88,7 @@ class InstructorProfileScreen extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Logout'),
-                    content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+                    content: const Text('Are you sure you want to logout?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
