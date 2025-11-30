@@ -21,8 +21,8 @@ class StudentQuizzesScreen extends StatelessWidget {
                 backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
                 child: const Icon(Icons.quiz, color: AppTheme.secondaryColor),
               ),
-              title: Text('Bài kiểm tra ${index + 1}'),
-              subtitle: Text('Thời gian: 30 phút • ${index + 10} câu hỏi'),
+              title: Text('Quiz ${index + 1}'),
+              subtitle: Text('Duration: 30 minutes • ${index + 10} questions'),
               trailing: ElevatedButton(
                 onPressed: () {},
                 child: const Text('Take Quiz'),

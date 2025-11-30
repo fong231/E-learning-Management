@@ -20,8 +20,8 @@ class StudentForumScreen extends StatelessWidget {
                 backgroundColor: Colors.orange.withOpacity(0.1),
                 child: const Icon(Icons.forum, color: Colors.orange),
               ),
-              title: Text('Chủ đề thảo luận ${index + 1}'),
-              subtitle: Text('Người tạo: Sinh viên ${index + 1} • ${index + 5} phản hồi'),
+              title: Text('Topic ${index + 1}'),
+              subtitle: Text('Creator: Student ${index + 1} • ${index + 5} replies'),
               trailing: const Icon(Icons.chevron_right),
             ),
           );
@@ -30,7 +30,7 @@ class StudentForumScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         icon: const Icon(Icons.add),
-        label: const Text('Tạo chủ đề'),
+        label: const Text('Create Topic'),
       ),
     );
   }

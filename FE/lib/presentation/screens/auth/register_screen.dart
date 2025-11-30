@@ -83,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 // Role Selection
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
