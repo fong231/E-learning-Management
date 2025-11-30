@@ -2,7 +2,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `Customers`;
-DROP TABLE IF EXISTS `Accounts`;
 DROP TABLE IF EXISTS `Instructors`;
 DROP TABLE IF EXISTS `Students`;
 
@@ -45,19 +44,11 @@ CREATE TABLE `Customers` (
     `customerID` INT NOT NULL AUTO_INCREMENT,
     `phone_number` VARCHAR(20),
     `email` VARCHAR(255) UNIQUE NOT NULL,
-    `avatar` VARCHAR(500),
+    `avatar` VARCHAR(255),
     `fullname` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
     `role` ENUM('student', 'instructor') NOT NULL,
     PRIMARY KEY (`customerID`)
-) ENGINE=InnoDB;
-
--- Accounts (Login credentials)
-CREATE TABLE `Accounts` (
-    `customerID` INT NOT NULL,
-    `username` VARCHAR(100) UNIQUE NOT NULL,
-    `password` VARCHAR(255) NOT NULL,
-    PRIMARY KEY (`username`),
-    FOREIGN KEY (`customerID`) REFERENCES `Customers`(`customerID`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Instructors (Teachers)
@@ -339,40 +330,24 @@ DELIMITER ;
 -- ============================================
 
 -- ============================================
--- 1. CUSTOMERS (Base users)
+-- CUSTOMERS (Base users)
 -- ============================================
-INSERT INTO `Customers` (`customerID`, `phone_number`, `email`, `avatar`, `fullname`, `role`) VALUES
-(1, '0901234567', 'john.doe@university.edu', 'avatars/john.jpg', 'John Doe', 'student'),
-(2, '0902345678', 'jane.smith@university.edu', 'avatars/jane.jpg', 'Jane Smith', 'student'),
-(3, '0903456789', 'bob.wilson@university.edu', 'avatars/bob.jpg', 'Bob Wilson', 'student'),
-(4, '0904567890', 'alice.brown@university.edu', 'avatars/alice.jpg', 'Alice Brown', 'student'),
-(5, '0905678901', 'charlie.davis@university.edu', 'avatars/charlie.jpg', 'Charlie Davis', 'student'),
-(6, '0906789012', 'emma.johnson@university.edu', 'avatars/emma.jpg', 'Emma Johnson', 'student'),
-(7, '0907890123', 'david.miller@university.edu', 'avatars/david.jpg', 'David Miller', 'student'),
-(8, '0908901234', 'sophia.garcia@university.edu', 'avatars/sophia.jpg', 'Sophia Garcia', 'student'),
+INSERT INTO `Customers` (`customerID`, `phone_number`, `email`, `fullname`, `password`, `role`) VALUES
+(1, '0901234567', 'john.doe@university.edu', 'avatars/john.jpg', 'John Doe', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(2, '0902345678', 'jane.smith@university.edu', 'avatars/jane.jpg', 'Jane Smith', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(3, '0903456789', 'bob.wilson@university.edu', 'avatars/bob.jpg', 'Bob Wilson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(4, '0904567890', 'alice.brown@university.edu', 'avatars/alice.jpg', 'Alice Brown', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(5, '0905678901', 'charlie.davis@university.edu', 'avatars/charlie.jpg', 'Charlie Davis', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(6, '0906789012', 'emma.johnson@university.edu', 'avatars/emma.jpg', 'Emma Johnson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(7, '0907890123', 'david.miller@university.edu', 'avatars/david.jpg', 'David Miller', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(8, '0908901234', 'sophia.garcia@university.edu', 'avatars/sophia.jpg', 'Sophia Garcia', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
 -- Instructors
-(101, '0911111111', 'dr.robert.brown@university.edu', 'avatars/robert.jpg', 'Dr. Robert Brown', 'instructor'),
-(102, '0922222222', 'dr.sarah.jones@university.edu', 'avatars/sarah.jpg', 'Dr. Sarah Jones', 'instructor'),
-(103, '0933333333', 'prof.michael.lee@university.edu', 'avatars/michael.jpg', 'Prof. Michael Lee', 'instructor');
+(101, '0911111111', 'admin', 'admin', '$2y$10$XBo8o.VWW5wK44.UujuRf.oTXidGtovPLxgdpZXM3EAkjNidXdAlu', 'instructor'),
+(102, '0922222222', 'dr.sarah.jones@university.edu', 'Dr. Sarah Jones', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'instructor'),
+(103, '0933333333', 'prof.michael.lee@university.edu', 'Prof. Michael Lee', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'instructor');
 
 -- ============================================
--- 2. ACCOUNTS (Login credentials)
--- ============================================
-INSERT INTO `Accounts` (`customerID`, `username`, `password`) VALUES
-(1, 'john_doe', '$2y$10$abcdefghijklmnopqrstuvwxyz123456'),  -- password: john123
-(2, 'jane_smith', '$2y$10$bcdefghijklmnopqrstuvwxyz234567'),
-(3, 'bob_wilson', '$2y$10$cdefghijklmnopqrstuvwxyz345678'),
-(4, 'alice_brown', '$2y$10$defghijklmnopqrstuvwxyz456789'),
-(5, 'charlie_davis', '$2y$10$efghijklmnopqrstuvwxyz567890'),
-(6, 'emma_johnson', '$2y$10$fghijklmnopqrstuvwxyz678901'),
-(7, 'david_miller', '$2y$10$ghijklmnopqrstuvwxyz789012'),
-(8, 'sophia_garcia', '$2y$10$hijklmnopqrstuvwxyz890123'),
-(101, 'dr_robert', '$2y$10$ijklmnopqrstuvwxyz901234'),
-(102, 'dr_sarah', '$2y$10$jklmnopqrstuvwxyz012345'),
-(103, 'prof_michael', '$2y$10$klmnopqrstuvwxyz123456');
-
--- ============================================
--- 3. INSTRUCTORS & STUDENTS
+-- INSTRUCTORS & STUDENTS
 -- ============================================
 INSERT INTO `Instructors` (`instructorID`) VALUES
 (101),
@@ -383,7 +358,7 @@ INSERT INTO `Students` (`studentID`) VALUES
 (1), (2), (3), (4), (5), (6), (7), (8);
 
 -- ============================================
--- 4. SEMESTERS
+-- SEMESTERS
 -- ============================================
 INSERT INTO `Semesters` (`semesterID`, `description`) VALUES
 (1, 'Fall Semester 2024 - September to December'),
@@ -391,7 +366,7 @@ INSERT INTO `Semesters` (`semesterID`, `description`) VALUES
 (3, 'Summer Semester 2025 - June to August');
 
 -- ============================================
--- 5. COURSES
+-- COURSES
 -- ============================================
 INSERT INTO `Courses` (`courseID`, `number_of_sessions`, `description`, `semesterID`, `instructorID`) VALUES
 (1, '15', 'Introduction to Programming with Java - Learn fundamental programming concepts', 1, 101),
@@ -401,7 +376,7 @@ INSERT INTO `Courses` (`courseID`, `number_of_sessions`, `description`, `semeste
 (5, '10', 'Mobile App Development - Build Android apps with Flutter', 2, 103);
 
 -- ============================================
--- 6. GROUPS
+-- GROUPS
 -- ============================================
 INSERT INTO `Groups` (`groupID`, `courseID`) VALUES
 (1, 1),  -- Java Programming - Group 1
@@ -412,7 +387,7 @@ INSERT INTO `Groups` (`groupID`, `courseID`) VALUES
 (6, 5);  -- Mobile Development - Group 1
 
 -- ============================================
--- 7. STUDENT_GROUP (Enrollments)
+-- STUDENT_GROUP (Enrollments)
 -- ============================================
 INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
 -- Group 1 (Java - Group 1)
@@ -429,7 +404,7 @@ INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
 (2, 6), (4, 6), (6, 6), (8, 6);
 
 -- ============================================
--- 8. LEARNING CONTENT
+-- LEARNING CONTENT
 -- ============================================
 INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
 -- Course 1: Java Programming
@@ -455,7 +430,7 @@ INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
 (14, 'Assignment Deadline Extended', 'Assignment 1 deadline extended to next week');
 
 -- ============================================
--- 9. MATERIALS
+-- MATERIALS
 -- ============================================
 INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
 (1, 'Java Programming Lecture Slides', 'Comprehensive slides covering Java basics'),
@@ -467,7 +442,7 @@ INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
 (10, 'CSS Properties Reference', 'Complete CSS properties guide');
 
 -- ============================================
--- 10. COURSE_MATERIALS
+-- COURSE_MATERIALS
 -- ============================================
 INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
 (1, 1), (1, 2),
@@ -475,7 +450,7 @@ INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
 (3, 9), (3, 10);
 
 -- ============================================
--- 11. FILES_IMAGES
+-- FILES_IMAGES
 -- ============================================
 INSERT INTO `Files_Images` (`resourceID`, `path`, `contentID`, `uploaded_at`) VALUES
 (1, 'materials/java_week1_slides.pdf', 1, '2024-09-01 10:00:00'),
@@ -489,21 +464,21 @@ INSERT INTO `Files_Images` (`resourceID`, `path`, `contentID`, `uploaded_at`) VA
 (9, 'materials/css_examples.zip', 10, '2024-09-08 11:00:00');
 
 -- ============================================
--- 12. ASSIGNMENTS
+-- ASSIGNMENTS
 -- ============================================
 INSERT INTO `Assignments` (`assignmentID`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
 (4, '2024-09-20 00:00:00', '2024-09-27 23:59:59', '2024-09-29 23:59:59', 5.00, '.java,.zip', 1),
 (8, '2024-10-01 00:00:00', '2024-10-08 23:59:59', '2024-10-10 23:59:59', 10.00, '.java,.zip', 3);
 
 -- ============================================
--- 13. QUIZZES
+-- QUIZZES
 -- ============================================
 INSERT INTO `Quizzes` (`quizID`, `duration`, `open_time`, `close_time`, `easy_questions`, `medium_questions`, `hard_questions`, `number_of_attempts`) VALUES
 (5, 30, '2024-10-05 09:00:00', '2024-10-05 18:00:00', 5, 3, 2, 2),
 (11, 45, '2024-10-12 09:00:00', '2024-10-12 18:00:00', 6, 4, 0, 1);
 
 -- ============================================
--- 14. QUESTIONS
+-- QUESTIONS
 -- ============================================
 INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
 -- Quiz 1 (Java Basics) - Easy Questions
@@ -534,7 +509,7 @@ INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
 (20, 'medium_question', 'B', 11);
 
 -- ============================================
--- 15. STUDENT_SCORE
+-- STUDENT_SCORE
 -- ============================================
 INSERT INTO `Student_Score` (`studentID`, `groupID`, `quizID`, `score`, `completed_at`) VALUES
 -- Quiz 1 scores
@@ -554,7 +529,7 @@ INSERT INTO `Student_Score` (`studentID`, `groupID`, `quizID`, `score`, `complet
 (8, 4, 11, 89.00, '2024-10-12 13:00:00');
 
 -- ============================================
--- 16. ANNOUNCEMENTS
+-- ANNOUNCEMENTS
 -- ============================================
 INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
 (12, 1),
@@ -562,7 +537,7 @@ INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
 (14, 2);
 
 -- ============================================
--- 17. TOPICS (Forum)
+-- TOPICS (Forum)
 -- ============================================
 INSERT INTO `Topics` (`topicID`, `title`, `description`, `created_at`, `courseID`) VALUES
 (1, 'How to install Java JDK?', 'I am having trouble installing Java on my computer. Can someone help?', '2024-09-02 14:30:00', 1),
@@ -573,7 +548,7 @@ INSERT INTO `Topics` (`topicID`, `title`, `description`, `created_at`, `courseID
 (6, 'CSS Grid vs Flexbox', 'When should I use Grid and when should I use Flexbox?', '2024-09-12 15:00:00', 3);
 
 -- ============================================
--- 18. TOPIC_CHATS
+-- TOPIC_CHATS
 -- ============================================
 INSERT INTO `Topic_Chats` (`messageID`, `message`, `topicID`, `studentID`) VALUES
 -- Topic 1 discussion
@@ -604,7 +579,7 @@ INSERT INTO `Topic_Chats` (`messageID`, `message`, `topicID`, `studentID`) VALUE
 (15, 'Use Grid for two-dimensional layouts', 6, 8);
 
 -- ============================================
--- 19. TOPIC_FILES
+-- TOPIC_FILES
 -- ============================================
 INSERT INTO `Topic_Files` (`fileID`, `path`, `topicID`) VALUES
 (1, 'forum/java_installation_guide.pdf', 1),
@@ -615,7 +590,7 @@ INSERT INTO `Topic_Files` (`fileID`, `path`, `topicID`) VALUES
 (6, 'forum/grid_vs_flexbox_diagram.png', 6);
 
 -- ============================================
--- 20. COMMENTS (On Announcements)
+-- COMMENTS (On Announcements)
 -- ============================================
 INSERT INTO `Comments` (`commentID`, `message`, `ownerID`, `announcementID`) VALUES
 (1, 'Thank you for the warm welcome! Excited to start learning Java.', 1, 12),
@@ -626,7 +601,7 @@ INSERT INTO `Comments` (`commentID`, `message`, `ownerID`, `announcementID`) VAL
 (6, 'This is very helpful, I needed more time.', 6, 14);
 
 -- ============================================
--- 21. MESSAGES (Direct messaging)
+-- MESSAGES (Direct messaging)
 -- ============================================
 INSERT INTO `Messages` (`messageID`, `content`, `senderID`, `receiverID`, `created_at`) VALUES
 -- Student to Instructor
@@ -643,7 +618,7 @@ INSERT INTO `Messages` (`messageID`, `content`, `senderID`, `receiverID`, `creat
 (8, 'Yes, but there will be a 10% penalty', 103, 4, '2024-10-15 16:30:00');
 
 -- ============================================
--- 22. NOTIFICATIONS
+-- NOTIFICATIONS
 -- ============================================
 INSERT INTO `Notifications` (`notificationID`, `type`, `content`, `status`, `created_at`, `studentID`) VALUES
 -- Announcements
