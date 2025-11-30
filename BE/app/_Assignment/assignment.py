@@ -3,6 +3,8 @@ import requests
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
+from .._Group import model as GroupModel
+from .._Learning_Content import model as ContentModel
 
 router = APIRouter(
     prefix="/assignments",
@@ -18,17 +20,20 @@ def create(assignment: schema.AssignmentCreate, db: Session = Depends(get_db)):
     
     group_id = assignment.groupID
     content_id = assignment.contentID
-    group_url = f"{GROUP_BASE_URL}/{group_id}"
-    content_url = f"{CONTENT_BASE_URL}/{content_id}"
     
-    # check group and content existence in another service
-    try:
-        if not check_service_availability("group", group_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-        if not check_service_availability("content", content_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
-    except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    content = db.query(ContentModel.LearningContent).filter(
+        ContentModel.LearningContent.contentID == content_id
+    ).first()
+    
+    if not content:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
+    
+    group = db.query(GroupModel.Group).filter(
+        GroupModel.Group.groupID == group_id
+    ).first()
+    
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
     
     # create orm model instance
     db_assignment = model.Assignment(**assignment.model_dump())

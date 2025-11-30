@@ -9,8 +9,8 @@ class RoleEnum(str, enum.Enum):
 class CustomerBase(BaseModel):
     phone_number : Optional[str] = None
     email : EmailStr
-    avatar_url : Optional[str] = None
-    full_name : str
+    avatar : Optional[str] = None
+    fullname : str
 
 class CustomerCreate(CustomerBase):
     pass
@@ -24,6 +24,6 @@ class CustomerRead(CustomerBase):
 class CustomerUpdate(BaseModel):
     phone_number : Optional[str] = None
     email : Optional[EmailStr] = None
-    avatar_url : Optional[str] = None
-    full_name : Optional[str] = None
+    avatar : Optional[str] = None
+    fullname : Optional[str] = None
     role : Optional[RoleEnum] = None

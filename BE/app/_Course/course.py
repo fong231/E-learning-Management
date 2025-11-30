@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
 from .._Semester import model as SemesterModel
+from .._Instructor import model as InstructorModel
+# from .._Instructor import 
 
 router = APIRouter(
     prefix="/courses",
@@ -13,19 +15,14 @@ router = APIRouter(
 # create course
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
-    """
-    require instructre id and semester id
-    """
-    
     instructor_id = course.instructorID
-    url = f"{INSTRUCTOR_BASE_URL}/{instructor_id}"
-
-    # check instructor existence in another service
-    try:
-        if not check_service_availability("instructor", url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Instructor not found")
-    except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    
+    instructor = db.query(InstructorModel.Instructor).filter(
+        InstructorModel.Instructor.instructorID == instructor_id
+    ).first()
+    
+    if not instructor:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Instructor not found")
         
     semester_id = course.semesterID
     if semester_id is not None:
@@ -94,17 +91,3 @@ def delete(course_id : int, db : Session = Depends(get_db)):
     db.commit()
     
     return
-
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

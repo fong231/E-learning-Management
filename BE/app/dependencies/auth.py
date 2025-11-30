@@ -2,16 +2,27 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from .._Authenticate.model import TokenData
+from fastapi import Depends, HTTPException, Header, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from .._Account import model as AccountModel
 from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..database import get_db
 
-# Define the OAuth2 scheme (FastAPI standard for login)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+security = HTTPBearer()
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+    
+
+class CustomJWTError(Exception):
+    def __init__(self, detail: str, status_code: int):
+        self.detail = detail
+        self.status_code = status_code
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Generates the JWT."""
@@ -28,50 +39,55 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def decode_access_token(token: str):
     """Decodes and validates the JWT."""
     try:
-        # 1. Decode the token using the secret key
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         # 2. Extract the user identifier
-        username: int = payload.get("sub")
-        if username is None:
-            raise JWTError("Invalid credentials", status_code=status.HTTP_401_UNAUTHORIZED)
-            
+        account_id: str = payload.get("sub")
+        # session_id_in_jwt = payload.get("sid")
+        
+        if account_id is None:
+            raise CustomJWTError("Token is missing the 'sub' claim (account_id)", 
+                                 status_code=status.HTTP_401_UNAUTHORIZED)
+
         return payload
         
     except JWTError as e:
-        # Handles expiration and invalid signature errors
+        raise CustomJWTError(f"Token validation failed: {str(e)}", 
+                             status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    except CustomJWTError as e:
+        raise e
+    
+async def get_raw_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    return credentials.credentials  
+
+async def get_current_active_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)):
+
+    token = credentials.credentials
+    
+    # auth_record = await validate_token()
+    
+    # if not auth_record:
+    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    
+    # return auth_record
+    return
+
+
+def get_token_from_header(authorization: Annotated[Optional[str], Header()] = None) -> str:
+    """Extracts the token string from the 'Authorization: Bearer <token>' header."""
+    if authorization is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Authorization header missing"
         )
-
-async def get_current_active_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
-    """
-    Decodes the JWT token to get the current user.
-    This function acts as a dependency for protected endpoints.
-    """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        # Decode the token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
     
-    # Get user from the 'database'
-    user = db.query(AccountModel.Account).filter(AccountModel.Account.username == token_data.username).first()
-    if user is None:
-        raise credentials_exception
-    # if user.disabled:
-    #     raise HTTPException(status_code=400, detail="Inactive user")
-    
-    return user
-        
+    parts = authorization.split()
+    if parts[0].lower() != "bearer" or len(parts) != 2:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token format (Expected: Bearer <token>)"
+        )
+    return parts[1]

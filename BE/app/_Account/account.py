@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
 from .._Customer import model as CustomerModel
-from .._Customer.customer import create_customer
 
 router = APIRouter(
     prefix="/accounts",

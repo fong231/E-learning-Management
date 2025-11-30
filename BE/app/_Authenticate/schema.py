@@ -14,3 +14,7 @@ class AccountUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
     customerID: Optional[int] = None
+    
+class AccountLogin(BaseModel):
+    username: str
+    password: str

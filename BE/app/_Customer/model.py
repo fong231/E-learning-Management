@@ -11,8 +11,8 @@ class Customer(Base):
     
     phone_number = Column(String(20))
     email = Column(String(255), nullable=False, unique=True)
-    avatar_url = Column(String(500))
-    full_name = Column(String(255), nullable=False)
+    avatar = Column(String(500))
+    fullname = Column(String(255), nullable=False)
     role = Column(Enum("student", "instructor", name="customer_roles"), nullable=False, default="student")
     
     # Relationship
