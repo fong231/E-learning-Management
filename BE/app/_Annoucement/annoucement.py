@@ -16,17 +16,17 @@ def create(annoucement: schema.AnnoucementCreate, db: Session = Depends(get_db))
     
     group_id = annoucement.groupID
     content_id = annoucement.contentID
-    group_url = f"{GROUP_BASE_URL}/{group_id}"
-    content_url = f"{CONTENT_BASE_URL}/{content_id}"
+    # group_url = f"{GROUP_BASE_URL}/{group_id}"
+    # content_url = f"{CONTENT_BASE_URL}/{content_id}"
     
     # check group and content existence in another service
-    try:
-        if not check_service_availability("group", group_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-        if not check_service_availability("content", content_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
-    except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    # try:
+    #     if not check_service_availability("group", group_url):
+    #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+    #     if not check_service_availability("content", content_url):
+    #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
+    # except RuntimeError as e:
+    #     raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
     
     # create orm model instance
     db_annoucement = model.Annoucement(**annoucement.model_dump())
@@ -77,17 +77,3 @@ def delete(annoucement_id : int, db : Session = Depends(get_db)):
     db.commit()
 
     return
-
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")
