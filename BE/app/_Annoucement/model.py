@@ -9,5 +9,5 @@ class Annoucement(Base):
 
     annoucementID = Column(Integer, primary_key=True, index=True)
 
-    groupID = Column(String, nullable=False)
-    contentID = Column(String, nullable=False)
+    groupID = Column(String(255), nullable=False)
+    contentID = Column(String(255), nullable=False)

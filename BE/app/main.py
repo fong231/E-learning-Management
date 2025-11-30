@@ -10,14 +10,14 @@ from ._Course_Material import course_material
 from ._Customer import customer
 from ._File_Image import file_image
 from ._Group import group
-from ._Instructor import instructor
+# from ._Instructor import instructor
 from ._Learning_Content import learning_content
 from ._Material import material
 from ._Question import question
 from ._Question import question
 from ._Quiz import quiz
 from ._Semester import semester
-from ._Student import student
+# from ._Student import student
 from ._Student_Group import student_group
 from ._Student_Score import student_score
 

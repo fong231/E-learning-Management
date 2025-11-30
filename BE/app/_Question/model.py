@@ -11,7 +11,7 @@ class Question(Base):
     level = Column(Enum('easy', 'medium', 'hard', name='question_levels'), nullable=False)
     answer = Column(Enum('A', 'B', 'C', 'D', name='answer_options'), nullable=False)
     
-    quizID = Column(Integer, ForeignKey('Quizzes.quizID'), ondelete='SET NULL', nullable=True)
+    quizID = Column(Integer, ForeignKey('Quizzes.quizID', ondelete="SET NULL"), nullable=True)
 
     # relationship
     quiz = relationship("Quiz", back_populates="question")
