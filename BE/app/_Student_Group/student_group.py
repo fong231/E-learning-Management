@@ -4,6 +4,7 @@ from ..database import get_db
 from . import schema, model
 from .._Group import model as GroupModel
 import requests
+from .._Student import model as StudentModel
 
 router = APIRouter(
     prefix="/groups",
@@ -20,14 +21,13 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
     
     student_id = association.studentID
-    student_url = f"{STUDENT_BASE_URL}/{student_id}"
+
+    student = db.query(StudentModel.Student).filter(
+        StudentModel.Student.studentID == student_id
+    ).first()
     
-    # check student exist
-    try:
-        if not check_service_availability("student", student_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-    except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    if not student:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
     
     # check if this asociation already existed
     existing_association = db.query(model.StudentGroupAssociation).filter(

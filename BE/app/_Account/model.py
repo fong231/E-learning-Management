@@ -8,7 +8,7 @@ class Account(Base):
     __tablename__ = "Accounts"
 
     username = Column(String(100), primary_key=True, index=True)
-    password_hash = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False)
     
     customerID = Column(Integer, ForeignKey("Customers.customerID", ondelete='CASCADE'), nullable=False)
     
@@ -18,8 +18,11 @@ class Account(Base):
     def verify_password(self, plain_password: str) -> bool:
         """Compares a plain text password with the stored hash."""
         import bcrypt
-        return bcrypt.checkpw(
-            plain_password.encode('utf-8'),
-            self.password_hash.encode('utf-8')
-        )
+        try:
+            return bcrypt.checkpw(
+                plain_password.encode('utf-8'),
+                self.password.encode('utf-8')
+            )
+        except (ValueError, TypeError):
+            return False
 

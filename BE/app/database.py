@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:@localhost:3306/elearning_db"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, echo=True
+    SQLALCHEMY_DATABASE_URL, echo=False
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

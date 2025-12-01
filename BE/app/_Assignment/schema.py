@@ -12,11 +12,10 @@ class AssignmentBase(BaseModel):
     size_limit: Optional[Decimal] = None 
     
     file_format: Optional[str] = None
-
-    groupID: Optional[int] = None
-    contentID: Optional[int] = None
     
 class AssignmentCreate(AssignmentBase):
+    contentID : int
+    groupID: int
     pass
     
 class AssignmentUpdate(BaseModel):
@@ -29,6 +28,7 @@ class AssignmentUpdate(BaseModel):
     contentID: Optional[int] = None
 
 class AssignmentRead(AssignmentBase):
-    
+    assignmentID : int
+    groupID: int
     class Config:
         from_attributes = True

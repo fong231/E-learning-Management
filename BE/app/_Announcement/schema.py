@@ -12,9 +12,11 @@ class AnnoucementCreate(AnnoucementBase):
     
 class AnnoucementUpdate(BaseModel):
     groupID: Optional[int] = None
-    contentID: Optional[int] = None
+    announcementID: Optional[int] = None
 
-class AnnoucementRead(AnnoucementBase):
+class AnnoucementRead(BaseModel):
+    groupID: Optional[int] = None
+    announcementID: Optional[int] = None
     
     class Config:
         from_attributes = True

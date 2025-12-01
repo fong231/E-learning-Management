@@ -4,6 +4,8 @@ import requests
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
+from .._Group import model as GroupModel
+from .._Student import model as StudentModel
 
 router = APIRouter(
     prefix="/scores",
@@ -17,20 +19,19 @@ def create(student_scores: schema.StudentScoreCreate, db: Session = Depends(get_
     student_id = student_scores.studentID
     group_id = student_scores.groupID
     
-    group_url = f"{GROUP_BASE_URL}/{group_id}"
-    student_url = f"{STUDENT_BASE_URL}/{student_id}"
-    student_group_url = f"{STUDENT_GROUP_BASE_URL}/{group_id}/students/{student_id}"
+    student = db.query(StudentModel.Student).filter(
+        StudentModel.Student.studentID == student_id
+    ).first()
     
-    try:
-        if not check_service_availability("group", group_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-        if not check_service_availability("student", student_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-        if not check_service_availability("student-group", student_group_url):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
-                                detail="Student in this group not found")
-    except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    if not student:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+    
+    group = db.query(GroupModel.Group).filter(
+        GroupModel.Group.groupID == group_id
+    ).first()
+    
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
     
     # create orm model instance
     db_student_score = model.StudentScore(**student_scores.model_dump())
@@ -86,17 +87,3 @@ def delete(group_id : int, student_id : int, quiz_id, db : Session = Depends(get
     db.commit()
 
     return
-
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

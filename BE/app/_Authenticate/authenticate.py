@@ -13,7 +13,7 @@ from .._Customer.customer import create_customer
 from ..dependencies.auth import create_access_token, decode_access_token
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 
-MIN_LENGTH = 12
+MIN_LENGTH = 8
 
 router = APIRouter(
     prefix="/auth",
@@ -71,13 +71,10 @@ def check_password_complexity(password: str) -> Tuple[bool, Dict[str, Any]]:
 # register account
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(account: schema.AccountCreate, db: Session = Depends(get_db)):
-    """
-    Register a new account for a customer.
-    """
     customer_data = schema.CustomerCreate(
-        full_name=account.full_name,
+        fullname=account.fullname,
         email=account.email,
-        avatar_url=account.avatar_url,
+        avatar=account.avatar,
         phone_number=account.phone_number
     )
     customer = create_customer(customer_data, db)
@@ -102,7 +99,7 @@ def register(account: schema.AccountCreate, db: Session = Depends(get_db)):
     
     db_account = AccountModel.Account(
         username=account.username,
-        password_hash=hashed_password,
+        password=hashed_password,
         customerID=customer.customerID
     )
     
@@ -113,12 +110,9 @@ def register(account: schema.AccountCreate, db: Session = Depends(get_db)):
 
 # login account
 @router.post("/login", response_model=model.Token)
-def login(form_data : OAuth2PasswordRequestForm = Depends(),
+def login(form_data : schema.AccountLogin,
         db: Session = Depends(get_db)):
-    """
-    Login an account.
-    """
-    
+
     user = db.query(AccountModel.Account).filter(
         AccountModel.Account.username == form_data.username
     ).first()
@@ -137,17 +131,3 @@ def login(form_data : OAuth2PasswordRequestForm = Depends(),
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
-    
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

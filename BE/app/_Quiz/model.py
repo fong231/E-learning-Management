@@ -19,4 +19,5 @@ class Quiz(Base):
     
     # relationship
     question = relationship("Question", back_populates="quiz")
+    student_score = relationship("StudentScore", back_populates="quiz")
 
