@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
 from .._Customer import model as CustomerModel
+from .._Authenticate.authenticate import check_password_complexity
 
 router = APIRouter(
     prefix="/accounts",
@@ -16,30 +17,43 @@ def hash_password(password: str) -> str:
     return hashed_bytes.decode('utf-8')
 
 # update account password
-@router.patch("/reset-password", response_model=schema.AccountRead)
-def reset_password(account_data: schema.AccountUpdate, db : Session = Depends(get_db)):
-    # TODO add email verification step
-    if account_data.customerID:
-        customer = db.query(CustomerModel.Customer).filter(
-            CustomerModel.Customer.customerID == account_data.customerID
-        ).first()
-        if not customer:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
-    
-    db_account = db.query(model.Account).filter(model.Account.customerID == account_data.customerID).first()
+@router.patch("/{account_id}/reset-password")
+def reset_password(
+    account_id: int, 
+    account_data: schema.AccountPasswordReset, 
+    db: Session = Depends(get_db)
+):
+    if not db.get(CustomerModel.Customer, account_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    db_account = db.query(model.Account).filter(
+        model.Account.customerID == account_id
+    ).first()
     
     if not db_account:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
-    
-    update_data = account_data.model_dump(exclude_unset=True)
-    
-    for key, value in update_data.items():
-        setattr(db_account, key, value)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found for this customer.")
 
+    if not db_account.verify_password(account_data.current_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Incorrect current password."
+        )
+        
+    is_valid, detail = check_password_complexity(account_data.new_password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "Password does not meet complexity requirements", "details": detail}
+        )
+
+    hashed_password = hash_password(account_data.new_password)
+
+    db_account.password = hashed_password
+    
     db.commit()
     db.refresh(db_account)
-    
-    return db_account
+
+    return {"message": "Successful update password"}
     
 # delete account
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -53,17 +67,3 @@ def delete(customer_id : int, db : Session = Depends(get_db)):
     db.commit()
     
     return
-
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

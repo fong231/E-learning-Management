@@ -4,6 +4,10 @@ import requests
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
+from .._Course.model import Course
+from .._Course.schema import CourseRead
+from .._Group.model import Group
+from .._Student_Group.model import StudentGroupAssociation
 
 router = APIRouter(
     prefix="/students",
@@ -62,7 +66,7 @@ async def read_student(student_id: int, db: Session = Depends(get_db)):
 
 
 @router.get(
-    "/students/",
+    "/",
     response_model=List[schema.Student],
     summary="Get a list of all students"
 )
@@ -72,7 +76,7 @@ async def read_students(db: Session = Depends(get_db), skip: int = 0, limit: int
 
 
 @router.delete(
-    "/students/{student_id}",
+    "/{student_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a student entry"
 )
@@ -87,3 +91,30 @@ async def delete_student(student_id: int, db: Session = Depends(get_db)):
     db.delete(db_student)
     db.commit()
     return None
+
+@router.get("/{student_id}/courses", response_model=List[CourseRead])
+def get_courses(student_id: int, semester_id: Optional[int] = None, db: Session = Depends(get_db)):
+
+    query = db.query(Course)
+
+    query = query.join(
+        Group, 
+        Group.courseID == Course.courseID
+    ).join(
+        StudentGroupAssociation, 
+        StudentGroupAssociation.groupID == Group.groupID
+    ).filter(
+        StudentGroupAssociation.studentID == student_id
+    )
+
+    if semester_id is not None:
+        query = query.filter(
+            Course.semesterID == semester_id
+        )
+
+    courses = query.distinct().all()
+
+    if not courses:
+        return []
+
+    return courses

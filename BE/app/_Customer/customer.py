@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
+from .._Semester import model as SemesterModel
+from .._Semester import schema as SemesterSchema
+from .._Course.model import Course
+from .._Group.model import Group
+from .._Student_Group.model import StudentGroupAssociation
 
 router = APIRouter(
     prefix="/customers",
@@ -81,16 +87,29 @@ def delete(customer_id : int, db : Session = Depends(get_db)):
     
     return
 
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")
+# get customer semester
+@router.get("/{customer_id}/semester", response_model=list[SemesterSchema.SemesterRead])
+def get_semesters(customer_id: int, db: Session = Depends(get_db)):
+    if not db.get(model.Customer, customer_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    is_instructor = Course.instructorID == customer_id
+
+    is_student = db.query(Group.courseID).join(
+        StudentGroupAssociation, 
+        StudentGroupAssociation.groupID == Group.groupID
+    ).filter(
+        StudentGroupAssociation.studentID == customer_id
+    ).subquery()
+
+    semesters = db.query(SemesterModel.Semester).distinct().join(
+        Course, 
+        Course.semesterID == SemesterModel.Semester.semesterID
+    ).filter(
+        or_(
+            is_instructor,
+            Course.courseID.in_(is_student)
+        )
+    ).all()
+    
+    return semesters

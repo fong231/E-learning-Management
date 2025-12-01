@@ -13,7 +13,7 @@ from .._Customer.customer import create_customer
 from ..dependencies.auth import create_access_token, decode_access_token
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 
-MIN_LENGTH = 12
+MIN_LENGTH = 8
 
 router = APIRouter(
     prefix="/auth",

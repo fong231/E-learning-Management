@@ -29,8 +29,8 @@ app = FastAPI(title="E-Learning Backend")
 
 auth_dependency = [Depends(get_current_active_user)]
 
-app.include_router(customer.router)
-app.include_router(account.router)
+app.include_router(customer.router, dependencies=auth_dependency)
+app.include_router(account.router, dependencies=auth_dependency)
 app.include_router(authenticate.router)
 app.include_router(announcement.router, dependencies=auth_dependency)
 app.include_router(assignment.router, dependencies=auth_dependency)
