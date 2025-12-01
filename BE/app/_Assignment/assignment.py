@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
@@ -53,6 +54,16 @@ def read(assignment_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
     
     return assignment
+
+# read all assignments
+@router.get("/", response_model=List[schema.AssignmentRead])
+def read_all(db : Session = Depends(get_db)):
+    assignments = db.query(model.Assignment).all()
+    
+    if not assignments:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No assignment found")
+    
+    return assignments
 
 # update assignment
 @router.patch("/{assignment_id}", response_model=schema.AssignmentRead)

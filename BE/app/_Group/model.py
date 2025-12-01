@@ -15,3 +15,11 @@ class Group(Base):
     # relationship
     course = relationship("Course", back_populates="group")
     student_association = relationship("StudentGroupAssociation", back_populates="group")
+    announcements = relationship(
+        "Announcement", 
+        back_populates="group"
+    )
+    assignments = relationship(
+        "Assignment", 
+        back_populates="group"
+    )

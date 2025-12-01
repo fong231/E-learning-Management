@@ -17,4 +17,6 @@ class Customer(Base):
     
     # Relationship
     account = relationship("Account", back_populates="customer")
+    instructor = relationship("Instructor", back_populates="customer")
+    student = relationship("Student", back_populates="customer")
 

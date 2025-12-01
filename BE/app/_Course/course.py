@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
@@ -50,6 +51,16 @@ def read(course_id : int, db : Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     
     return course
+
+# read all courses
+@router.get("/", response_model=List[schema.CourseRead])
+def read_all(db : Session = Depends(get_db)):
+    courses = db.query(model.Course).all()
+    
+    if not courses:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No course found")
+    
+    return courses
 
 # update course
 @router.patch("/{course_id}", response_model=schema.CourseRead)

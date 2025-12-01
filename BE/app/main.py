@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from ._Account import account
-from ._Annoucement import annoucement
+from ._Announcement import announcement
 from ._Assignment import assignment
 from ._Authenticate import authenticate
 from ._Course import course
@@ -32,7 +32,7 @@ auth_dependency = [Depends(get_current_active_user)]
 app.include_router(customer.router)
 app.include_router(account.router)
 app.include_router(authenticate.router)
-app.include_router(annoucement.router, dependencies=auth_dependency)
+app.include_router(announcement.router, dependencies=auth_dependency)
 app.include_router(assignment.router, dependencies=auth_dependency)
 app.include_router(course.router, dependencies=auth_dependency)
 app.include_router(course_material.router, dependencies=auth_dependency)

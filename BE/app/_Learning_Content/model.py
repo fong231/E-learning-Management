@@ -15,3 +15,14 @@ class LearningContent(Base):
     # relationship
     material = relationship("Material", back_populates="content")
     resource = relationship("FileImage", back_populates="content")
+    announcement = relationship(
+        "Announcement", 
+        uselist=False, 
+        back_populates="content"
+    )
+    
+    assignment = relationship(
+        "Assignment", 
+        uselist=False, 
+        back_populates="content"
+    )
