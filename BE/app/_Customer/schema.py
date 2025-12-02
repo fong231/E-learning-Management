@@ -18,6 +18,7 @@ class CustomerCreate(CustomerBase):
 
 class CustomerRead(CustomerBase):
     customerID: int
+    role : RoleEnum
     
     class Config:
         from_attributes = True 
@@ -30,6 +31,6 @@ class CustomerUpdate(BaseModel):
     role : Optional[RoleEnum] = None
     
 class TokenWithCustomer(BaseModel):
-    access_token: str
+    token: str
     token_type: str
     customer: CustomerRead

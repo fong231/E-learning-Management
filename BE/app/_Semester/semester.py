@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
@@ -32,6 +33,16 @@ def read(semester_id : int, db : Session = Depends(get_db)):
     
     return semester
 
+# read semesters
+@router.get("/", response_model=List[schema.SemesterRead])
+def read_all(db : Session = Depends(get_db)):
+    semesters = db.query(model.Semester).all()
+    
+    if not semesters:
+        return []
+    
+    return semesters
+
 # update semester
 @router.patch("/{semester_id}", response_model=schema.SemesterRead)
 def update(semester_id : int, semester_data: schema.SemesterUpdate, db : Session = Depends(get_db)):
@@ -62,17 +73,3 @@ def delete(semester_id : int, db : Session = Depends(get_db)):
     db.commit()
     
     return
-
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")
