@@ -72,38 +72,24 @@ class CourseModel {
 
 class SemesterModel {
   final int id;
-  final String name;
-  final DateTime startDate;
-  final DateTime endDate;
-  final DateTime createdAt;
+  final String description;
 
   SemesterModel({
     required this.id,
-    required this.name,
-    required this.startDate,
-    required this.endDate,
-    required this.createdAt,
+    required this.description,
   });
 
   factory SemesterModel.fromJson(Map<String, dynamic> json) {
     return SemesterModel(
       id: json['semester_id'] ?? json['id'] ?? 0,
-      name: json['semester_name'] ?? json['name'] ?? '',
-      startDate: DateTime.parse(json['start_date']),
-      endDate: DateTime.parse(json['end_date']),
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
-          : DateTime.now(),
+      description: json['semester_description'] ?? json['description'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'semester_id': id,
-      'semester_name': name,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
+      'description': description,
     };
   }
 }
@@ -113,8 +99,7 @@ class GroupModel {
   final int courseId;
   final String? courseName;
   final String groupName;
-  final int maxStudents;
-  final int currentStudents;
+  final int students;
   final DateTime createdAt;
 
   GroupModel({
@@ -122,8 +107,7 @@ class GroupModel {
     required this.courseId,
     this.courseName,
     required this.groupName,
-    required this.maxStudents,
-    this.currentStudents = 0,
+    required this.students,
     required this.createdAt,
   });
 
@@ -133,8 +117,7 @@ class GroupModel {
       courseId: json['course_id'] ?? 0,
       courseName: json['course_name'],
       groupName: json['group_name'] ?? '',
-      maxStudents: json['max_students'] ?? 50,
-      currentStudents: json['current_students'] ?? 0,
+      students: json['students'] ?? 0,
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : DateTime.now(),
@@ -147,12 +130,9 @@ class GroupModel {
       'course_id': courseId,
       'course_name': courseName,
       'group_name': groupName,
-      'max_students': maxStudents,
-      'current_students': currentStudents,
+      'students': students,
       'created_at': createdAt.toIso8601String(),
     };
   }
-
-  bool get isFull => currentStudents >= maxStudents;
 }
 

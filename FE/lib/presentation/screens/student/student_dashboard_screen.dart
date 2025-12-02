@@ -120,7 +120,7 @@ class StudentHomeTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.username ?? 'Student',
+                    user?.fullname ?? 'Student',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

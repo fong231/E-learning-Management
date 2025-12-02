@@ -1,21 +1,25 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/instructor_provider.dart';
+import 'create_announcement_screen.dart';
+import 'create_assignment_screen.dart';
+import 'create_course_screen.dart';
+import 'create_quiz_screen.dart';
 import 'instructor_courses_screen.dart';
-import 'instructor_students_screen.dart';
 import 'instructor_messages_screen.dart';
 import 'instructor_profile_screen.dart';
-import 'create_course_screen.dart';
-import 'create_assignment_screen.dart';
-import 'create_quiz_screen.dart';
-import 'create_announcement_screen.dart';
+import 'instructor_students_screen.dart';
 
 class InstructorDashboardScreen extends StatefulWidget {
   const InstructorDashboardScreen({super.key});
 
   @override
-  State<InstructorDashboardScreen> createState() => _InstructorDashboardScreenState();
+  State<InstructorDashboardScreen> createState() =>
+      _InstructorDashboardScreenState();
 }
 
 class _InstructorDashboardScreenState extends State<InstructorDashboardScreen> {
@@ -66,8 +70,47 @@ class _InstructorDashboardScreenState extends State<InstructorDashboardScreen> {
   }
 }
 
-class InstructorHomeTab extends StatelessWidget {
+class InstructorHomeTab extends StatefulWidget {
   const InstructorHomeTab({super.key});
+
+  @override
+  State<InstructorHomeTab> createState() => _InstructorHomeTabState();
+}
+
+class _InstructorHomeTabState extends State<InstructorHomeTab> {
+  List<ChartData> chartData = [
+    ChartData(name: 'Courses', value: 0, color: Colors.blue),
+    ChartData(name: 'Students', value: 0, color: Colors.green),
+    ChartData(name: 'Groups', value: 0, color: Colors.orange),
+    ChartData(name: 'Assignments', value: 0, color: Colors.purple),
+    ChartData(name: 'Quizzes', value: 0, color: Colors.red),
+  ];
+
+  Future<void> loadChartData() async {
+    final instructorProvider = Provider.of<InstructorProvider>(
+      context,
+      listen: false,
+    );
+    await instructorProvider.loadInstructorSummary();
+
+    final summary = instructorProvider.summary;
+
+    setState(() {
+      chartData[0].value = summary?.totalCourses.toDouble() ?? 0;
+      chartData[1].value = summary?.totalStudents.toDouble() ?? 0;
+      chartData[2].value = summary?.totalGroups.toDouble() ?? 0;
+      chartData[3].value = summary?.totalAssignments.toDouble() ?? 0;
+      chartData[4].value = summary?.totalQuizzes.toDouble() ?? 0;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await loadChartData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,24 +151,24 @@ class InstructorHomeTab extends StatelessWidget {
                 children: [
                   Text(
                     'Hello,',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white70,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.username ?? 'Instructor',
+                    user?.fullname ?? 'Instructor',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Welcome to the LMS system',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white70,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                   ),
                 ],
               ),
@@ -138,36 +181,54 @@ class InstructorHomeTab extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
+
+            // Biểu đồ dạng cột
+            _CustomBarChart(data: chartData),
+            const SizedBox(height: 24),
+
+            // Stat Cards - Row 1 (3 card: Courses, Students, Groups)
             Row(
               children: [
                 Expanded(
                   child: _StatCard(
                     icon: Icons.book,
                     title: 'Courses',
-                    value: '5',
-                    color: AppTheme.primaryColor,
+                    value: chartData[0].value.toStringAsFixed(0),
+                    color: chartData[0].color,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
                     icon: Icons.people,
-                    title: 'Student',
-                    value: '120',
-                    color: AppTheme.accentColor,
+                    title: 'Students',
+                    value: chartData[1].value.toStringAsFixed(0),
+                    color: chartData[1].color,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    // NEW CARD: Groups
+                    icon: Icons.group_work,
+                    title: 'Groups',
+                    value: chartData[2].value.toStringAsFixed(0),
+                    color: chartData[2].color,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
+
+            // Stat Cards - Row 2 (2 card: Assignments, Quizzes)
             Row(
               children: [
                 Expanded(
                   child: _StatCard(
                     icon: Icons.assignment,
                     title: 'Assignments',
-                    value: '15',
-                    color: Colors.orange,
+                    value: chartData[3].value.toStringAsFixed(0),
+                    color: chartData[3].color,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -175,12 +236,13 @@ class InstructorHomeTab extends StatelessWidget {
                   child: _StatCard(
                     icon: Icons.quiz,
                     title: 'Quizzes',
-                    value: '8',
-                    color: AppTheme.secondaryColor,
+                    value: chartData[4].value.toStringAsFixed(0),
+                    color: chartData[4].color,
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 24),
 
             // Quick Actions
@@ -194,9 +256,7 @@ class InstructorHomeTab extends StatelessWidget {
               title: 'Create New Course',
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const CreateCourseScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
                 );
               },
             ),
@@ -218,9 +278,7 @@ class InstructorHomeTab extends StatelessWidget {
               title: 'Create New Quiz',
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const CreateQuizScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const CreateQuizScreen()),
                 );
               },
             ),
@@ -232,6 +290,39 @@ class InstructorHomeTab extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const CreateAnnouncementScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // Course Management
+            Text(
+              'Course Management',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            _QuickActionButton(
+              icon: Icons.analytics_outlined,
+              title: 'View Grading Reports',
+              onTap: () {
+                // Giả định có màn hình tương ứng
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Navigating to Grading Reports'),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _QuickActionButton(
+              icon: Icons.settings_applications_outlined,
+              title: 'Manage Course Settings',
+              onTap: () {
+                // Giả định có màn hình tương ứng
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Navigating to Course Settings'),
                   ),
                 );
               },
@@ -280,10 +371,7 @@ class InstructorHomeTab extends StatelessWidget {
         ),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: Text(
-          time,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        trailing: Text(time, style: Theme.of(context).textTheme.bodySmall),
       ),
     );
   }
@@ -314,15 +402,12 @@ class _StatCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 4),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
@@ -354,3 +439,159 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
+// Data model cho biểu đồ
+class ChartData {
+  final String name;
+  late final double value;
+  final Color color;
+
+  ChartData({required this.name, required this.value, required this.color});
+}
+
+// Widget Biểu đồ Cột tùy chỉnh sử dụng fl_chart
+class _CustomBarChart extends StatelessWidget {
+  final List<ChartData> data;
+
+  const _CustomBarChart({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    // Giá trị lớn nhất trong dữ liệu để đặt trục Y
+    double maxValue = data.map((d) => d.value).reduce((a, b) => a > b ? a : b);
+    if (maxValue < 10)
+      maxValue = 10; // Đảm bảo trục Y có khoảng nhìn tốt cho các giá trị nhỏ
+    maxValue = (maxValue * 1.2).ceilToDouble();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 16, 24, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Statistical Overview',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 250,
+              child: BarChart(
+                BarChartData(
+                  barGroups: data.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    ChartData item = entry.value;
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: item.value,
+                          color: item.color,
+                          width: 16,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(4),
+                            topRight: Radius.circular(4),
+                          ),
+                        ),
+                      ],
+                      showingTooltipIndicators: [0],
+                    );
+                  }).toList(),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          // Lấy tên cột dựa vào index
+                          String title = data[value.toInt()].name;
+                          return SideTitleWidget(
+                            space: 8,
+                            meta: meta,
+                            child: Text(
+                              title,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      axisNameWidget: const Text('Count'),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        getTitlesWidget: (value, meta) {
+                          if (value == 0)
+                            return const Text(
+                              '0',
+                              style: TextStyle(fontSize: 10),
+                            );
+                          if (value == maxValue / 2)
+                            return Text(
+                              (maxValue / 2).toStringAsFixed(0),
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          if (value == maxValue)
+                            return Text(
+                              maxValue.toStringAsFixed(0),
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey.shade300,
+                        strokeWidth: 0.5,
+                      );
+                    },
+                  ),
+                  barTouchData: BarTouchData(
+                    touchTooltipData: BarTouchTooltipData(
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final item = data[group.x];
+                        return BarTooltipItem(
+                          item.value.toStringAsFixed(0),
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: maxValue,
+                  minY: 0,
+                ),
+                swapAnimationDuration: const Duration(milliseconds: 150),
+                swapAnimationCurve: Curves.linear,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

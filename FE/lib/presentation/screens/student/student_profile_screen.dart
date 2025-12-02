@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../auth/change_password_screen.dart';
 import '../auth/login_screen.dart';
+import '../auth/edit_profile_screen.dart';
 
 class StudentProfileScreen extends StatelessWidget {
   const StudentProfileScreen({super.key});
@@ -31,7 +33,7 @@ class StudentProfileScreen extends StatelessWidget {
                     radius: 50,
                     backgroundColor: Colors.white,
                     child: Text(
-                      user?.username.substring(0, 1).toUpperCase() ?? 'S',
+                      user?.fullname.substring(0, 1).toUpperCase() ?? 'S',
                       style: const TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
@@ -41,7 +43,7 @@ class StudentProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    user?.username ?? 'Student',
+                    user?.fullname ?? 'Student',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -61,12 +63,24 @@ class StudentProfileScreen extends StatelessWidget {
             _ProfileMenuItem(
               icon: Icons.person_outline,
               title: 'Personal Information',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const UserProfileScreen(),
+                  ),
+                );
+              },
             ),
             _ProfileMenuItem(
               icon: Icons.lock_outline,
               title: 'Change Password',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ChangePasswordScreen(),
+                  ),
+                );
+              },
             ),
             _ProfileMenuItem(
               icon: Icons.notifications_outlined,
@@ -100,6 +114,9 @@ class StudentProfileScreen extends StatelessWidget {
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.errorColor,
+                        ),
                         onPressed: () => Navigator.pop(context, true),
                         child: const Text('Logout'),
                       ),

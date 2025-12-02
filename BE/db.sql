@@ -91,6 +91,7 @@ CREATE TABLE `Courses` (
 -- Groups (Classes within a course)
 CREATE TABLE `Groups` (
     `groupID` INT NOT NULL AUTO_INCREMENT,
+    `id` INT NOT NULL, -- "Group 1, 2, 3 for each courses"
     `courseID` INT NOT NULL,
     PRIMARY KEY (`groupID`),
     FOREIGN KEY (`courseID`) REFERENCES `Courses`(`courseID`) ON DELETE CASCADE
@@ -156,6 +157,8 @@ CREATE TABLE `Course_Materials` (
 -- Assignments
 CREATE TABLE `Assignments` (
     `assignmentID` INT NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(255) NOT NULL,
+    `description` TEXT,
     `start_date` DATETIME,
     `deadline` DATETIME NOT NULL,
     `late_deadline` DATETIME,

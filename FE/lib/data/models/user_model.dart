@@ -1,7 +1,8 @@
 class UserModel {
   final int id;
-  final String username;
+  final String fullname;
   final String email;
+  final String? avatar;
   final String? phoneNumber;
   final String? address;
   final String role; // 'student' or 'instructor'
@@ -10,8 +11,9 @@ class UserModel {
 
   UserModel({
     required this.id,
-    required this.username,
+    required this.fullname,
     required this.email,
+    this.avatar,
     this.phoneNumber,
     this.address,
     required this.role,
@@ -22,8 +24,9 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] ?? json['user_id'] ?? 0,
-      username: json['username'] ?? '',
+      fullname: json['fullname'] ?? '',
       email: json['email'] ?? '',
+      avatar: json['avatar'],
       phoneNumber: json['phone_number'],
       address: json['address'],
       role: json['role'] ?? 'student',
@@ -39,8 +42,9 @@ class UserModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'username': username,
+      'fullname': fullname,
       'email': email,
+      'avatar': avatar,
       'phone_number': phoneNumber,
       'address': address,
       'role': role,
@@ -51,8 +55,9 @@ class UserModel {
 
   UserModel copyWith({
     int? id,
-    String? username,
+    String? fullname,
     String? email,
+    String? avatar,
     String? phoneNumber,
     String? address,
     String? role,
@@ -61,8 +66,9 @@ class UserModel {
   }) {
     return UserModel(
       id: id ?? this.id,
-      username: username ?? this.username,
+      fullname: fullname ?? this.fullname,
       email: email ?? this.email,
+      avatar: avatar ?? this.avatar,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       address: address ?? this.address,
       role: role ?? this.role,
@@ -80,7 +86,7 @@ class StudentModel extends UserModel {
 
   StudentModel({
     required super.id,
-    required super.username,
+    required super.fullname,
     required super.email,
     super.phoneNumber,
     super.address,
@@ -95,7 +101,7 @@ class StudentModel extends UserModel {
   factory StudentModel.fromJson(Map<String, dynamic> json) {
     return StudentModel(
       id: json['user_id'] ?? json['id'] ?? 0,
-      username: json['username'] ?? '',
+      fullname: json['fullname'] ?? '',
       email: json['email'] ?? '',
       phoneNumber: json['phone_number'],
       address: json['address'],
@@ -133,7 +139,7 @@ class InstructorModel extends UserModel {
 
   InstructorModel({
     required super.id,
-    required super.username,
+    required super.fullname,
     required super.email,
     super.phoneNumber,
     super.address,
@@ -148,7 +154,7 @@ class InstructorModel extends UserModel {
   factory InstructorModel.fromJson(Map<String, dynamic> json) {
     return InstructorModel(
       id: json['user_id'] ?? json['id'] ?? 0,
-      username: json['username'] ?? '',
+      fullname: json['fullname'] ?? '',
       email: json['email'] ?? '',
       phoneNumber: json['phone_number'],
       address: json['address'],

@@ -87,25 +87,25 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> uploadFile(
-    String endpoint,
-    String filePath,
-    String fieldName,
-  ) async {
+      String endpoint,
+      String filePath,
+      String fieldName,
+      ) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final request = http.MultipartRequest('POST', url);
-      
+
       // Add headers
       if (_token != null) {
         request.headers['Authorization'] = 'Bearer $_token';
       }
-      
+
       // Add file
       request.files.add(await http.MultipartFile.fromPath(fieldName, filePath));
-      
+
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       return _handleResponse(response);
     } catch (e) {
       throw Exception('Upload error: $e');
@@ -127,11 +127,10 @@ class ApiService {
     } else if (response.statusCode >= 500) {
       throw Exception('Server error: Please try again later');
     } else {
-      final errorBody = response.body.isNotEmpty 
-          ? jsonDecode(response.body) 
+      final errorBody = response.body.isNotEmpty
+          ? jsonDecode(response.body)
           : {'message': 'Unknown error'};
       throw Exception(errorBody['message'] ?? 'Request failed');
     }
   }
 }
-

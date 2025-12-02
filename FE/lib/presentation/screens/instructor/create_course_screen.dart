@@ -1,7 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/course_provider.dart';
 
 class CreateCourseScreen extends StatefulWidget {
-  const CreateCourseScreen({super.key});
+  const CreateCourseScreen({
+    super.key,
+    this.isEdit = false,
+    this.courseId,
+    this.name,
+    this.description,
+    this.semesterId,
+    this.numberOfSessions,
+    this.startDate,
+    this.endDate,
+  });
+
+  final bool isEdit;
+  final int? courseId;
+  final String? name;
+  final String? description;
+  final int? semesterId;
+  final int? numberOfSessions;
+  final DateTime? startDate;
+  final DateTime? endDate;
 
   @override
   State<CreateCourseScreen> createState() => _CreateCourseScreenState();
@@ -12,31 +34,71 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _numberOfSessionsController = TextEditingController();
-  
+  final _semesterController = TextEditingController();
+
   int? _selectedSemesterId;
   DateTime? _startDate;
   DateTime? _endDate;
-  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isEdit) {
+      _nameController.text = widget.name ?? '';
+      _descriptionController.text = widget.description ?? '';
+      _numberOfSessionsController.text = widget.numberOfSessions?.toString() ?? '';
+      _selectedSemesterId = widget.semesterId;
+      _startDate = widget.startDate;
+      _endDate = widget.endDate;
+    } else {
+      _loadSemesters();
+    }
+  }
+
+  Future<void> _loadSemesters() async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadSemesters();
+
+    _semesterController.text =
+        courseProvider.currentSemester?.description ?? '';
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _numberOfSessionsController.dispose();
+    _semesterController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime initial = isStartDate
+        ? (_startDate ?? DateTime.now())
+        : (_endDate ?? _startDate ?? DateTime.now());
+
+    final DateTime first = isStartDate
+        ? DateTime.now().subtract(const Duration(days: 1 * 365))
+        : (_startDate ??
+              DateTime.now().subtract(const Duration(days: 1 * 365)));
+
+    final DateTime last = DateTime.now().add(const Duration(days: 1 * 365));
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
     );
+
     if (picked != null) {
       setState(() {
         if (isStartDate) {
           _startDate = picked;
+
+          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
+            _endDate = null;
+          }
         } else {
           _endDate = picked;
         }
@@ -49,22 +111,22 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
+    // TODO: Call API to create course
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.createCourse({
+      'name': _nameController.text,
+      'description': _descriptionController.text,
+      'semester_id': _selectedSemesterId,
+      'number_of_sessions': int.parse(_numberOfSessionsController.text),
+      'start_date': _startDate,
+      'end_date': _endDate,
     });
 
-    // TODO: Call API to create course
-    await Future.delayed(const Duration(seconds: 2));
-
     if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Create course successfully!')),
       );
-      
+
       Navigator.of(context).pop();
     }
   }
@@ -72,9 +134,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Course'),
-      ),
+      appBar: AppBar(title: const Text('Create Course')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -95,7 +155,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -106,32 +166,25 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               maxLines: 4,
             ),
             const SizedBox(height: 16),
-            
-            DropdownButtonFormField<int>(
-              value: _selectedSemesterId,
+
+            TextFormField(
+              controller: _semesterController,
+              readOnly: true,
               decoration: const InputDecoration(
                 labelText: 'Semester *',
                 prefixIcon: Icon(Icons.calendar_today),
+                suffixIcon: Icon(Icons.arrow_drop_down),
+                border: OutlineInputBorder(),
               ),
-              items: [
-                DropdownMenuItem(value: 1, child: Text('HK1 2024-2025')),
-                DropdownMenuItem(value: 2, child: Text('HK2 2024-2025')),
-                DropdownMenuItem(value: 3, child: Text('HK3 2024-2025')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedSemesterId = value;
-                });
-              },
               validator: (value) {
-                if (value == null) {
+                if (_selectedSemesterId == null) {
                   return 'Please select semester';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _numberOfSessionsController,
               decoration: const InputDecoration(
@@ -151,7 +204,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
@@ -165,7 +218,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               onTap: () => _selectDate(context, true),
             ),
             const Divider(),
-            
+
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available),
@@ -179,19 +232,28 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               onTap: () => _selectDate(context, false),
             ),
             const SizedBox(height: 32),
-            
-            ElevatedButton(
-              onPressed: _isLoading ? null : _saveCourse,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Create Course'),
+
+            Consumer<CourseProvider>(
+              builder: (context, courseProvider, child) {
+                return ElevatedButton(
+                  onPressed: courseProvider.isLoading ? null : _saveCourse,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: courseProvider.isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(widget.isEdit ? 'Update Course' : 'Create Course'),
+                );
+              },
             ),
           ],
         ),
@@ -199,4 +261,3 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
     );
   }
 }
-

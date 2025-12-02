@@ -1,8 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/message_provider.dart';
 
-class StudentNotificationsScreen extends StatelessWidget {
+class StudentNotificationsScreen extends StatefulWidget {
   const StudentNotificationsScreen({super.key});
+
+  @override
+  State<StudentNotificationsScreen> createState() => _StudentNotificationsScreenState();
+}
+
+class _StudentNotificationsScreenState extends State<StudentNotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadNotifications());
+  }
+
+  Future<void> _loadNotifications() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final messageProvider = Provider.of<MessageProvider>(context, listen: false);
+
+    final userId = authProvider.userId;
+    if (userId == null) return;
+
+    await messageProvider.loadNotifications(userId);
+    await messageProvider.refreshUnreadCounts(userId: userId, studentId: userId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,34 +36,68 @@ class StudentNotificationsScreen extends StatelessWidget {
         title: const Text('Notifications'),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              final messageProvider = Provider.of<MessageProvider>(context, listen: false);
+              for (final n in messageProvider.notifications.where((n) => !n.isRead)) {
+                await messageProvider.markNotificationAsRead(n.id);
+              }
+            },
             child: const Text('Mark as Read'),
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: 8,
-        itemBuilder: (context, index) {
-          final isRead = index % 3 == 0;
-          return Container(
-            color: isRead ? null : AppTheme.primaryColor.withOpacity(0.05),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: _getNotificationColor(index).withOpacity(0.1),
-                child: Icon(_getNotificationIcon(index), color: _getNotificationColor(index)),
+      body: Consumer<MessageProvider>(
+        builder: (context, messageProvider, child) {
+          if (messageProvider.isLoading && messageProvider.notifications.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (messageProvider.notifications.isEmpty) {
+            return Center(
+              child: Text(
+                'No notifications yet',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              title: Text(_getNotificationTitle(index)),
-              subtitle: Text('${index + 1} hours ago'),
-              trailing: !isRead
-                  ? Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                    )
-                  : null,
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: _loadNotifications,
+            child: ListView.builder(
+              itemCount: messageProvider.notifications.length,
+              itemBuilder: (context, index) {
+                final notification = messageProvider.notifications[index];
+                final isRead = notification.isRead;
+                final icon = _getNotificationIcon(notification.type);
+                final color = _getNotificationColor(notification.type);
+
+                return Container(
+                  color: isRead ? null : AppTheme.primaryColor.withOpacity(0.05),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: color.withOpacity(0.1),
+                      child: Icon(icon, color: color),
+                    ),
+                    title: Text(notification.title),
+                    subtitle: Text(notification.content),
+                    trailing: !isRead
+                        ? Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.primaryColor,
+                              shape: BoxShape.circle,
+                            ),
+                          )
+                        : null,
+                    onTap: () {
+                      if (!isRead) {
+                        messageProvider.markNotificationAsRead(notification.id);
+                      }
+                    },
+                  ),
+                );
+              },
             ),
           );
         },
@@ -46,43 +105,29 @@ class StudentNotificationsScreen extends StatelessWidget {
     );
   }
 
-  IconData _getNotificationIcon(int index) {
-    switch (index % 4) {
-      case 0:
+  IconData _getNotificationIcon(String type) {
+    switch (type) {
+      case 'announcement':
         return Icons.announcement;
-      case 1:
+      case 'deadline':
         return Icons.assignment;
-      case 2:
+      case 'message':
         return Icons.message;
       default:
         return Icons.info;
     }
   }
 
-  Color _getNotificationColor(int index) {
-    switch (index % 4) {
-      case 0:
+  Color _getNotificationColor(String type) {
+    switch (type) {
+      case 'announcement':
         return Colors.orange;
-      case 1:
+      case 'deadline':
         return AppTheme.accentColor;
-      case 2:
+      case 'message':
         return Colors.blue;
       default:
         return AppTheme.primaryColor;
     }
   }
-
-  String _getNotificationTitle(int index) {
-    switch (index % 4) {
-      case 0:
-        return 'New Announcement from Instructor ${index + 1}';
-      case 1:
-        return 'Assignment ${index + 1} is due soon';
-      case 2:
-        return 'New Message';
-      default:
-        return 'System Notification';
-    }
-  }
 }
-

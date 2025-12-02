@@ -29,6 +29,11 @@ class AssignmentRepository {
   Future<AssignmentModel> createAssignment(Map<String, dynamic> assignmentData) async {
     try {
       final response = await _apiService.post('/assignments', assignmentData);
+      final responseUpload = await _apiService.uploadFile(
+        '/uploads/assignment',
+        assignmentData['file_path'],
+        'file',
+      );
       return AssignmentModel.fromJson(response['assignment'] ?? response['data']);
     } catch (e) {
       throw Exception('Failed to create assignment: $e');

@@ -21,10 +21,7 @@ class AuthRepository {
         await _apiService.setToken(response['token']);
         
         // Save user data
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(AppConstants.userDataKey, jsonEncode(response['user']));
-        await prefs.setString(AppConstants.userRoleKey, response['user']['role']);
-        await prefs.setInt(AppConstants.userIdKey, response['user']['id']);
+        saveUserData(response);
       }
 
       return response;
@@ -39,9 +36,29 @@ class AuthRepository {
         AppConstants.registerEndpoint,
         userData,
       );
+
+      if (response['token'] != null) {
+        await _apiService.setToken(response['token']);
+
+        // Save user data
+        saveUserData(response);
+      }
+
       return response;
     } catch (e) {
       throw Exception('Registration failed: $e');
+    }
+  }
+
+  void saveUserData(Map<String, dynamic> response) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.userDataKey, jsonEncode(response['user']));
+      await prefs.setString(AppConstants.userRoleKey, response['user']['role']);
+      await prefs.setInt(AppConstants.userIdKey, response['user']['id']);
+      await prefs.setString(AppConstants.tokenKey, response['token']);
+    } catch (e) {
+      throw Exception('Save user data failed: $e');
     }
   }
 
@@ -87,9 +104,15 @@ class AuthRepository {
     return prefs.getInt(AppConstants.userIdKey);
   }
 
+  Future<Map<String, dynamic>> getUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = jsonDecode(prefs.getString(AppConstants.userDataKey) ?? '{}');
+    return userData;
+  }
+
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> userData) async {
     try {
-      final response = await _apiService.put('/users/profile', userData);
+      final response = await _apiService.put("/users/${await getUserId()}/profile", userData);
       
       // Update local user data
       final prefs = await SharedPreferences.getInstance();
@@ -107,7 +130,7 @@ class AuthRepository {
   ) async {
     try {
       final response = await _apiService.post(
-        '/users/change-password',
+        "/users/${await getUserId()}/change-password",
         {
           'current_password': currentPassword,
           'new_password': newPassword,

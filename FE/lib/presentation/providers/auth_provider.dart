@@ -46,15 +46,16 @@ class AuthProvider with ChangeNotifier {
       _currentUser = UserModel.fromJson(response['user']);
       _isLoggedIn = true;
       _error = null;
+      _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       _error = e.toString();
       _isLoggedIn = false;
+      _isLoading = false;
       notifyListeners();
       return false;
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -67,14 +68,15 @@ class AuthProvider with ChangeNotifier {
     try {
       await _authRepository.register(userData);
       _error = null;
+      _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
       return false;
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -93,6 +95,15 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>> getUserProfile() async {
+    try {
+      final response = await _authRepository.getUserProfile();
+      return response;
+    } catch (e) {
+      throw Exception('Get user profile failed: $e');
     }
   }
 

@@ -48,8 +48,9 @@ dependencies:
   # Date & Time
   intl: ^0.20.2
 
-  # File Handling
+  # File & Image Handling
   file_picker: ^10.3.3
+  image_picker: ^1.2.1
 
   # AI & Chat
   google_generative_ai: ^0.4.7
@@ -57,6 +58,9 @@ dependencies:
 
   # Utils
   url_launcher: ^6.2.4
+
+  # Chart
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

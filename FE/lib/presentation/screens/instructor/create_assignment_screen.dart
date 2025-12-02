@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../providers/assignment_provider.dart';
 
 class CreateAssignmentScreen extends StatefulWidget {
   const CreateAssignmentScreen({super.key});
@@ -15,6 +20,9 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   final _maxScoreController = TextEditingController();
   
   int? _selectedCourseId;
+  int? _selectedGroupId;
+  List<File>? _selectedFile;
+  List<String>? _selectedFileName;
   DateTime? _dueDate;
   bool _isLoading = false;
 
@@ -71,7 +79,15 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     });
 
     // TODO: Call API to create assignment
-    await Future.delayed(const Duration(seconds: 2));
+    final assignmentProvider = Provider.of<AssignmentProvider>(context, listen: false);
+    await assignmentProvider.createAssignment({
+      'course_id': _selectedCourseId,
+      'group_id': _selectedGroupId,
+      'title': _titleController.text,
+      'description': _descriptionController.text,
+      'deadline': _dueDate,
+      'max_score': double.parse(_maxScoreController.text),
+    });
 
     if (mounted) {
       setState(() {
@@ -83,6 +99,17 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       );
       
       Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      setState(() {
+        _selectedFile?.add(File(result.files.single.path!));
+        _selectedFileName?.add(result.files.single.name);
+      });
     }
   }
 
@@ -111,6 +138,31 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               onChanged: (value) {
                 setState(() {
                   _selectedCourseId = value;
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select a course';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<int>(
+              value: _selectedGroupId,
+              decoration: const InputDecoration(
+                labelText: 'Group *',
+                prefixIcon: Icon(Icons.group_work),
+              ),
+              items: [
+                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
+                DropdownMenuItem(value: 2, child: Text('Database')),
+                DropdownMenuItem(value: 3, child: Text('Computer Network')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedGroupId = value;
                 });
               },
               validator: (value) {
@@ -210,10 +262,19 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                     OutlinedButton.icon(
                       onPressed: () {
                         // TODO: Implement file picker
+                        pickFile();
                       },
                       icon: const Icon(Icons.upload_file),
                       label: const Text('Upload File'),
                     ),
+
+                    if (_selectedFileName != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "Selected: $_selectedFileName",
+                        style: const TextStyle(color: Colors.green),
+                      ),
+                    ],
                   ],
                 ),
               ),

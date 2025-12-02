@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import 'create_course_screen.dart';
+import 'instructor_students_screen.dart';
 
 class InstructorCoursesScreen extends StatelessWidget {
   const InstructorCoursesScreen({super.key});
@@ -26,6 +27,30 @@ class InstructorCoursesScreen extends StatelessWidget {
                 '${(index + 1) * 20} students • ${index + 10} assignments',
               ),
               trailing: PopupMenuButton(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    // TODO: Navigate to edit course screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => CreateCourseScreen(
+                        isEdit: true,
+                        courseId: 1,
+                        name: 'Mobile Programming',
+                        description: 'This is a course about mobile programming',
+                        semesterId: 1,
+                        numberOfSessions: 10,
+                        startDate: DateTime.now(),
+                        endDate: DateTime.now().add(const Duration(days: 30)),
+                      )),
+                    );
+                  } else if (value == 'students') {
+                    // TODO: Navigate to students list screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const InstructorStudentsScreen()),
+                    );
+                  } else if (value == 'delete') {
+                    // TODO: Show confirmation dialog
+                  }
+                },
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'edit', child: Text('Edit')),
                   const PopupMenuItem(
