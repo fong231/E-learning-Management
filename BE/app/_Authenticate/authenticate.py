@@ -35,7 +35,7 @@ async def validate_token(token : str = Depends(get_token_from_header), db: Sessi
         # if not session_exists:
         #     raise CustomJWTError(status_code=401, detail="Token revoked (Session terminated)")
 
-        return model.TokenData(email==email)
+        return model.TokenData(email=email)
         
     except CustomJWTError as e:
         raise HTTPException(
@@ -188,3 +188,22 @@ def login(form_data : schema.AccountLogin,
         "access_token": access_token, 
         "token_type": "bearer",
         "customer" : user}
+    
+@router.get("/me", response_model=CustomerSchema.CustomerRead)
+def get_current_user(token : str = Depends(get_token_from_header), db : Session = Depends(get_db)):
+    """
+        input: token in header,
+        output: customer data
+    """
+    
+    payload = decode_access_token(token)
+    email = payload.get("sub")
+    
+    customer = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.email == email
+    ).first()
+    
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="error get current user data")
+    
+    return customer
