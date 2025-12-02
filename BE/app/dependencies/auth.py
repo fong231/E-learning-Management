@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
 from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..database import get_db
 
@@ -42,11 +43,11 @@ def decode_access_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         # 2. Extract the user identifier
-        account_id: str = payload.get("sub")
+        email: str = payload.get("sub")
         # session_id_in_jwt = payload.get("sid")
         
-        if account_id is None:
-            raise CustomJWTError("Token is missing the 'sub' claim (account_id)", 
+        if email is None:
+            raise CustomJWTError("Token is missing the 'sub' claim (email)", 
                                  status_code=status.HTTP_401_UNAUTHORIZED)
 
         return payload
@@ -64,16 +65,17 @@ async def get_raw_token(credentials: HTTPAuthorizationCredentials = Depends(secu
 async def get_current_active_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)):
-
+    from .._Authenticate.authenticate import validate_token
+    
     token = credentials.credentials
     
-    # auth_record = await validate_token()
+    auth_record = await validate_token()
     
-    # if not auth_record:
-    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    if not auth_record:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
-    # return auth_record
-    return
+    return auth_record
+    # return
 
 
 def get_token_from_header(authorization: Annotated[Optional[str], Header()] = None) -> str:

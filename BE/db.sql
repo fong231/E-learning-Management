@@ -333,16 +333,16 @@ DELIMITER ;
 -- CUSTOMERS (Base users)
 -- ============================================
 INSERT INTO `Customers` (`customerID`, `phone_number`, `email`, `fullname`, `password`, `role`) VALUES
-(1, '0901234567', 'john.doe@university.edu', 'avatars/john.jpg', 'John Doe', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(2, '0902345678', 'jane.smith@university.edu', 'avatars/jane.jpg', 'Jane Smith', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(3, '0903456789', 'bob.wilson@university.edu', 'avatars/bob.jpg', 'Bob Wilson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(4, '0904567890', 'alice.brown@university.edu', 'avatars/alice.jpg', 'Alice Brown', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(5, '0905678901', 'charlie.davis@university.edu', 'avatars/charlie.jpg', 'Charlie Davis', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(6, '0906789012', 'emma.johnson@university.edu', 'avatars/emma.jpg', 'Emma Johnson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(7, '0907890123', 'david.miller@university.edu', 'avatars/david.jpg', 'David Miller', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(8, '0908901234', 'sophia.garcia@university.edu', 'avatars/sophia.jpg', 'Sophia Garcia', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(1, '0901234567', 'john.doe@university.edu', 'John Doe', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(2, '0902345678', 'jane.smith@university.edu', 'Jane Smith', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(3, '0903456789', 'bob.wilson@university.edu', 'Bob Wilson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(4, '0904567890', 'alice.brown@university.edu', 'Alice Brown', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(5, '0905678901', 'charlie.davis@university.edu', 'Charlie Davis', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(6, '0906789012', 'emma.johnson@university.edu', 'Emma Johnson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(7, '0907890123', 'david.miller@university.edu', 'David Miller', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
+(8, '0908901234', 'sophia.garcia@university.edu', 'Sophia Garcia', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
 -- Instructors
-(101, '0911111111', 'admin', 'admin', '$2y$10$XBo8o.VWW5wK44.UujuRf.oTXidGtovPLxgdpZXM3EAkjNidXdAlu', 'instructor'),
+(101, '0911111111', 'admin@gmail.com', 'admin', '$2b$12$yGIqw4/uaAsIVa4n/6j5ouz4Ekq6LHXhmP8RJTH5nkq8bVAFsYGny', 'instructor'),
 (102, '0922222222', 'dr.sarah.jones@university.edu', 'Dr. Sarah Jones', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'instructor'),
 (103, '0933333333', 'prof.michael.lee@university.edu', 'Prof. Michael Lee', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'instructor');
 

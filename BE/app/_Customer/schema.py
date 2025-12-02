@@ -13,6 +13,7 @@ class CustomerBase(BaseModel):
     fullname : str
 
 class CustomerCreate(CustomerBase):
+    password : str
     pass
 
 class CustomerRead(CustomerBase):
@@ -27,3 +28,8 @@ class CustomerUpdate(BaseModel):
     avatar : Optional[str] = None
     fullname : Optional[str] = None
     role : Optional[RoleEnum] = None
+    
+class TokenWithCustomer(BaseModel):
+    access_token: str
+    token_type: str
+    customer: CustomerRead
