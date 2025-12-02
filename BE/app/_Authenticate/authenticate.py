@@ -3,14 +3,13 @@ import re
 from typing import Any, Dict, Tuple
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-import requests
 from sqlalchemy.orm import Session
 from ..database import get_db 
 from . import schema, model
-from .._Account import model as AccountModel
+from .._Customer import model as CustomerModel
+from .._Customer import schema as CustomerSchema
 from .._Customer.customer import create_customer
-from ..dependencies.auth import create_access_token, decode_access_token
+from ..dependencies.auth import CustomJWTError, create_access_token, decode_access_token, get_token_from_header
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 
 MIN_LENGTH = 8
@@ -19,6 +18,31 @@ router = APIRouter(
     prefix="/auth",
     tags=["Authenticate"],
 )
+async def validate_token(token : str = Depends(get_token_from_header), db: Session = Depends(get_db)): # <== THÊM DB
+    try:
+        payload = decode_access_token(token)
+        email = payload.get("sub")
+        # session_id_in_jwt = payload.get("sid")
+
+        if not email:
+            raise CustomJWTError(status_code=401, detail="Invalid token structure")
+
+        # session_exists = db.query(session_model.Session).filter(
+        #     session_model.Session.session_id == session_id_in_jwt,
+        #     session_model.Session.user_id == account_id
+        # ).first()
+
+        # if not session_exists:
+        #     raise CustomJWTError(status_code=401, detail="Token revoked (Session terminated)")
+
+        return model.TokenData(email==email)
+        
+    except CustomJWTError as e:
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=e.detail,
+            headers={"X-Auth-Failed": "Token rejected"} 
+        )
 
 def hash_password(password: str) -> str:
     hashed_bytes = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -66,68 +90,101 @@ def check_password_complexity(password: str) -> Tuple[bool, Dict[str, Any]]:
             is_complex = False
             
     return is_complex, results
-    
 
-# register account
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-def register(account: schema.AccountCreate, db: Session = Depends(get_db)):
-    customer_data = schema.CustomerCreate(
-        fullname=account.fullname,
-        email=account.email,
-        avatar=account.avatar,
-        phone_number=account.phone_number
-    )
-    customer = create_customer(customer_data, db)
-    db.flush()
+# update account password
+@router.patch("/{customer_id}/reset-password")
+def reset_password(
+    customer_id: int, 
+    account_data: schema.AccountPasswordReset, 
+    db: Session = Depends(get_db)
+):
+    if not db.get(CustomerModel.Customer, customer_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    db_customer = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.customerID == customer_id
+    ).first()
     
-    is_valid, detail = check_password_complexity(account.password)
+    if not db_customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found for this customer.")
+
+    if not db_customer.verify_password(account_data.current_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Incorrect current password."
+        )
+        
+    is_valid, detail = check_password_complexity(account_data.new_password)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": "Password does not meet complexity requirements", "details": detail}
         )
+
+    hashed_password = hash_password(account_data.new_password)
+
+    db_customer.password = hashed_password
     
-    hashed_password = hash_password(account.password)
-    username_exist = db.query(AccountModel.Account).filter(
-        AccountModel.Account.username == account.username
+    db.commit()
+    db.refresh(db_customer)
+
+    return {"message": "Successful update password"}    
+
+# register account
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+def register(customer: schema.AccountCreate, db: Session = Depends(get_db)):
+    username_exist = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.email == customer.email
     ).first()
     if username_exist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Account with username '{account.username}' already exists."
+            detail=f"Customer with this email already exist"
         )
     
-    db_account = AccountModel.Account(
-        username=account.username,
-        password=hashed_password,
-        customerID=customer.customerID
+    # is_valid, detail = check_password_complexity(account.password)
+    # if not is_valid:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail={"error": "Password does not meet complexity requirements", "details": detail}
+    #     )
+        
+    hashed_password = hash_password(customer.password)
+
+    customer_data = schema.CustomerCreate(
+        fullname=customer.fullname,
+        email=customer.email,
+        avatar=customer.avatar,
+        phone_number=customer.phone_number,
+        password=hashed_password
     )
-    
-    db.add(db_account)
-    db.commit()
-    db.refresh(db_account)
+    customer = create_customer(customer_data, db)
+
     return {"message": "Account registered successfully"}
 
 # login account
-@router.post("/login", response_model=model.Token)
+@router.post("/login", response_model=CustomerSchema.TokenWithCustomer)
 def login(form_data : schema.AccountLogin,
         db: Session = Depends(get_db)):
 
-    user = db.query(AccountModel.Account).filter(
-        AccountModel.Account.username == form_data.username
+    user = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.email == form_data.email
     ).first()
     
     if not user or not user.verify_password(form_data.password):
-        print(form_data.username, form_data.password)
+        # print(form_data.email, form_data.password)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
+            detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "customer" : user}

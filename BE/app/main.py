@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from ._Account import account
+# from ._Account import account
 from ._Announcement import announcement
 from ._Assignment import assignment
 from ._Authenticate import authenticate
@@ -30,7 +30,7 @@ app = FastAPI(title="E-Learning Backend")
 auth_dependency = [Depends(get_current_active_user)]
 
 app.include_router(customer.router, dependencies=auth_dependency)
-app.include_router(account.router, dependencies=auth_dependency)
+# app.include_router(account.router, dependencies=auth_dependency)
 app.include_router(authenticate.router)
 app.include_router(announcement.router, dependencies=auth_dependency)
 app.include_router(assignment.router, dependencies=auth_dependency)

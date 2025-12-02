@@ -28,6 +28,7 @@ def create_customer(customer: schema.CustomerCreate, db: Session):
     
     db.add(db_customer)
     db.commit()
+    db.refresh(db_customer)
     return db_customer
 
 # create customer
