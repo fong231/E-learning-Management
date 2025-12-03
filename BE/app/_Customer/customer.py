@@ -107,7 +107,8 @@ def read(customer_id : int, db : Session = Depends(get_db)):
     
     if customer.avatar:
         if customer.avatar.startswith('/'):
-            customer.avatar = f"{BASE_URL}{customer.avatar}"
+            # customer.avatar = f"{BASE_URL}{customer.avatar}"
+            customer.avatar = customer.avatar
     
     return customer
 
