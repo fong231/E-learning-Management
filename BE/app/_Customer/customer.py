@@ -13,8 +13,8 @@ from .._Course.model import Course
 from .._Group.model import Group
 from .._Student_Group.model import StudentGroupAssociation
 
-# BASE_URL = "http://10.0.2.2:8000/uploads"
-BASE_URL = "http://localhost:8000/uploads"
+BASE_URL = "http://10.0.2.2:8000/uploads"
+# BASE_URL = "http://localhost:8000/uploads"
 
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__)) 
