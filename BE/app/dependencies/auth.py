@@ -43,10 +43,10 @@ def decode_access_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         # 2. Extract the user identifier
-        email: str = payload.get("sub")
+        fullname: str = payload.get("sub")
         # session_id_in_jwt = payload.get("sid")
         
-        if email is None:
+        if fullname is None:
             raise CustomJWTError("Token is missing the 'sub' claim (email)", 
                                  status_code=status.HTTP_401_UNAUTHORIZED)
 

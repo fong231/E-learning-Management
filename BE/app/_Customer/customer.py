@@ -17,7 +17,7 @@ router = APIRouter(
 
 def create_customer(customer: schema.CustomerCreate, db: Session):
     email = customer.email
-    email_exist = db.query(model.Customer).filter(model.Customer.email == email).first()
+    email_exist = db.query(model.Customer).filter(model.Customer.fullname == email).first()
     if email_exist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -57,8 +57,8 @@ def update(customer_id : int, customer_data: schema.CustomerUpdate, db : Session
     if not db_customer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
     
-    email = db_customer.email
-    email_exist = db.query(model.Customer).filter(model.Customer.email == email).first()
+    email = db_customer.fullname
+    email_exist = db.query(model.Customer).filter(model.Customer.fullname == email).first()
     if email_exist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

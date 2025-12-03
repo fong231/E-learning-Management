@@ -12,7 +12,7 @@ class Customer(Base):
     phone_number = Column(String(20))
     email = Column(String(255), nullable=False, unique=True)
     avatar = Column(String(500))
-    fullname = Column(String(255), nullable=False)
+    fullname = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     role = Column(Enum("student", "instructor", name="customer_roles"), nullable=False, default="student")
     

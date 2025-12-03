@@ -21,10 +21,10 @@ router = APIRouter(
 async def validate_token(token : str = Depends(get_token_from_header), db: Session = Depends(get_db)): # <== THÊM DB
     try:
         payload = decode_access_token(token)
-        email = payload.get("sub")
+        username = payload.get("sub")
         # session_id_in_jwt = payload.get("sid")
 
-        if not email:
+        if not username:
             raise CustomJWTError(status_code=401, detail="Invalid token structure")
 
         # session_exists = db.query(session_model.Session).filter(
@@ -35,7 +35,7 @@ async def validate_token(token : str = Depends(get_token_from_header), db: Sessi
         # if not session_exists:
         #     raise CustomJWTError(status_code=401, detail="Token revoked (Session terminated)")
 
-        return model.TokenData(email=email)
+        return model.TokenData(username=username)
         
     except CustomJWTError as e:
         raise HTTPException(
@@ -134,7 +134,7 @@ def reset_password(
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=CustomerSchema.TokenWithCustomer)
 def register(customer: schema.AccountCreate, db: Session = Depends(get_db)):
     username_exist = db.query(CustomerModel.Customer).filter(
-        CustomerModel.Customer.email == customer.email
+        CustomerModel.Customer.fullname == customer.email
     ).first()
     if username_exist:
         raise HTTPException(
@@ -165,7 +165,7 @@ def register(customer: schema.AccountCreate, db: Session = Depends(get_db)):
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": customer.email}, expires_delta=access_token_expires
+        data={"sub": customer.fullname}, expires_delta=access_token_expires
     )
 
     return {
@@ -179,7 +179,7 @@ def login(form_data : schema.AccountLogin,
         db: Session = Depends(get_db)):
 
     user = db.query(CustomerModel.Customer).filter(
-        CustomerModel.Customer.email == form_data.email
+        CustomerModel.Customer.fullname == form_data.username
     ).first()
     
     if not user or not user.verify_password(form_data.password):
@@ -192,7 +192,7 @@ def login(form_data : schema.AccountLogin,
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.fullname}, expires_delta=access_token_expires
     )
     
     return {
@@ -212,7 +212,7 @@ def get_current_user(token : str = Depends(get_token_from_header), db : Session 
     email = payload.get("sub")
     
     customer = db.query(CustomerModel.Customer).filter(
-        CustomerModel.Customer.email == email
+        CustomerModel.Customer.fullname == email
     ).first()
     
     if not customer:
