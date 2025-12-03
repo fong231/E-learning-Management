@@ -200,7 +200,7 @@ Used by `CourseRepository.getCourses()`.
   "courses": [
     {
       "course_id": 1,
-      "course_name": "Introduction to Programming",
+      "course_name": "Introduction to Programming", // Course.description in DB
       "description": "...",
       "instructor_id": 101,
       "instructor_name": "Dr. Brown",
@@ -238,7 +238,7 @@ Used by `CourseRepository.getCourseById()`.
 {
   "course": {
     "course_id": 1,
-    "course_name": "...",
+    "course_name": "...", // Course.description in DB
     "description": "...",
     "instructor_id": 101,
     "instructor_name": "...",
@@ -316,8 +316,8 @@ Used by `CourseRepository.getCourseGroups()`.
     {
       "group_id": 1,
       "course_id": 1,
-      "course_name": "Introduction to Programming",
-      "group_name": "Group 1",            // display name
+      "course_name": "Introduction to Programming", // Course.description in DB
+      "group_name": "Group 1",            // Group.id in DB
       "students": 25,                      // number of students
       "created_at": "2024-09-01T00:00:00Z"
     }
@@ -375,10 +375,9 @@ Used by `CourseRepository.getCourseContent()`.
     {
       "content_id": 1,
       "course_id": 1,
-      "course_name": "Introduction to Programming",
+      "course_name": "Introduction to Programming", // Course.description in DB
       "title": "Week 1: Introduction",
       "description": "...",
-      "content_type": "document" | "video" | "slide" | "link",
       "content_url": "materials/java_week1_slides.pdf",
       "session_number": 1,
       "created_at": "2024-09-01T10:00:00Z",
@@ -398,7 +397,6 @@ Used by `CourseRepository.addCourseContent()`.
 {
   "title": "Week 1: Introduction",
   "description": "...",
-  "content_type": "document",          // or video/slide/link
   "content_url": "materials/file.pdf", // for link/document/video path
   "session_number": 1
 }
@@ -654,7 +652,7 @@ Used by `QuizRepository.getCourseQuizzes()`.
     {
       "quiz_id": 5,
       "course_id": 1,
-      "course_name": "...",
+      "course_name": "...", // Course.description in DB
       "title": "Quiz 1: Basics",
       "description": "...",
       "duration": 30,
@@ -856,7 +854,7 @@ Used by `ForumRepository.getCourseTopics()`.
     {
       "topic_id": 1,
       "course_id": 1,
-      "course_name": "...",
+      "course_name": "...", // Course.description in DB
       "creator_id": 1,
       "creator_name": "John Doe",
       "creator_role": "student",  
@@ -964,7 +962,7 @@ Used by `ForumRepository.getCourseAnnouncements()`.
     {
       "announcement_id": 12,
       "course_id": 1,
-      "course_name": "...",
+      "course_name": "...", // Course.description in DB
       "instructor_id": 101,
       "instructor_name": "Dr. Brown",
       "title": "Welcome to Java Programming!",
@@ -1222,3 +1220,103 @@ This API spec is consistent with your existing schema:
 - `Messages`, `Notifications` for communication and alerts
 
 Your backend team can freely adjust internal table structure and joins, as long as these **endpoint URLs**, **request body fields**, and **response JSON fields** remain compatible with this document.
+
+---
+
+## 12. Frontend usage summary (screens → providers → repositories → APIs)
+
+This section lists how the current Flutter FE uses the above APIs. It is meant as a quick map for backend changes.
+
+- **Auth / profile**
+  - **LoginScreen** → `AuthProvider.login(email, password)` → `AuthRepository.login()` → **POST** `/auth/login`.
+  - **RegisterScreen** → `AuthProvider.register(userData)` → `AuthRepository.register()` → **POST** `/auth/register`.
+  - **EditProfileScreen** → `AuthProvider.updateProfile(userData)` → `AuthRepository.updateProfile()` → **PUT** `/users/{id}/profile`.
+  - **ChangePasswordScreen** → `AuthProvider.changePassword()` → `AuthRepository.changePassword()` → **POST** `/users/{id}/change-password`.
+
+- **Semesters & courses (student)**
+  - **StudentCoursesScreen** (tab in `StudentDashboardScreen`)
+    - `CourseProvider.loadSemesters()` → `CourseRepository.getSemesters()` → **GET** `/semesters`.
+    - `CourseProvider.loadStudentCoursesWithSemester(semesterId)` → `CourseRepository.getStudentCoursesWithSemester()` → **GET** `/students/{studentId}/courses?semester_id={semesterId}`.
+  - **StudentAssignmentsScreen** (global pending assignments)
+    - Uses `CourseProvider.loadSemesters()` and `CourseProvider.loadStudentCoursesWithSemester()` as above to determine current semester courses.
+
+- **Semesters & courses (instructor)**
+  - **InstructorCoursesScreen** (tab in `InstructorDashboardScreen`)
+    - `CourseProvider.loadSemesters()` → `CourseRepository.getSemesters()` → **GET** `/semesters`.
+    - `CourseProvider.loadInstructorCoursesWithSemester(semesterId)` → `CourseRepository.getInstructorCoursesWithSemester()` → **GET** `/instructors/{instructorId}/courses?semester_id={semesterId}`.
+    - Delete course: `CourseProvider.deleteCourse(course.id)` → `CourseRepository.deleteCourse()` → **DELETE** `/courses/{courseId}`.
+  - **CreateCourseScreen**
+    - Create: `CourseProvider.createCourse(courseData)` → `CourseRepository.createCourse()` → **POST** `/courses`.
+    - Edit (when wired) would call `CourseProvider.updateCourse()` → `CourseRepository.updateCourse()` → **PUT** `/courses/{courseId}`.
+
+- **Groups & student-group enrollment (instructor)**
+  - **CourseGroupsScreen**
+    - Load groups: `CourseProvider.loadCourseGroups(courseId)` → `CourseRepository.getCourseGroups()` → **GET** `/courses/{courseId}/groups`.
+    - Create group: `CourseProvider.createGroup(courseId)` → `CourseRepository.createGroup()` → **POST** `/groups`.
+  - **InstructorStudentsScreen** (course-specific view)
+    - Assign to group: `CourseProvider.enrollStudentToGroup(studentId, groupId)` → `CourseRepository.enrollStudent()` → **POST** `/groups/{groupId}/students`.
+    - Remove from group: `CourseProvider.unenrollStudentFromGroup(studentId, groupId)` → `CourseRepository.unenrollStudent()` → **DELETE** `/groups/{groupId}/students/{studentId}`.
+
+- **Course detail (student)**
+  - **CourseDetailScreen.OverviewTab**
+    - Course data itself is passed in as `CourseModel` from the courses list (which came from `/students/{studentId}/courses`).
+    - Announcements list: `_OverviewTab` → `ForumProvider.loadCourseAnnouncements(course.id)` → `ForumRepository.getCourseAnnouncements()` → **GET** `/courses/{courseId}/announcements`.
+  - **CourseDetailScreen.MaterialsTab**
+    - `_MaterialsTab` → `CourseProvider.loadCourseContent(courseId)` → `CourseRepository.getCourseContent()` → **GET** `/courses/{courseId}/content`.
+  - **CourseDetailScreen.AssignmentsTab**
+    - `_AssignmentsTab` → `AssignmentProvider.loadCourseAssignments(courseId)` → `AssignmentRepository.getCourseAssignments()` → **GET** `/courses/{courseId}/assignments`.
+  - **CourseDetailScreen.QuizzesTab**
+    - `_QuizzesTab` → `QuizProvider.loadCourseQuizzes(courseId)` → `QuizRepository.getCourseQuizzes()` → **GET** `/courses/{courseId}/quizzes`.
+    - Starting attempts & submitting answers will later use:
+      - `QuizProvider.startQuizAttempt()` → `QuizRepository.startQuizAttempt()` → **POST** `/quiz-attempts`.
+      - `QuizProvider.submitQuizAttempt()` → `QuizRepository.submitQuizAttempt()` → **POST** `/quiz-attempts/{attemptId}/submit`.
+  - **CourseDetailScreen.DiscussionTab**
+    - `_DiscussionTab` → `ForumProvider.loadCourseTopics(courseId)` → `ForumRepository.getCourseTopics()` → **GET** `/courses/{courseId}/topics`.
+
+- **Assignments (instructor)**
+  - **CreateAssignmentScreen**
+    - Create assignment: `AssignmentProvider.createAssignment(data)` → `AssignmentRepository.createAssignment()` → **POST** `/assignments`.
+    - (Optional file upload, if hooked up) would use `AssignmentRepository.uploadAssignmentFile()` → **POST** `/uploads/assignment`.
+
+- **Assignments (student)**
+  - **StudentAssignmentsScreen** (global pending assignments)
+    - Per course: `AssignmentRepository.getCourseAssignments()` → **GET** `/courses/{courseId}/assignments`.
+    - Per assignment: `AssignmentRepository.getStudentSubmissions()` → **GET** `/assignments/{assignmentId}/submissions?student_id={studentId}`.
+    - The screen keeps only assignments with **no submissions** yet.
+  - **StudentSubmitAssignmentScreen**
+    - Submit: `AssignmentProvider.submitAssignment(submissionData)` → `AssignmentRepository.submitAssignment()` → **POST** `/submissions`.
+
+- **Quizzes (instructor)**
+  - **CreateQuizScreen**
+    - Load instructor courses for dropdown: as in InstructorCoursesScreen (`GET /semesters`, `GET /instructors/{instructorId}/courses?semester_id=...`).
+    - Create quiz: `QuizProvider.createQuiz(quizData)` → `QuizRepository.createQuiz()` → **POST** `/quizzes`.
+    - Create questions: `QuizProvider.addQuestion(questionData)` → `QuizRepository.addQuestion()` → **POST** `/questions`.
+
+- **Forum / group discussion (student)**
+  - **StudentForumScreen** (global forum tab)
+    - Determines current semester courses via `CourseProvider.loadSemesters()` and `CourseProvider.loadStudentCoursesWithSemester()` as in the courses tab.
+    - Loads topics for all enrolled courses: `ForumProvider.loadTopicsForCourses(courseIds)` → `ForumRepository.getCourseTopics()` → **GET** `/courses/{courseId}/topics` (per course).
+  - **StudentTopicChatScreen** (topic chat / group discussion)
+    - Load messages: `ForumProvider.loadTopicChats(topic.id)` → `ForumRepository.getTopicChats()` → **GET** `/topics/{topicId}/chats`.
+    - Send message: `ForumProvider.addTopicChat(chatData)` → `ForumRepository.addTopicChat()` → **POST** `/topic-chats`.
+
+- **Announcements (instructor)**
+  - **CreateAnnouncementScreen** (intended wiring)
+    - Would use `ForumProvider.createAnnouncement(announcementData)` → `ForumRepository.createAnnouncement()` → **POST** `/announcements`.
+    - Courses for the dropdown should come from the same instructor-course APIs as `InstructorCoursesScreen`.
+
+- **Messaging & notifications (student)**
+  - **StudentMessagesScreen**
+    - List messages: `MessageProvider.loadUserMessages(userId)` → `MessageRepository.getUserMessages()` → **GET** `/users/{userId}/messages`.
+    - Unread counts: `MessageProvider.refreshUnreadCounts(...)` → `MessageRepository.getUnreadCount()` → **GET** `/users/{userId}/messages/unread-count`.
+  - **StudentChatScreen** (1–1 conversation)
+    - Conversation: `MessageProvider.loadConversation(userId, otherUserId)` → `MessageRepository.getConversation()` → **GET** `/messages/conversation/{userId1}/{userId2}`.
+    - Send: `MessageProvider.sendMessage(messageData)` → `MessageRepository.sendMessage()` → **POST** `/messages`.
+    - Mark as read: `MessageProvider.markMessageAsRead(messageId)` → `MessageRepository.markAsRead()` → **PUT** `/messages/{messageId}/read`.
+  - **StudentNotificationsScreen**
+    - List: `MessageRepository.getNotifications()` → **GET** `/students/{studentId}/notifications`.
+    - Mark read: `MessageRepository.markNotificationAsRead()` → **PUT** `/notifications/{notificationId}/read`.
+    - Delete: `MessageRepository.deleteNotification()` → **DELETE** `/notifications/{notificationId}`.
+    - Unread badge: `MessageRepository.getUnreadNotificationCount()` → **GET** `/students/{studentId}/notifications/unread-count`.
+
+This mapping should make it straightforward to see which FE screens depend on which endpoints when evolving the backend.
