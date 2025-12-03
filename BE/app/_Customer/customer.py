@@ -40,7 +40,7 @@ def create(customer: schema.CustomerCreate, db: Session = Depends(get_db)):
     return {"message": "Customer created successfully"}
 
 # read customer
-@router.get("/{customer_id}", response_model=schema.CustomerRead)
+@router.get("/{customer_id}/profile", response_model=schema.CustomerRead)
 def read(customer_id : int, db : Session = Depends(get_db)):
     customer = db.query(model.Customer).filter(model.Customer.customerID == customer_id).first()
     
@@ -50,7 +50,7 @@ def read(customer_id : int, db : Session = Depends(get_db)):
     return customer
 
 # update customer
-@router.patch("/{customer_id}", response_model=schema.CustomerRead)
+@router.patch("/{customer_id}/profile", response_model=schema.CustomerRead)
 def update(customer_id : int, customer_data: schema.CustomerUpdate, db : Session = Depends(get_db)):
     db_customer = db.query(model.Customer).filter(model.Customer.customerID == customer_id).first()
     
@@ -73,7 +73,7 @@ def update(customer_id : int, customer_data: schema.CustomerUpdate, db : Session
     db.commit()
     db.refresh(db_customer)
     
-    return db_customer
+    return {"customer": db_customer}
     
 # delete customer
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)

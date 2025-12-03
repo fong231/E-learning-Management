@@ -29,14 +29,33 @@ def enroll_student(group_id : int, association: schema.StudentGroupAssociationCr
     if not student:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
     
-    # check if this asociation already existed
-    existing_association = db.query(model.StudentGroupAssociation).filter(
-        model.StudentGroupAssociation.groupID == group_id,
-        model.StudentGroupAssociation.studentID == student_id
+    course_id = group.courseID
+    
+    course_group_ids = db.query(GroupModel.Group.groupID).filter(
+        GroupModel.Group.courseID == course_id
+    ).all()
+    
+    # Convert the list of tuples [(1,), (2,), ...] into a flat list [1, 2, ...]
+    course_group_ids = [g[0] for g in course_group_ids]
+    
+    existing_course_enrollment = db.query(model.StudentGroupAssociation).filter(
+        model.StudentGroupAssociation.studentID == student_id,
+        # Check if the groupID is in the list of groups for the course
+        model.StudentGroupAssociation.groupID.in_(course_group_ids)
     ).first()
     
-    if existing_association:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Student already enrolled in this group.")
+    if existing_course_enrollment:
+        if existing_course_enrollment.groupID == group_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, 
+                detail=f"Student {student_id} is already enrolled in this group."
+            )
+        else:
+            # This enforces the business rule: they are in a DIFFERENT group in the SAME course
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Student {student_id} is already enrolled in another group (ID: {existing_course_enrollment.groupID}) for Course {course_id}. A student can only belong to one group per course."
+            )
     
     db_association = model.StudentGroupAssociation(
         groupID = group_id,
@@ -95,7 +114,7 @@ def remove_student(group_id : int, student_id : int, db : Session = Depends(get_
     db.delete(association)
     db.commit()
     
-    return
+    return {"message": "Student unenrolled successfully"}
 
 # helper function
 def check_service_availability(name: str, url: str) -> bool:

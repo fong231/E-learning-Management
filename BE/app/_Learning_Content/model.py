@@ -13,7 +13,7 @@ class LearningContent(Base):
     description = Column(Text)
     
     # relationship
-    material = relationship("Material", back_populates="content")
+    # material = relationship("Material", back_populates="content")
     resource = relationship("FileImage", back_populates="content")
     announcement = relationship(
         "Announcement", 

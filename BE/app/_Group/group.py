@@ -38,7 +38,7 @@ def read(group_id : int, db : Session = Depends(get_db)):
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
-    return group
+    return group 
 
 # update group
 @router.patch("/{group_id}", response_model=schema.GroupRead)

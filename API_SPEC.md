@@ -369,6 +369,8 @@ Used by `CourseRepository.getCourseContent()`.
 
 **Response**
 
+# NOTE: Hiện tại learning content không có liên kết gì liên quan đến course nên không thể query
+
 ```json
 {
   "content": [

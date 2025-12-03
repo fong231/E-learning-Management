@@ -69,7 +69,7 @@ async def get_current_active_user(
     
     token = credentials.credentials
     
-    auth_record = await validate_token()
+    auth_record = await validate_token(token, db)
     
     if not auth_record:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
