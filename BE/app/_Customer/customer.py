@@ -57,14 +57,35 @@ def update(customer_id : int, customer_data: schema.CustomerUpdate, db : Session
     if not db_customer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
     
-    email = db_customer.fullname
-    email_exist = db.query(model.Customer).filter(model.Customer.fullname == email).first()
-    if email_exist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Customer with email '{email}' already exists."
-        )
+    email = customer_data.email
+    fullname = customer_data.fullname
     
+    if email:
+        email_exist = (
+            db.query(model.Customer)
+            .filter(model.Customer.email == email)
+            .filter(model.Customer.customerID != customer_id)
+            .first()
+        )
+        if email_exist:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Customer with email '{email}' already exists."
+            )
+
+    if fullname:
+        fullname_exist = (
+            db.query(model.Customer)
+            .filter(model.Customer.fullname == fullname)
+            .filter(model.Customer.customerID != customer_id)
+            .first()
+        )
+        if fullname_exist:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Customer with username '{fullname}' already exists."
+            )
+        
     update_data = customer_data.model_dump(exclude_unset=True)
     
     for key, value in update_data.items():
@@ -73,7 +94,7 @@ def update(customer_id : int, customer_data: schema.CustomerUpdate, db : Session
     db.commit()
     db.refresh(db_customer)
     
-    return {"customer": db_customer}
+    return db_customer
     
 # delete customer
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
