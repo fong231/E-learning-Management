@@ -32,7 +32,7 @@ The models show accepted key names; the backend can send extra fields – FE wil
 
 ```json
 {
-  "email": "student1@university.edu",
+  "username": "admin", // Customer.fullname in DB
   "password": "string"
 }
 ```

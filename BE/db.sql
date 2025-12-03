@@ -45,7 +45,7 @@ CREATE TABLE `Customers` (
     `phone_number` VARCHAR(20),
     `email` VARCHAR(255) UNIQUE NOT NULL,
     `avatar` VARCHAR(255),
-    `fullname` VARCHAR(255) NOT NULL,
+    `fullname` VARCHAR(255) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `role` ENUM('student', 'instructor') NOT NULL,
     PRIMARY KEY (`customerID`)
