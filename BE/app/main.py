@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .database import engine, Base
 # from ._Account import account
 from ._Announcement import announcement
@@ -29,6 +31,12 @@ app = FastAPI(title="E-Learning Backend")
 
 auth_dependency = [Depends(get_current_active_user)]
 
+current_file_dir = os.path.dirname(os.path.abspath(__file__))
+
+STATIC_DIR = os.path.join(current_file_dir, '..', 'uploads') 
+
+app.mount("/uploads", StaticFiles(directory=STATIC_DIR), name="uploads")
+
 app.include_router(customer.router, dependencies=auth_dependency)
 # app.include_router(account.router, dependencies=auth_dependency)
 app.include_router(authenticate.router)
@@ -55,6 +63,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 @app.get("/")
 def read_root():
