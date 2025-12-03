@@ -114,12 +114,12 @@ def reset_password(
             detail="Current password is incorrect"
         )
         
-    is_valid, detail = check_password_complexity(account_data.new_password)
-    if not is_valid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": "Password does not meet complexity requirements", "details": detail}
-        )
+    # is_valid, detail = check_password_complexity(account_data.new_password)
+    # if not is_valid:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail={"error": "Password does not meet complexity requirements", "details": detail}
+    #     )
 
     hashed_password = hash_password(account_data.new_password)
 
