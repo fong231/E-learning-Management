@@ -4,6 +4,8 @@ from datetime import datetime
 from decimal import Decimal
 
 class AssignmentBase(BaseModel):
+    title : str
+    description : Optional[str] = None
     start_date: Optional[datetime] = None
     deadline: datetime
     late_deadline: Optional[datetime] = None
@@ -19,6 +21,8 @@ class AssignmentCreate(AssignmentBase):
     pass
     
 class AssignmentUpdate(BaseModel):
+    title : str
+    description : Optional[str] = None
     start_date: Optional[datetime] = None
     deadline: Optional[datetime] = None
     late_deadline: Optional[datetime] = None

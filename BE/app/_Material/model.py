@@ -7,9 +7,9 @@ from ..database import Base
 class Material(Base):
     __tablename__ = "Materials"
     
-    materialID = Column(Integer, primary_key=True, index=True)
-    
+    # materialID = Column(Integer, primary_key=True, index=True)
     # contentID = Column(Integer, ForeignKey('Learning_Content.contentID', ondelete="CASCADE"), nullable=False)
+    materialID = Column(Integer, ForeignKey('Learning_Content.contentID', ondelete="CASCADE"), primary_key=True)
     
     title = Column(String(255))
     description = Column(Text)

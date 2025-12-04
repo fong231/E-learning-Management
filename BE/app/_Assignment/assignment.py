@@ -95,17 +95,3 @@ def delete(assignment_id : int, db : Session = Depends(get_db)):
     db.commit()
 
     return
-
-# helper function
-def check_service_availability(name: str, url: str) -> bool:
-    """Requests the endpoint to check if the external item exists."""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        return True
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            return False 
-        raise
-    except requests.RequestException as e:
-        raise RuntimeError(f"External service '{name}' is unavailable: {str(e)}")

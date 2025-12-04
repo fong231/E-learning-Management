@@ -92,8 +92,8 @@ def read_groups_in_course(course_id : int, db : Session = Depends(get_db)):
             {
                 "group_id": group.groupID,
                 "course_id": group.courseID,
-                # "course_name": "Course Name PlaceHolder", 
-                "group_name": f"Group {group.groupID}",
+                "course_name": course.course_name,
+                "group_name": f"Group {group.id}",
                 "students": student_count,
                 # "created_at": "2024-01-01T00:00:00Z",
             }
@@ -143,41 +143,31 @@ def delete(course_id : int, db : Session = Depends(get_db)):
     return {"message": "Course deleted successfully"}
 
 # get course content
+@router.get("/{course_id}/content")
 def get_course_content(
     course_id: int, 
     content_id: int,
     db: Session = Depends(get_db)
 ):
-    # Use the SQLAlchemy Class name directly for clarity (e.g., ContentModel.LearningContent)
-    # AND include the missing columns for the full response structure.
-    
-    # NOTE: You MUST ensure your database has the columns used here (name, content_type, session_number, created_at, updated_at).
     result = (
         db.query(
             ContentModel.LearningContent.contentID,
             model.Course.courseID,
-            # model.Course.name.label("course_name"), # UNCOMMENTED: Assuming Course has 'name'
+            model.Course.course_name,
             ContentModel.LearningContent.title,
             ContentModel.LearningContent.description,
-            # ContentModel.LearningContent.content_type, # UNCOMMENTED: Assuming LearningContent has 'content_type'
-
             FileImageModel.FileImage.path.label("content_url"), 
-            FileImageModel.FileImage.upload_at.label("upload_at"), # UNCOMMENTED
-            
-            # Course_MaterialModel.CourseMaterialAssociation.session_number, # UNCOMMENTED
-            # ContentModel.LearningContent.created_at, # UNCOMMENTED
-            # ContentModel.LearningContent.updated_at, # UNCOMMENTED
+            # FileImageModel.FileImage.upload_at.label("upload_at"),
         )
-        # 1. Join LearningContent to Material (The join you commented out MUST BE RESTORED)
-        # .join(MaterialModel.Material, ContentModel.LearningContent.contentID == MaterialModel.Material.contentID)
-        
-        # 2. Join Material to CourseMaterialAssociation
+        .select_from(ContentModel.LearningContent) 
+
+        .join(MaterialModel.Material, ContentModel.LearningContent.contentID == MaterialModel.Material.materialID)
         .join(Course_MaterialModel.CourseMaterialAssociation, MaterialModel.Material.materialID == Course_MaterialModel.CourseMaterialAssociation.materialID)
-        
-        # 3. Join CourseMaterialAssociation to Course
+
+        # 2. Join to Course
         .join(model.Course, Course_MaterialModel.CourseMaterialAssociation.courseID == model.Course.courseID)
 
-        # 4. LEFT JOIN to FileImage (No change needed here)
+        # 3. Outer Join to File/Image
         .outerjoin(FileImageModel.FileImage, ContentModel.LearningContent.contentID == FileImageModel.FileImage.contentID) 
         
         .filter(model.Course.courseID == course_id)
@@ -185,7 +175,6 @@ def get_course_content(
         .first()
     )
 
-    # 2. Check if the content was found and is associated with the course
     if not result:
         content_exists = db.query(ContentModel.LearningContent).filter(ContentModel.LearningContent.contentID == content_id).first()
         
@@ -199,17 +188,14 @@ def get_course_content(
             detail=detail_msg
         )
 
-    # 3. Format the result for the desired JSON output
     content_data = {
         "content_id": result.contentID,
         "course_id": result.courseID,
-        # "course_name": result.course_name, 
+        "course_name": result.course_name,
         "title": result.title,
         "description": result.description,
         # "content_type": result.content_type, 
-        
-        # content_url comes from FileImage.path
-        "content_url": result.content_url, 
+        "content_url": result.content_url,
         # "session_number": result.session_number, 
         
         # "created_at": result.created_at.isoformat() + "Z" if result.created_at else None,
