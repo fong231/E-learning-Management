@@ -17,4 +17,13 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: redis-server --requirepass ${REDIS_PASSWORD}
 
+  backend:
+    build: ./backend/
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: ${DB_NAME_AUTH}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    restart: always
+
   
