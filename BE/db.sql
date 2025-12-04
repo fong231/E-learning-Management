@@ -80,6 +80,7 @@ CREATE TABLE `Semesters` (
 CREATE TABLE `Courses` (
     `courseID` INT NOT NULL AUTO_INCREMENT,
     `number_of_sessions` ENUM('10', '15') NOT NULL,
+    `course_name` VARCHAR(255) NOT NULL,
     `description` TEXT,
     `semesterID` INT,
     `instructorID` INT,
@@ -335,321 +336,325 @@ DELIMITER ;
 -- ============================================
 -- CUSTOMERS (Base users)
 -- ============================================
-INSERT INTO `Customers` (`customerID`, `phone_number`, `email`, `fullname`, `password`, `role`) VALUES
-(1, '0901234567', 'john.doe@university.edu', 'John Doe', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(2, '0902345678', 'jane.smith@university.edu', 'Jane Smith', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(3, '0903456789', 'bob.wilson@university.edu', 'Bob Wilson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(4, '0904567890', 'alice.brown@university.edu', 'Alice Brown', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(5, '0905678901', 'charlie.davis@university.edu', 'Charlie Davis', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(6, '0906789012', 'emma.johnson@university.edu', 'Emma Johnson', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(7, '0907890123', 'david.miller@university.edu', 'David Miller', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
-(8, '0908901234', 'sophia.garcia@university.edu', 'Sophia Garcia', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'student'),
--- Instructors
-(101, '0911111111', 'admin@gmail.com', 'admin', '$2b$12$yGIqw4/uaAsIVa4n/6j5ouz4Ekq6LHXhmP8RJTH5nkq8bVAFsYGny', 'instructor'),
-(102, '0922222222', 'dr.sarah.jones@university.edu', 'Dr. Sarah Jones', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'instructor'),
-(103, '0933333333', 'prof.michael.lee@university.edu', 'Prof. Michael Lee', '$2y$10$5mEQXOhi50si90LVLwlUR.4BmRid3T5talGtLC4eJj9EpE4A9F/3G', 'instructor');
+INSERT INTO `Customers` (`customerID`, `phone_number`, `email`, `avatar`, `fullname`, `password`, `role`) VALUES
+-- MAIN DEMO STUDENT: John Doe (ID=1)
+(1, '0901234567', 'john.doe@university.edu', 'https://ui-avatars.com/api/?name=John+Doe&background=4285F4&color=fff', 'John Doe', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+
+-- Other students (supporting cast)
+(2, '0902345678', 'jane.smith@university.edu', 'https://ui-avatars.com/api/?name=Jane+Smith&background=EA4335&color=fff', 'Jane Smith', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(3, '0903456789', 'bob.wilson@university.edu', 'https://ui-avatars.com/api/?name=Bob+Wilson&background=FBBC04&color=fff', 'Bob Wilson', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(4, '0904567890', 'alice.brown@university.edu', 'https://ui-avatars.com/api/?name=Alice+Brown&background=34A853&color=fff', 'Alice Brown', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(5, '0905678901', 'charlie.davis@university.edu', 'https://ui-avatars.com/api/?name=Charlie+Davis&background=9C27B0&color=fff', 'Charlie Davis', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+
+-- MAIN DEMO INSTRUCTOR: Admin (ID=101)
+(101, '0911111111', 'admin@gmail.com', 'https://ui-avatars.com/api/?name=Admin&background=FF5722&color=fff', 'admin', '$2b$12$yGIqw4/uaAsIVa4n/6j5ouz4Ekq6LHXhmP8RJTH5nkq8bVAFsYGny', 'instructor');
 
 -- ============================================
--- INSTRUCTORS & STUDENTS
+-- 2. INSTRUCTORS & STUDENTS
 -- ============================================
-INSERT INTO `Instructors` (`instructorID`) VALUES
-(101),
-(102),
-(103);
+INSERT INTO `Instructors` (`instructorID`) VALUES (101);
 
-INSERT INTO `Students` (`studentID`) VALUES
-(1), (2), (3), (4), (5), (6), (7), (8);
+INSERT INTO `Students` (`studentID`) VALUES (1), (2), (3), (4), (5);
 
 -- ============================================
--- SEMESTERS
+-- 3. SEMESTER
 -- ============================================
 INSERT INTO `Semesters` (`semesterID`, `description`) VALUES
-(1, 'Fall Semester 2024 - September to December'),
-(2, 'Spring Semester 2025 - January to May'),
-(3, 'Summer Semester 2025 - June to August');
+(1, 'Semester 1 - Academic Year 2024-2025');
 
 -- ============================================
--- COURSES
+-- 4. MAIN DEMO COURSE
 -- ============================================
-INSERT INTO `Courses` (`courseID`, `number_of_sessions`, `description`, `semesterID`, `instructorID`) VALUES
-(1, '15', 'Introduction to Programming with Java - Learn fundamental programming concepts', 1, 101),
-(2, '15', 'Data Structures and Algorithms - Master essential data structures', 1, 101),
-(3, '10', 'Web Development Fundamentals - HTML, CSS, JavaScript basics', 1, 102),
-(4, '15', 'Database Design and SQL - Learn relational database design', 2, 102),
-(5, '10', 'Mobile App Development - Build Android apps with Flutter', 2, 103);
+INSERT INTO `Courses` (`courseID`, `number_of_sessions`, `course_name`, `description`, `semesterID`, `instructorID`) VALUES
+(1, '15', 'Cross-Platform Mobile Application Development', 'Learn Flutter and build mobile apps for Android, iOS, and Web', 1, 101);
 
 -- ============================================
--- GROUPS
+-- 5. GROUPS
 -- ============================================
-INSERT INTO `Groups` (`groupID`, `courseID`) VALUES
-(1, 1),  -- Java Programming - Group 1
-(2, 1),  -- Java Programming - Group 2
-(3, 2),  -- Data Structures - Group 1
-(4, 3),  -- Web Development - Group 1
-(5, 4),  -- Database Design - Group 1
-(6, 5);  -- Mobile Development - Group 1
+INSERT INTO `Groups` (`groupID`, `id`, `courseID`) VALUES
+(1, 1, 1),  -- Group 1 of Course 1
+(2, 2, 1);  -- Group 2 of Course 1
 
 -- ============================================
--- STUDENT_GROUP (Enrollments)
+-- 6. STUDENT ENROLLMENTS
 -- ============================================
+-- John Doe in Group 1 (MAIN DEMO)
 INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
--- Group 1 (Java - Group 1)
-(1, 1), (2, 1), (3, 1), (4, 1),
--- Group 2 (Java - Group 2)
-(5, 2), (6, 2), (7, 2), (8, 2),
--- Group 3 (Data Structures)
-(1, 3), (2, 3), (5, 3), (6, 3),
--- Group 4 (Web Development)
-(3, 4), (4, 4), (7, 4), (8, 4),
--- Group 5 (Database Design)
-(1, 5), (3, 5), (5, 5), (7, 5),
--- Group 6 (Mobile Development)
-(2, 6), (4, 6), (6, 6), (8, 6);
+(1, 1),  -- John Doe -> Group 1
+(2, 1),  -- Jane Smith -> Group 1
+(3, 1),  -- Bob Wilson -> Group 1
+(4, 2),  -- Alice Brown -> Group 2
+(5, 2);  -- Charlie Davis -> Group 2
 
 -- ============================================
--- LEARNING CONTENT
+-- 7. LEARNING CONTENT (Base for all content types)
 -- ============================================
 INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
--- Course 1: Java Programming
-(1, 'Week 1: Introduction to Java', 'Getting started with Java programming environment'),
-(2, 'Week 2: Variables and Data Types', 'Understanding primitive and reference types'),
-(3, 'Week 3: Control Structures', 'If statements, loops, and switch cases'),
-(4, 'Assignment 1: Hello World Application', 'Create your first Java application'),
-(5, 'Quiz 1: Java Basics', 'Test your understanding of Java fundamentals'),
-
--- Course 2: Data Structures
-(6, 'Week 1: Arrays and Lists', 'Understanding linear data structures'),
-(7, 'Week 2: Stacks and Queues', 'LIFO and FIFO data structures'),
-(8, 'Assignment 2: Implement Stack', 'Build a stack data structure from scratch'),
-
--- Course 3: Web Development
-(9, 'Week 1: HTML Basics', 'Introduction to HTML tags and structure'),
-(10, 'Week 2: CSS Styling', 'Style your web pages with CSS'),
-(11, 'Quiz 2: HTML & CSS Fundamentals', 'Test your web development knowledge'),
-
 -- Announcements
-(12, 'Welcome to Java Programming!', 'Important information about the course'),
-(13, 'Midterm Exam Schedule', 'Exam will be held on November 15th'),
-(14, 'Assignment Deadline Extended', 'Assignment 1 deadline extended to next week');
+(1, 'Welcome to Cross-Platform Development!', 'Welcome everyone! This course will teach you Flutter development.'),
+(2, 'Midterm Exam Schedule', 'The midterm exam will be held on December 15, 2024.'),
+(3, 'Assignment 1 Deadline Extended', 'Due to popular request, Assignment 1 deadline is extended by 2 days.'),
+
+-- Assignments
+(4, 'Assignment 1: Flutter UI Basics', 'Create a simple Flutter app with Material Design widgets.'),
+(5, 'Assignment 2: State Management', 'Implement a counter app using Provider for state management.'),
+(6, 'Assignment 3: API Integration', 'Build an app that fetches data from REST API and displays it.'),
+
+-- Materials
+(7, 'Week 1: Introduction to Flutter', 'Getting started with Flutter framework and Dart programming.'),
+(8, 'Week 2: Widgets and Layouts', 'Understanding StatelessWidget, StatefulWidget, and layout widgets.'),
+(9, 'Week 3: Navigation and Routing', 'Learn how to navigate between screens in Flutter.'),
+(10, 'Week 4: State Management with Provider', 'Deep dive into Provider package for state management.'),
+
+-- Quizzes (as Learning Content)
+(11, 'Quiz 1: Flutter Basics', 'Test your knowledge on Flutter fundamentals.'),
+(12, 'Quiz 2: Widgets and State', 'Quiz about Flutter widgets and state management.');
 
 -- ============================================
--- MATERIALS
--- ============================================
-INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
-(1, 'Java Programming Lecture Slides', 'Comprehensive slides covering Java basics'),
-(2, 'Java Installation Guide', 'Step-by-step guide to install JDK'),
-(3, 'Data Structures Textbook', 'Recommended reading for the course'),
-(6, 'Array Operations Examples', 'Code examples for array manipulations'),
-(7, 'Stack Implementation Guide', 'Detailed guide on implementing stacks'),
-(9, 'HTML Cheat Sheet', 'Quick reference for HTML tags'),
-(10, 'CSS Properties Reference', 'Complete CSS properties guide');
-
--- ============================================
--- COURSE_MATERIALS
--- ============================================
-INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
-(1, 1), (1, 2),
-(2, 3), (2, 6), (2, 7),
-(3, 9), (3, 10);
-
--- ============================================
--- FILES_IMAGES
--- ============================================
-INSERT INTO `Files_Images` (`resourceID`, `path`, `contentID`, `uploaded_at`) VALUES
-(1, 'materials/java_week1_slides.pdf', 1, '2024-09-01 10:00:00'),
-(2, 'materials/java_week1_code.zip', 1, '2024-09-01 10:05:00'),
-(3, 'materials/java_week2_slides.pdf', 2, '2024-09-08 10:00:00'),
-(4, 'materials/variables_examples.java', 2, '2024-09-08 10:10:00'),
-(5, 'materials/control_structures.pdf', 3, '2024-09-15 10:00:00'),
-(6, 'materials/arrays_lecture.pdf', 6, '2024-09-01 09:00:00'),
-(7, 'materials/stack_queue_slides.pdf', 7, '2024-09-08 09:00:00'),
-(8, 'materials/html_tutorial.pdf', 9, '2024-09-01 11:00:00'),
-(9, 'materials/css_examples.zip', 10, '2024-09-08 11:00:00');
-
--- ============================================
--- ASSIGNMENTS
--- ============================================
-INSERT INTO `Assignments` (`assignmentID`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
-(4, '2024-09-20 00:00:00', '2024-09-27 23:59:59', '2024-09-29 23:59:59', 5.00, '.java,.zip', 1),
-(8, '2024-10-01 00:00:00', '2024-10-08 23:59:59', '2024-10-10 23:59:59', 10.00, '.java,.zip', 3);
-
--- ============================================
--- QUIZZES
--- ============================================
-INSERT INTO `Quizzes` (`quizID`, `duration`, `open_time`, `close_time`, `easy_questions`, `medium_questions`, `hard_questions`, `number_of_attempts`) VALUES
-(5, 30, '2024-10-05 09:00:00', '2024-10-05 18:00:00', 5, 3, 2, 2),
-(11, 45, '2024-10-12 09:00:00', '2024-10-12 18:00:00', 6, 4, 0, 1);
-
--- ============================================
--- QUESTIONS
--- ============================================
-INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
--- Quiz 1 (Java Basics) - Easy Questions
-(1, 'easy_question', 'A', 5),
-(2, 'easy_question', 'B', 5),
-(3, 'easy_question', 'C', 5),
-(4, 'easy_question', 'D', 5),
-(5, 'easy_question', 'A', 5),
--- Quiz 1 - Medium Questions
-(6, 'medium_question', 'B', 5),
-(7, 'medium_question', 'C', 5),
-(8, 'medium_question', 'A', 5),
--- Quiz 1 - Hard Questions
-(9, 'hard_question', 'D', 5),
-(10, 'hard_question', 'B', 5),
-
--- Quiz 2 (HTML & CSS) - Easy Questions
-(11, 'easy_question', 'A', 11),
-(12, 'easy_question', 'C', 11),
-(13, 'easy_question', 'B', 11),
-(14, 'easy_question', 'D', 11),
-(15, 'easy_question', 'A', 11),
-(16, 'easy_question', 'B', 11),
--- Quiz 2 - Medium Questions
-(17, 'medium_question', 'C', 11),
-(18, 'medium_question', 'A', 11),
-(19, 'medium_question', 'D', 11),
-(20, 'medium_question', 'B', 11);
-
--- ============================================
--- STUDENT_SCORE
--- ============================================
-INSERT INTO `Student_Score` (`studentID`, `groupID`, `quizID`, `score`, `completed_at`) VALUES
--- Quiz 1 scores
-(1, 1, 5, 85.50, '2024-10-05 10:30:00'),
-(2, 1, 5, 92.00, '2024-10-05 11:00:00'),
-(3, 1, 5, 78.50, '2024-10-05 09:45:00'),
-(4, 1, 5, 88.00, '2024-10-05 12:00:00'),
-(5, 2, 5, 95.00, '2024-10-05 10:00:00'),
-(6, 2, 5, 82.50, '2024-10-05 11:30:00'),
-(7, 2, 5, 76.00, '2024-10-05 13:00:00'),
-(8, 2, 5, 90.50, '2024-10-05 14:00:00'),
-
--- Quiz 2 scores
-(3, 4, 11, 87.00, '2024-10-12 10:00:00'),
-(4, 4, 11, 91.50, '2024-10-12 11:00:00'),
-(7, 4, 11, 83.00, '2024-10-12 12:00:00'),
-(8, 4, 11, 89.00, '2024-10-12 13:00:00');
-
--- ============================================
--- ANNOUNCEMENTS
+-- 8. ANNOUNCEMENTS
 -- ============================================
 INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
-(12, 1),
-(13, 1),
-(14, 2);
+(1, 1),  -- Welcome announcement for Group 1
+(2, 1),  -- Midterm schedule for Group 1
+(3, 2);  -- Deadline extension for Group 2
 
 -- ============================================
--- TOPICS (Forum)
+-- 9. COMMENTS ON ANNOUNCEMENTS
+-- ============================================
+INSERT INTO `Comments` (`commentID`, `message`, `ownerID`, `announcementID`) VALUES
+(1, 'Thank you professor! Looking forward to this course.', 1, 1),  -- John Doe comment
+(2, 'Will the midterm be online or in-person?', 1, 2),  -- John Doe question
+(3, 'The exam will be conducted online via our LMS platform.', 101, 2),  -- Admin reply
+(4, 'Thanks for the extension!', 2, 3);  -- Jane Smith
+
+-- ============================================
+-- 10. ASSIGNMENTS
+-- ============================================
+INSERT INTO `Assignments` (`assignmentID`, `title`, `description`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
+(4, 'Assignment 1: Flutter UI Basics', 'Create a simple Flutter app with Material Design widgets. Include AppBar, ListView, and Cards.', '2024-11-01 00:00:00', '2024-11-15 23:59:59', '2024-11-17 23:59:59', 10.00, '.zip,.dart', 1),
+(5, 'Assignment 2: State Management', 'Implement a counter app using Provider. Show increment, decrement, and reset functionality.', '2024-11-16 00:00:00', '2024-11-30 23:59:59', '2024-12-02 23:59:59', 10.00, '.zip,.dart', 1),
+(6, 'Assignment 3: API Integration', 'Build an app that fetches data from JSONPlaceholder API and displays posts in a list.', '2024-12-01 00:00:00', '2024-12-15 23:59:59', NULL, 15.00, '.zip,.dart', 1);
+
+-- ============================================
+-- 11. MATERIALS
+-- ============================================
+INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
+(7, 'Week 1: Introduction to Flutter', 'Lecture slides covering Flutter installation, project structure, and first app.'),
+(8, 'Week 2: Widgets and Layouts', 'Comprehensive guide on Flutter widgets - Container, Row, Column, Stack, etc.'),
+(9, 'Week 3: Navigation and Routing', 'Learn Navigator, Routes, and passing data between screens.'),
+(10, 'Week 4: State Management with Provider', 'Deep dive into Provider package with examples and best practices.');
+
+-- ============================================
+-- 12. COURSE_MATERIALS (Link materials to course)
+-- ============================================
+INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
+(1, 7),
+(1, 8),
+(1, 9),
+(1, 10);
+
+-- ============================================
+-- 13. FILES FOR CONTENT
+-- ============================================
+INSERT INTO `Files_Images` (`resourceID`, `path`, `contentID`, `uploaded_at`) VALUES
+-- Announcement 1 files
+(1, 'https://example.com/files/course_syllabus.pdf', 1, '2024-11-01 08:00:00'),
+(2, 'https://example.com/files/welcome_guide.pdf', 1, '2024-11-01 08:00:00'),
+
+-- Assignment 1 files (instructor's reference)
+(3, 'https://example.com/files/assignment1_requirements.pdf', 4, '2024-11-01 09:00:00'),
+(4, 'https://example.com/files/ui_examples.png', 4, '2024-11-01 09:00:00'),
+
+-- Material 1 files
+(5, 'https://example.com/materials/week1_slides.pdf', 7, '2024-11-01 10:00:00'),
+(6, 'https://example.com/materials/flutter_installation_guide.pdf', 7, '2024-11-01 10:00:00'),
+
+-- Material 2 files
+(7, 'https://example.com/materials/week2_widgets_demo.zip', 8, '2024-11-08 10:00:00'),
+(8, 'https://example.com/materials/widget_catalog.pdf', 8, '2024-11-08 10:00:00');
+
+-- ============================================
+-- 14. QUIZZES
+-- ============================================
+INSERT INTO `Quizzes` (`quizID`, `duration`, `open_time`, `close_time`, `easy_questions`, `medium_questions`, `hard_questions`, `number_of_attempts`) VALUES
+(11, 30, '2024-11-20 09:00:00', '2024-11-20 18:00:00', 5, 3, 2, 2),
+(12, 45, '2024-12-05 09:00:00', '2024-12-05 18:00:00', 6, 4, 3, 1);
+
+-- ============================================
+-- 15. QUESTIONS FOR QUIZZES
+-- ============================================
+-- Quiz 1: Flutter Basics (10 questions)
+INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
+-- Easy Questions
+(1, 'easy_question', 'A', 11),  -- What is Flutter?
+(2, 'easy_question', 'B', 11),  -- Which language is Flutter based on?
+(3, 'easy_question', 'C', 11),  -- What is a StatelessWidget?
+(4, 'easy_question', 'D', 11),  -- What does hot reload do?
+(5, 'easy_question', 'A', 11),  -- What is Material Design?
+
+-- Medium Questions
+(6, 'medium_question', 'B', 11),  -- Difference between StatelessWidget and StatefulWidget
+(7, 'medium_question', 'C', 11),  -- What is BuildContext?
+(8, 'medium_question', 'A', 11),  -- How to pass data between screens?
+
+-- Hard Questions
+(9, 'hard_question', 'D', 11),  -- Explain widget lifecycle
+(10, 'hard_question', 'B', 11); -- What is InheritedWidget?
+
+-- Quiz 2: Widgets and State (13 questions)
+INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
+-- Easy Questions
+(11, 'easy_question', 'A', 12),
+(12, 'easy_question', 'C', 12),
+(13, 'easy_question', 'B', 12),
+(14, 'easy_question', 'D', 12),
+(15, 'easy_question', 'A', 12),
+(16, 'easy_question', 'B', 12),
+
+-- Medium Questions
+(17, 'medium_question', 'C', 12),
+(18, 'medium_question', 'A', 12),
+(19, 'medium_question', 'D', 12),
+(20, 'medium_question', 'B', 12),
+
+-- Hard Questions
+(21, 'hard_question', 'C', 12),
+(22, 'hard_question', 'A', 12),
+(23, 'hard_question', 'D', 12);
+
+-- ============================================
+-- 16. STUDENT SCORES (John Doe's quiz results)
+-- ============================================
+INSERT INTO `Student_Score` (`studentID`, `groupID`, `quizID`, `score`, `completed_at`) VALUES
+(1, 1, 11, 85.50, '2024-11-20 10:30:00'),  -- John Doe scored 85.5% on Quiz 1
+(2, 1, 11, 92.00, '2024-11-20 11:00:00'),  -- Jane Smith
+(3, 1, 11, 78.00, '2024-11-20 12:00:00');  -- Bob Wilson
+
+-- ============================================
+-- 17. FORUM TOPICS
 -- ============================================
 INSERT INTO `Topics` (`topicID`, `title`, `description`, `created_at`, `courseID`) VALUES
-(1, 'How to install Java JDK?', 'I am having trouble installing Java on my computer. Can someone help?', '2024-09-02 14:30:00', 1),
-(2, 'Difference between Array and ArrayList', 'What are the main differences between these two?', '2024-09-10 16:00:00', 1),
-(3, 'Best practices for naming variables', 'What are the conventions for naming variables in Java?', '2024-09-15 10:00:00', 1),
-(4, 'Stack vs Queue - Real world examples', 'Can someone provide real-world examples of when to use each?', '2024-09-05 11:00:00', 2),
-(5, 'HTML5 new features', 'What are the new features introduced in HTML5?', '2024-09-03 13:00:00', 3),
-(6, 'CSS Grid vs Flexbox', 'When should I use Grid and when should I use Flexbox?', '2024-09-12 15:00:00', 3);
+(1, 'How to fix "flutter doctor" errors?', 'I am getting errors when running flutter doctor. Android SDK not found.', '2024-11-02 14:30:00', 1),
+(2, 'Best state management approach?', 'What is the recommended state management solution for beginners? Provider, Bloc, or Riverpod?', '2024-11-10 16:00:00', 1),
+(3, 'Assignment 1 - AppBar not showing', 'My AppBar widget is not displaying. Here is my code...', '2024-11-12 10:00:00', 1),
+(4, 'Recommended resources for Flutter', 'Can anyone share good tutorials or documentation links?', '2024-11-15 13:00:00', 1);
 
 -- ============================================
--- TOPIC_CHATS
+-- 18. TOPIC CHATS (Replies)
 -- ============================================
 INSERT INTO `Topic_Chats` (`messageID`, `message`, `topicID`, `studentID`) VALUES
 -- Topic 1 discussion
-(1, 'Make sure you download the correct version for your operating system', 1, 2),
-(2, 'Also, don''t forget to set JAVA_HOME environment variable', 1, 5),
-(3, 'Thanks! It worked after setting the environment variable', 1, 1),
+(1, 'You need to download Android Studio and set ANDROID_HOME environment variable.', 2, 1),
+(2, 'Also run "flutter doctor --android-licenses" to accept licenses.', 3, 1),
+(3, 'Thanks! That fixed it.', 1, 1),
 
 -- Topic 2 discussion
-(4, 'Array has fixed size, ArrayList is dynamic', 2, 3),
-(5, 'ArrayList is slower but more flexible', 2, 6),
-(6, 'Use Array when you know the exact size beforehand', 2, 4),
+(4, 'For beginners, I recommend starting with Provider. It is simple and officially supported.', 2, 2),
+(5, 'Provider is great for small to medium apps. For complex apps, consider Bloc.', 3, 2),
+(6, 'Thank you! I will start with Provider then.', 1, 2),
 
 -- Topic 3 discussion
-(7, 'Use camelCase for variable names in Java', 3, 7),
-(8, 'Start with lowercase letter, be descriptive', 3, 2),
+(7, 'Make sure you are using Scaffold widget and passing AppBar to its appBar property.', 2, 3),
+(8, 'Oh I forgot to wrap my widget with Scaffold! Thanks!', 1, 3),
 
 -- Topic 4 discussion
-(9, 'Stack is used in function call stack, undo operations', 4, 1),
-(10, 'Queue is used in print job queues, breadth-first search', 4, 2),
-(11, 'Browser back button is a good example of stack', 4, 5),
-
--- Topic 5 discussion
-(12, 'HTML5 added semantic elements like <header>, <nav>, <footer>', 5, 3),
-(13, 'Also added <canvas> for graphics and <video> for media', 5, 4),
-
--- Topic 6 discussion
-(14, 'Use Flexbox for one-dimensional layouts', 6, 7),
-(15, 'Use Grid for two-dimensional layouts', 6, 8);
+(9, 'Check out flutter.dev official documentation. Also, "Flutter in Action" book is excellent.', 3, 4),
+(10, 'YouTube channel "The Net Ninja" has great Flutter tutorials for free.', 2, 4);
 
 -- ============================================
--- TOPIC_FILES
+-- 19. TOPIC FILES
 -- ============================================
 INSERT INTO `Topic_Files` (`fileID`, `path`, `topicID`) VALUES
-(1, 'forum/java_installation_guide.pdf', 1),
-(2, 'forum/array_vs_arraylist_comparison.png', 2),
-(3, 'forum/naming_conventions_chart.jpg', 3),
-(4, 'forum/stack_queue_examples.pdf', 4),
-(5, 'forum/html5_features_list.pdf', 5),
-(6, 'forum/grid_vs_flexbox_diagram.png', 6);
+(1, 'https://example.com/forum/flutter_doctor_screenshot.png', 1),
+(2, 'https://example.com/forum/appbar_code.dart', 3),
+(3, 'https://example.com/forum/resource_list.pdf', 4);
 
 -- ============================================
--- COMMENTS (On Announcements)
--- ============================================
-INSERT INTO `Comments` (`commentID`, `message`, `ownerID`, `announcementID`) VALUES
-(1, 'Thank you for the warm welcome! Excited to start learning Java.', 1, 12),
-(2, 'Looking forward to this course!', 2, 12),
-(3, 'Will the exam be online or in-person?', 3, 13),
-(4, 'What topics will be covered in the midterm?', 4, 13),
-(5, 'Thank you for the extension!', 5, 14),
-(6, 'This is very helpful, I needed more time.', 6, 14);
-
--- ============================================
--- MESSAGES (Direct messaging)
+-- 20. MESSAGES (Private chat between John Doe and Admin)
 -- ============================================
 INSERT INTO `Messages` (`messageID`, `content`, `senderID`, `receiverID`, `created_at`) VALUES
--- Student to Instructor
-(1, 'Hello Dr. Brown, I have a question about Assignment 1', 1, 101, '2024-09-22 14:00:00'),
-(2, 'Hi John, sure! What''s your question?', 101, 1, '2024-09-22 14:05:00'),
-(3, 'I''m not sure how to implement the main method', 1, 101, '2024-09-22 14:10:00'),
-(4, 'Check the lecture slides from Week 1, there''s an example', 101, 1, '2024-09-22 14:15:00'),
+-- John Doe asks about Assignment 1
+(1, 'Hello Professor, I have a question about Assignment 1. Can I use external packages?', 1, 101, '2024-11-05 14:00:00'),
+(2, 'Hi John! Yes, you can use any packages from pub.dev, but make sure to document them in your README.', 101, 1, '2024-11-05 14:15:00'),
+(3, 'Thank you! Also, should the UI match the exact design in the requirements?', 1, 101, '2024-11-05 14:20:00'),
+(4, 'The design should be similar, but you can add your own creative touch. Focus on functionality first.', 101, 1, '2024-11-05 14:30:00'),
 
--- More instructor messages
-(5, 'Dr. Sarah, when will you post the quiz results?', 3, 102, '2024-10-06 10:00:00'),
-(6, 'Results will be posted by end of day today', 102, 3, '2024-10-06 10:30:00'),
+-- John Doe asks about Quiz 1
+(5, 'Professor, I missed Quiz 1 due to illness. Can I take it again?', 1, 101, '2024-11-21 10:00:00'),
+(6, 'Sorry to hear that. Yes, I will open a makeup quiz for you tomorrow. Please bring medical certificate.', 101, 1, '2024-11-21 10:30:00'),
+(7, 'Thank you so much! I will bring the certificate.', 1, 101, '2024-11-21 10:35:00'),
 
-(7, 'Professor Lee, can I submit my project one day late?', 4, 103, '2024-10-15 16:00:00'),
-(8, 'Yes, but there will be a 10% penalty', 103, 4, '2024-10-15 16:30:00');
+-- Jane asks about project
+(8, 'Hi Professor, can we work in pairs for the final project?', 2, 101, '2024-11-25 15:00:00'),
+(9, 'Yes, you can work in pairs. Please submit a team registration form by next week.', 101, 2, '2024-11-25 15:30:00');
 
 -- ============================================
--- NOTIFICATIONS
+-- 21. NOTIFICATIONS (For John Doe)
 -- ============================================
 INSERT INTO `Notifications` (`notificationID`, `type`, `content`, `status`, `created_at`, `studentID`) VALUES
 -- Announcements
-(1, 'announcement', 'New announcement posted: "Welcome to Java Programming!"', 'read', '2024-09-01 08:00:00', 1),
-(2, 'announcement', 'New announcement posted: "Welcome to Java Programming!"', 'read', '2024-09-01 08:00:00', 2),
-(3, 'announcement', 'New announcement posted: "Welcome to Java Programming!"', 'unread', '2024-09-01 08:00:00', 3),
+(1, 'announcement', 'New announcement: "Welcome to Cross-Platform Development!"', 'read', '2024-11-01 08:00:00', 1),
+(2, 'announcement', 'New announcement: "Midterm Exam Schedule"', 'read', '2024-11-10 09:00:00', 1),
 
 -- Deadlines
-(4, 'deadline', 'Assignment "Hello World Application" is due in 2 days', 'unread', '2024-09-25 09:00:00', 1),
-(5, 'deadline', 'Assignment "Hello World Application" is due in 2 days', 'unread', '2024-09-25 09:00:00', 2),
-(6, 'deadline', 'Quiz "Java Basics" opens tomorrow at 9:00 AM', 'read', '2024-10-04 10:00:00', 1),
+(3, 'deadline', 'Assignment "Flutter UI Basics" is due in 2 days (Nov 15, 2024)', 'unread', '2024-11-13 09:00:00', 1),
+(4, 'deadline', 'Quiz "Flutter Basics" opens tomorrow at 9:00 AM', 'read', '2024-11-19 10:00:00', 1),
 
 -- Submissions
-(7, 'submission', 'Your assignment "Hello World Application" was submitted successfully', 'read', '2024-09-26 15:30:00', 1),
-(8, 'submission', 'Your quiz "Java Basics" was submitted. Score: 85.5/100', 'read', '2024-10-05 10:35:00', 1),
+(5, 'submission', 'Your assignment "Flutter UI Basics" was submitted successfully', 'read', '2024-11-14 20:30:00', 1),
+(6, 'submission', 'Your quiz "Flutter Basics" was submitted. Score: 85.5/100', 'read', '2024-11-20 10:35:00', 1),
 
 -- Feedback
-(9, 'feedback', 'Your instructor has provided feedback on Assignment 1', 'unread', '2024-09-30 14:00:00', 1),
-(10, 'feedback', 'Your quiz has been graded. Check your score!', 'read', '2024-10-05 17:00:00', 2),
+(7, 'feedback', 'Your instructor has graded Assignment 1. Score: 90/100', 'unread', '2024-11-18 16:00:00', 1),
 
 -- Messages
-(11, 'message', 'You have a new message from Dr. Robert Brown', 'read', '2024-09-22 14:05:00', 1),
-(12, 'message', 'You have a new message from Jane Smith', 'unread', '2024-09-25 20:05:00', 2),
+(8, 'message', 'You have a new message from admin', 'read', '2024-11-05 14:15:00', 1),
+(9, 'message', 'You have a new message from admin', 'unread', '2024-11-21 10:30:00', 1),
 
 -- Other
-(13, 'other', 'New material added to Week 3: Control Structures', 'unread', '2024-09-15 11:00:00', 1),
-(14, 'other', 'Course schedule updated. Check your dashboard.', 'unread', '2024-09-16 09:00:00', 5);
+(10, 'other', 'New material added: "Week 4: State Management with Provider"', 'unread', '2024-11-22 11:00:00', 1);
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
--- END OF SCRIPT
+-- SUMMARY OF DEMO DATA
+-- ============================================
+-- MAIN DEMO USERS:
+--   Student: John Doe (ID=1) - john.doe@university.edu - password: admin
+--   Instructor: admin (ID=101) - admin@gmail.com - password: admin
+--
+-- MAIN DEMO COURSE:
+--   Cross-Platform Mobile Application Development (ID=1)
+--   - Group 1: John Doe, Jane Smith, Bob Wilson
+--   - Group 2: Alice Brown, Charlie Davis
+--
+-- DEMO CONTENT:
+--   - 3 Announcements (with comments)
+--   - 3 Assignments (Assignment 1, 2, 3)
+--   - 4 Materials (Week 1-4)
+--   - 2 Quizzes (23 questions total)
+--   - 4 Forum Topics (with replies)
+--   - 9 Private Messages (John ↔ Admin)
+--   - 10 Notifications (for John)
+--
+-- DEMO SCENARIO:
+-- John Doe has:
+--   ✓ Enrolled in Course 1, Group 1
+--   ✓ Viewed announcements and commented
+--   ✓ Submitted Assignment 1 (graded: 90/100)
+--   ✓ Completed Quiz 1 (score: 85.5/100)
+--   ✓ Participated in forum discussions
+--   ✓ Messaged with instructor
+--   ✓ Received various notifications
+--   ✓ Has pending Assignment 2 & 3
+--   ✓ Has upcoming Quiz 2
+--
+-- This data is perfect for demo video showing:
+-- 1. Student dashboard with progress
+-- 2. View announcements and materials
+-- 3. Submit assignments
+-- 4. Take quizzes
+-- 5. Forum participation
+-- 6. Private messaging with instructor
+-- 7. Notifications system
 -- ============================================
