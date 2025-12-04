@@ -8,7 +8,9 @@ class ForumRepository {
   Future<List<TopicModel>> getCourseTopics(int courseId) async {
     try {
       final response = await _apiService.get('/courses/$courseId/topics');
-      final List<dynamic> topicsJson = response['topics'] ?? response['data'] ?? [];
+      final List<dynamic> topicsJson = response is List
+          ? response
+          : (response['topics'] ?? response['data'] ?? []);
       return topicsJson.map((json) => TopicModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load topics: $e');
@@ -58,7 +60,9 @@ class ForumRepository {
   Future<List<TopicChatModel>> getTopicChats(int topicId) async {
     try {
       final response = await _apiService.get('/topics/$topicId/chats');
-      final List<dynamic> chatsJson = response['chats'] ?? response['data'] ?? [];
+      final List<dynamic> chatsJson = response is List
+          ? response
+          : (response['chats'] ?? response['data'] ?? []);
       return chatsJson.map((json) => TopicChatModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load chats: $e');
@@ -88,7 +92,9 @@ class ForumRepository {
   Future<List<AnnouncementModel>> getCourseAnnouncements(int courseId) async {
     try {
       final response = await _apiService.get('/courses/$courseId/announcements');
-      final List<dynamic> announcementsJson = response['announcements'] ?? response['data'] ?? [];
+      final List<dynamic> announcementsJson = response is List
+          ? response
+          : (response['announcements'] ?? response['data'] ?? []);
       return announcementsJson.map((json) => AnnouncementModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load announcements: $e');
@@ -141,7 +147,9 @@ class ForumRepository {
   Future<List<CommentModel>> getAnnouncementComments(int announcementId) async {
     try {
       final response = await _apiService.get('/announcements/$announcementId/comments');
-      final List<dynamic> commentsJson = response['comments'] ?? response['data'] ?? [];
+      final List<dynamic> commentsJson = response is List
+          ? response
+          : (response['comments'] ?? response['data'] ?? []);
       return commentsJson.map((json) => CommentModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load comments: $e');

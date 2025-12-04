@@ -8,7 +8,9 @@ class QuizRepository {
   Future<List<QuizModel>> getCourseQuizzes(int courseId) async {
     try {
       final response = await _apiService.get('/courses/$courseId/quizzes');
-      final List<dynamic> quizzesJson = response['quizzes'] ?? response['data'] ?? [];
+      final List<dynamic> quizzesJson = response is List
+          ? response
+          : (response['quizzes'] ?? response['data'] ?? []);
       return quizzesJson.map((json) => QuizModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load quizzes: $e');
@@ -58,7 +60,9 @@ class QuizRepository {
   Future<List<QuestionModel>> getQuizQuestions(int quizId) async {
     try {
       final response = await _apiService.get('/quizzes/$quizId/questions');
-      final List<dynamic> questionsJson = response['questions'] ?? response['data'] ?? [];
+      final List<dynamic> questionsJson = response is List
+          ? response
+          : (response['questions'] ?? response['data'] ?? []);
       return questionsJson.map((json) => QuestionModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load questions: $e');
@@ -131,7 +135,9 @@ class QuizRepository {
       final response = await _apiService.get(
         '/quizzes/$quizId/attempts?student_id=$studentId',
       );
-      final List<dynamic> attemptsJson = response['attempts'] ?? response['data'] ?? [];
+      final List<dynamic> attemptsJson = response is List
+          ? response
+          : (response['attempts'] ?? response['data'] ?? []);
       return attemptsJson.map((json) => QuizAttemptModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load attempts: $e');
@@ -142,7 +148,9 @@ class QuizRepository {
   Future<List<QuizAttemptModel>> getQuizAttempts(int quizId) async {
     try {
       final response = await _apiService.get('/quizzes/$quizId/attempts');
-      final List<dynamic> attemptsJson = response['attempts'] ?? response['data'] ?? [];
+      final List<dynamic> attemptsJson = response is List
+          ? response
+          : (response['attempts'] ?? response['data'] ?? []);
       return attemptsJson.map((json) => QuizAttemptModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load attempts: $e');

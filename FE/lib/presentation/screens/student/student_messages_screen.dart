@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/models/message_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/message_provider.dart';
+import 'student_chat_screen.dart';
 
 class StudentMessagesScreen extends StatefulWidget {
   const StudentMessagesScreen({super.key});
@@ -37,11 +39,52 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
       ),
       body: Consumer<MessageProvider>(
         builder: (context, messageProvider, child) {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          final currentUserId = authProvider.userId;
+
           if (messageProvider.isLoading && messageProvider.messages.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (messageProvider.messages.isEmpty) {
+          final List<MessageModel> allMessages = messageProvider.messages;
+
+          if (allMessages.isEmpty || currentUserId == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.message_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No messages yet',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Build latest message per conversation partner
+          final Map<int, MessageModel> latestByPartner = {};
+          for (final m in allMessages) {
+            final bool isSender = m.senderId == currentUserId;
+            final int partnerId = isSender ? m.receiverId : m.senderId;
+            final existing = latestByPartner[partnerId];
+            if (existing == null || m.sentAt.isAfter(existing.sentAt)) {
+              latestByPartner[partnerId] = m;
+            }
+          }
+
+          final List<MessageModel> conversations = latestByPartner.values.toList()
+            ..sort((a, b) => b.sentAt.compareTo(a.sentAt));
+
+          if (conversations.isEmpty) {
             return Center(
               child: Text(
                 'No messages yet',
@@ -53,20 +96,29 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
           return RefreshIndicator(
             onRefresh: _loadMessages,
             child: ListView.builder(
-              itemCount: messageProvider.messages.length,
+              itemCount: conversations.length,
               itemBuilder: (context, index) {
-                final message = messageProvider.messages[index];
-                final isUnread = !message.isRead;
+                final message = conversations[index];
+                final bool isSender = message.senderId == currentUserId;
+                final int otherUserId =
+                    isSender ? message.receiverId : message.senderId;
+                final String otherName = isSender
+                    ? (message.receiverName ?? 'Instructor')
+                    : (message.senderName ?? 'Instructor');
+                final String otherRole =
+                    isSender ? message.receiverRole : message.senderRole;
+                final bool isUnread =
+                    !message.isRead && message.receiverId == currentUserId;
 
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                     child: Text(
-                      (message.senderName ?? 'GV').substring(0, 1).toUpperCase(),
+                      otherName.substring(0, 1).toUpperCase(),
                       style: const TextStyle(color: AppTheme.primaryColor),
                     ),
                   ),
-                  title: Text(message.senderName ?? 'Instructor'),
+                  title: Text(otherName),
                   subtitle: Text(
                     message.content,
                     maxLines: 1,
@@ -95,6 +147,15 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
                     if (isUnread) {
                       messageProvider.markMessageAsRead(message.id);
                     }
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => StudentChatScreen(
+                          otherUserId: otherUserId,
+                          otherUserName: otherName,
+                          otherUserRole: otherRole,
+                        ),
+                      ),
+                    );
                   },
                 );
               },
@@ -104,7 +165,11 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Implement new message / choose instructor screen
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('New message screen is under development'),
+            ),
+          );
         },
         child: const Icon(Icons.add),
       ),

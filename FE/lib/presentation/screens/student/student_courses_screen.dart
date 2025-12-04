@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:source_code/presentation/providers/course_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/course_model.dart';
+import '../../providers/course_provider.dart';
 import 'course_detail_screen.dart';
 
 class StudentCoursesScreen extends StatefulWidget {
@@ -32,13 +32,14 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
       _isLoading = true;
     });
 
-    // TODO: Load semesters from repository
+    // todo call CourseProvider.loadSemesters()
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
     await courseProvider.loadSemesters();
     _semesters = courseProvider.semesters;
 
     if (_semesters.isNotEmpty) {
-      _selectedSemesterId = _semesters.first.id;
+      // default to nearest (last) semester
+      _selectedSemesterId = _semesters.last.id;
     }
 
     setState(() {
@@ -58,11 +59,9 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
       return;
     }
 
-    dynamic semester = _selectedSemesterId;
-
-    // TODO: Load courses from repository
-    dynamic courseProvider = Provider.of<CourseProvider>(context, listen: false);
-    await courseProvider.loadStudentCoursesWithSemester(semester.id);
+    // todo call CourseProvider.loadStudentCoursesWithSemester(semesterId)
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadStudentCoursesWithSemester(_selectedSemesterId!);
 
     _courses = courseProvider.courses;
 
@@ -80,7 +79,11 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Search is under development'),
+                ),
+              );
             },
           ),
         ],
@@ -93,10 +96,11 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
               for (final semester in _semesters)
                 DropdownMenuItem(value: semester.id, child: Text(semester.description)),
             ],
-            onChanged: (value) {
+            onChanged: (value) async {
               setState(() {
                 _selectedSemesterId = value;
               });
+              await _loadCoursesWithSemester();
             },
             validator: (value) {
               if (value == null) {
@@ -106,42 +110,43 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
             },
           ),
           const SizedBox(height: 16),
-
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _courses.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.book_outlined,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No courses yet',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        await _loadCoursesWithSemester();
-                      },
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _courses.length,
-                        itemBuilder: (context, index) {
-                          final course = _courses[index];
-                          return _CourseCard(course: course);
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _courses.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.book_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No courses yet',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          await _loadCoursesWithSemester();
                         },
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _courses.length,
+                          itemBuilder: (context, index) {
+                            final course = _courses[index];
+                            return _CourseCard(course: course);
+                          },
+                        ),
                       ),
-                    ),
+          ),
         ],
       ),
     );

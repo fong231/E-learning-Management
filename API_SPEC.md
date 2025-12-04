@@ -133,7 +133,7 @@ Used by `AuthRepository.updateProfile`.
 }
 ```
 
-### 2.3 POST `/users/{id}/change-password`
+### 2.3 POST `/auth/{id}/change-password`
 
 Used by `AuthRepository.changePassword`.
 
@@ -1232,8 +1232,8 @@ This section lists how the current Flutter FE uses the above APIs. It is meant a
 - **Auth / profile**
   - **LoginScreen** → `AuthProvider.login(email, password)` → `AuthRepository.login()` → **POST** `/auth/login`.
   - **RegisterScreen** → `AuthProvider.register(userData)` → `AuthRepository.register()` → **POST** `/auth/register`.
-  - **EditProfileScreen** → `AuthProvider.updateProfile(userData)` → `AuthRepository.updateProfile()` → **PUT** `/users/{id}/profile`.
-  - **ChangePasswordScreen** → `AuthProvider.changePassword()` → `AuthRepository.changePassword()` → **POST** `/users/{id}/change-password`.
+  - **EditProfileScreen** → `AuthProvider.updateProfile(userData)` → `AuthRepository.updateProfile()` → **PUT** `/customers/{id}/profile`.
+  - **ChangePasswordScreen** → `AuthProvider.changePassword()` → `AuthRepository.changePassword()` → **POST** `/auth/{id}/change-password`.
 
 - **Semesters & courses (student)**
   - **StudentCoursesScreen** (tab in `StudentDashboardScreen`)

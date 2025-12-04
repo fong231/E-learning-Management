@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/change_password_screen.dart';
@@ -10,16 +11,29 @@ import '../auth/login_screen.dart';
 class InstructorProfileScreen extends StatelessWidget {
   const InstructorProfileScreen({super.key});
 
+  String? getAvatarUrl(String? avatarPath) {
+    if (avatarPath == null || avatarPath.isEmpty) {
+      return null;
+    }
+
+    if (avatarPath.startsWith('https://ui-avatars.com')) {
+      return avatarPath;
+    }
+
+    return "${AppConstants.baseUrl}/uploads/$avatarPath";
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.currentUser;
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.currentUser;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
+        return Scaffold(
+          appBar: AppBar(title: const Text('Profile')),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -29,14 +43,9 @@ class InstructorProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.white,
-                    child: Text(
-                      user?.fullname.substring(0, 1).toUpperCase() ?? 'G',
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
+                    backgroundImage: user?.avatar != null
+                        ? NetworkImage(getAvatarUrl(user?.avatar) ?? '')
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -128,6 +137,8 @@ class InstructorProfileScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/models/course_model.dart';
+import '../../providers/course_provider.dart';
 import '../../providers/assignment_provider.dart';
 
 class CreateAssignmentScreen extends StatefulWidget {
@@ -17,21 +19,59 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _maxScoreController = TextEditingController();
   
   int? _selectedCourseId;
   int? _selectedGroupId;
-  List<File>? _selectedFile;
-  List<String>? _selectedFileName;
+  File? _selectedFile;
+  String? _selectedFileName;
   DateTime? _dueDate;
+  DateTime? _lateDueDate;
   bool _isLoading = false;
+  List<CourseModel> _courses = [];
+  List<GroupModel> _groups = [];
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _maxScoreController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadCoursesAndInitialGroups();
+    });
+  }
+
+  Future<void> _loadCoursesAndInitialGroups() async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+
+    await courseProvider.loadSemesters();
+
+    if (courseProvider.semesters.isNotEmpty) {
+      final SemesterModel semester = courseProvider.semesters.last;
+      await courseProvider.loadInstructorCoursesWithSemester(semester.id);
+      _courses = courseProvider.courses;
+
+      if (_courses.isNotEmpty) {
+        _selectedCourseId = _selectedCourseId ?? _courses.first.id;
+        await _loadGroupsForCourse(_selectedCourseId!);
+      }
+    } else {
+      _courses = [];
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _loadGroupsForCourse(int courseId) async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadCourseGroups(courseId);
+    _groups = courseProvider.groups;
   }
 
   Future<void> _selectDueDate(BuildContext context) async {
@@ -62,6 +102,35 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     }
   }
 
+  Future<void> _selectLateDueDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate:
+          _dueDate ?? DateTime.now().add(const Duration(days: 7)),
+      firstDate: _dueDate ?? DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (pickedDate != null && context.mounted) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          _lateDueDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
+    }
+  }
+
   Future<void> _saveAssignment() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -74,20 +143,50 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       return;
     }
 
+    if (_lateDueDate != null && _lateDueDate!.isBefore(_dueDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Late deadline must be after due date')),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    // TODO: Call API to create assignment
+    String? attachmentUrl;
+    if (_selectedFile != null) {
+      final assignmentProvider =
+          Provider.of<AssignmentProvider>(context, listen: false);
+      attachmentUrl = await assignmentProvider.uploadAssignmentFile(
+        _selectedFile!.path,
+      );
+
+      if (attachmentUrl == null || attachmentUrl.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload attachment')),
+          );
+        }
+        return;
+      }
+    }
+
     final assignmentProvider = Provider.of<AssignmentProvider>(context, listen: false);
-    await assignmentProvider.createAssignment({
+    final assignmentData = {
       'course_id': _selectedCourseId,
       'group_id': _selectedGroupId,
       'title': _titleController.text,
       'description': _descriptionController.text,
-      'deadline': _dueDate,
-      'max_score': double.parse(_maxScoreController.text),
-    });
+      'deadline': _dueDate!.toIso8601String(),
+      if (_lateDueDate != null) 'late_deadline': _lateDueDate!.toIso8601String(),
+      if (attachmentUrl != null) 'files_url': [attachmentUrl],
+    };
+
+    await assignmentProvider.createAssignment(assignmentData);
 
     if (mounted) {
       setState(() {
@@ -105,10 +204,10 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   Future<void> pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
-    if (result != null) {
+    if (result != null && result.files.single.path != null) {
       setState(() {
-        _selectedFile?.add(File(result.files.single.path!));
-        _selectedFileName?.add(result.files.single.name);
+        _selectedFile = File(result.files.single.path!);
+        _selectedFileName = result.files.single.name;
       });
     }
   }
@@ -131,14 +230,25 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                 prefixIcon: Icon(Icons.book),
               ),
               items: [
-                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
-                DropdownMenuItem(value: 2, child: Text('Database')),
-                DropdownMenuItem(value: 3, child: Text('Computer Network')),
+                for (final course in _courses)
+                  DropdownMenuItem(
+                    value: course.id,
+                    child: Text(course.name),
+                  ),
               ],
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _selectedCourseId = value;
+                  _selectedGroupId = null;
+                  _groups = [];
                 });
+
+                if (value != null) {
+                  await _loadGroupsForCourse(value);
+                  if (mounted) {
+                    setState(() {});
+                  }
+                }
               },
               validator: (value) {
                 if (value == null) {
@@ -156,9 +266,15 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                 prefixIcon: Icon(Icons.group_work),
               ),
               items: [
-                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
-                DropdownMenuItem(value: 2, child: Text('Database')),
-                DropdownMenuItem(value: 3, child: Text('Computer Network')),
+                for (final group in _groups)
+                  DropdownMenuItem(
+                    value: group.id,
+                    child: Text(
+                      group.groupName.isNotEmpty
+                          ? group.groupName
+                          : 'Group ${group.id}',
+                    ),
+                  ),
               ],
               onChanged: (value) {
                 setState(() {
@@ -167,7 +283,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               },
               validator: (value) {
                 if (value == null) {
-                  return 'Please select a course';
+                  return 'Please select a group';
                 }
                 return null;
               },
@@ -207,26 +323,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             ),
             const SizedBox(height: 16),
             
-            TextFormField(
-              controller: _maxScoreController,
-              decoration: const InputDecoration(
-                labelText: 'Max Score *',
-                hintText: 'Enter max score',
-                prefixIcon: Icon(Icons.grade),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter max score';
-                }
-                if (double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
@@ -238,6 +334,19 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _selectDueDate(context),
+            ),
+            const Divider(),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.event_available),
+              title: const Text('Late Deadline (optional)'),
+              subtitle: Text(
+                _lateDueDate != null
+                    ? '${_lateDueDate!.day}/${_lateDueDate!.month}/${_lateDueDate!.year} ${_lateDueDate!.hour}:${_lateDueDate!.minute.toString().padLeft(2, '0')}'
+                    : 'Not selected',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _selectLateDueDate(context),
             ),
             const Divider(),
             const SizedBox(height: 16),
@@ -261,7 +370,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () {
-                        // TODO: Implement file picker
                         pickFile();
                       },
                       icon: const Icon(Icons.upload_file),

@@ -53,7 +53,7 @@ class QuizProvider with ChangeNotifier {
   }
 
   // WORKING: POST /quizzes
-  Future<void> createQuiz(Map<String, dynamic> quizData) async {
+  Future<QuizModel> createQuiz(Map<String, dynamic> quizData) async {
     _isLoading = true;
     notifyListeners();
 
@@ -61,8 +61,10 @@ class QuizProvider with ChangeNotifier {
       final created = await _quizRepository.createQuiz(quizData);
       _quizzes = [..._quizzes, created];
       _error = null;
+      return created;
     } catch (e) {
       _error = e.toString();
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

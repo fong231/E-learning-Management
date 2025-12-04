@@ -7,8 +7,6 @@ class CourseModel {
   final int semesterId;
   final String? semesterName;
   final int numberOfSessions;
-  final DateTime? startDate;
-  final DateTime? endDate;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -21,28 +19,20 @@ class CourseModel {
     required this.semesterId,
     this.semesterName,
     required this.numberOfSessions,
-    this.startDate,
-    this.endDate,
     required this.createdAt,
     this.updatedAt,
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
-      id: json['course_id'] ?? json['id'] ?? 0,
+      id: json['courseID'] ?? json['id'] ?? 0,
       name: json['course_name'] ?? json['name'] ?? '',
       description: json['description'],
-      instructorId: json['instructor_id'] ?? 0,
+      instructorId: json['instructorID'] ?? 0,
       instructorName: json['instructor_name'],
-      semesterId: json['semester_id'] ?? 0,
+      semesterId: json['semesterID'] ?? 0,
       semesterName: json['semester_name'],
-      numberOfSessions: json['number_of_sessions'] ?? 10,
-      startDate: json['start_date'] != null 
-          ? DateTime.parse(json['start_date']) 
-          : null,
-      endDate: json['end_date'] != null 
-          ? DateTime.parse(json['end_date']) 
-          : null,
+      numberOfSessions: int.tryParse(json['number_of_sessions']) ?? 10,
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : DateTime.now(),
@@ -62,8 +52,6 @@ class CourseModel {
       'semester_id': semesterId,
       'semester_name': semesterName,
       'number_of_sessions': numberOfSessions,
-      'start_date': startDate?.toIso8601String(),
-      'end_date': endDate?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -81,8 +69,9 @@ class SemesterModel {
 
   factory SemesterModel.fromJson(Map<String, dynamic> json) {
     return SemesterModel(
-      id: json['semester_id'] ?? json['id'] ?? 0,
-      description: json['semester_description'] ?? json['description'] ?? '',
+      id: json['semester_id'] ?? json['semesterID'] ?? json['id'] ?? 0,
+      description:
+          json['semester_description'] ?? json['description'] ?? '',
     );
   }
 

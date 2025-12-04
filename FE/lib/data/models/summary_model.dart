@@ -18,22 +18,22 @@ class SummaryModel {
   factory SummaryModel.fromJson(Map<String, dynamic> json) {
     return SummaryModel(
       id: json['id'] ?? 0,
-      totalCourses: json['total_courses'] ?? 0,
-      totalStudents: json['total_students'] ?? 0,
-      totalGroups: json['total_groups'] ?? 0,
-      totalAssignments: json['total_assignments'] ?? 0,
-      totalQuizzes: json['total_quizzes'] ?? 0,
+      totalCourses: json['totalCourses'] ?? 0,
+      totalStudents: json['totalStudents'] ?? 0,
+      totalGroups: json['totalGroups'] ?? 0,
+      totalAssignments: json['totalAssignments'] ?? 0,
+      totalQuizzes: json['totalQuizzes'] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'total_courses': totalCourses,
-      'total_students': totalStudents,
-      'total_groups': totalGroups,
-      'total_assignments': totalAssignments,
-      'total_quizzes': totalQuizzes,
+      'totalCourses': totalCourses,
+      'totalStudents': totalStudents,
+      'totalGroups': totalGroups,
+      'totalAssignments': totalAssignments,
+      'totalQuizzes': totalQuizzes,
     };
   }
 }

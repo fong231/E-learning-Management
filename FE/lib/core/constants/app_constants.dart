@@ -1,6 +1,6 @@
 class AppConstants {
   // API Base URL
-  static const String baseUrl = 'http://10.0.2.2:80';
+  static const String baseUrl = 'http://10.0.2.2:8000';
   
   // API Endpoints
   static const String loginEndpoint = '/auth/login';

@@ -1,5 +1,7 @@
 class AssignmentModel {
   final int id;
+  final int? courseId;
+  final String? courseName;
   final int groupId;
   final String title;
   final String? description;
@@ -13,6 +15,8 @@ class AssignmentModel {
 
   AssignmentModel({
     required this.id,
+    this.courseId,
+    this.courseName,
     required this.groupId,
     required this.title,
     this.description,
@@ -28,9 +32,11 @@ class AssignmentModel {
   factory AssignmentModel.fromJson(Map<String, dynamic> json) {
     return AssignmentModel(
       id: json['assignment_id'] ?? json['id'] ?? 0,
+      courseId: json['course_id'] ?? 0,
+      courseName: json['course_name'] ?? '',
       groupId: json['group_id'] ?? 0,
       title: json['title'] ?? '',
-      description: json['description'],
+      description: json['description'] ?? '',
       deadline: DateTime.parse(json['deadline']),
       late_deadline: DateTime.parse(json['late_deadline']),
       size_limit: json['size_limit'],
@@ -48,6 +54,8 @@ class AssignmentModel {
   Map<String, dynamic> toJson() {
     return {
       'assignment_id': id,
+      'course_id': courseId,
+      'course_name': courseName,
       'group_id': groupId,
       'title': title,
       'description': description,

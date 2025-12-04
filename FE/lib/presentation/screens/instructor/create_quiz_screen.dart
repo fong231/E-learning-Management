@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../../core/constants/app_constants.dart';
+import '../../../data/models/course_model.dart';
+import '../../providers/course_provider.dart';
+import '../../providers/quiz_provider.dart';
 
 class CreateQuizScreen extends StatefulWidget {
   const CreateQuizScreen({super.key});
@@ -16,11 +21,15 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
   final _attemptsController = TextEditingController(text: '1');
   
   int? _selectedCourseId;
+  int? _selectedGroupId;
   DateTime? _startTime;
   DateTime? _endTime;
   bool _isLoading = false;
   
   final List<QuestionItem> _questions = [];
+
+  List<CourseModel> _courses = [];
+  List<GroupModel> _groups = [];
 
   @override
   void dispose() {
@@ -29,6 +38,14 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
     _durationController.dispose();
     _attemptsController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadCourses();
+    });
   }
 
   Future<void> _selectDateTime(BuildContext context, bool isStartTime) async {
@@ -77,6 +94,35 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
     );
   }
 
+  Future<void> _loadCourses() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+
+    // todo call CourseProvider.loadSemesters() and CourseProvider.loadInstructorCoursesWithSemester(semesterId)
+    await courseProvider.loadSemesters();
+
+    if (courseProvider.semesters.isNotEmpty) {
+      final SemesterModel semester = courseProvider.semesters.last;
+      await courseProvider.loadInstructorCoursesWithSemester(semester.id);
+      _courses = courseProvider.courses;
+    } else {
+      _courses = [];
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _loadGroupsForCourse(int courseId) async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadCourseGroups(courseId);
+    _groups = courseProvider.groups;
+  }
+
   Future<void> _saveQuiz() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -93,10 +139,40 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
       _isLoading = true;
     });
 
-    // TODO: Call API to create quiz
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final quizProvider = Provider.of<QuizProvider>(context, listen: false);
 
-    if (mounted) {
+      final quizData = {
+        'course_id': _selectedCourseId,
+        'group_id': _selectedGroupId,
+        'title': _titleController.text,
+        'description': _descriptionController.text,
+        'duration': int.parse(_durationController.text),
+        'number_of_attempts': int.parse(_attemptsController.text),
+        'start_time': _startTime?.toIso8601String(),
+        'end_time': _endTime?.toIso8601String(),
+      };
+
+      // todo call QuizProvider.createQuiz(quizData)
+      final createdQuiz = await quizProvider.createQuiz(quizData);
+
+      for (final question in _questions) {
+        final questionData = {
+          'quiz_id': createdQuiz.id,
+          'question_text': question.questionText,
+          'question_type': 'multiple_choice',
+          'level': question.level,
+          'points': question.points,
+          'options': question.options,
+          'correct_answer': question.correctAnswer,
+        };
+
+        // todo call QuizProvider.addQuestion(questionData)
+        await quizProvider.addQuestion(questionData);
+      }
+
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -106,6 +182,15 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
       );
       
       Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create quiz: $e')),
+      );
     }
   }
 
@@ -123,21 +208,63 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
             DropdownButtonFormField<int>(
               value: _selectedCourseId,
               decoration: const InputDecoration(
-                labelText: 'Khóa học *',
+                labelText: 'Course *',
                 prefixIcon: Icon(Icons.book),
               ),
               items: [
-                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
-                DropdownMenuItem(value: 2, child: Text('Database')),
+                for (final course in _courses)
+                  DropdownMenuItem(
+                    value: course.id,
+                    child: Text(course.name),
+                  ),
               ],
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _selectedCourseId = value;
+                  _selectedGroupId = null;
+                  _groups = [];
                 });
+
+                if (value != null) {
+                  await _loadGroupsForCourse(value);
+                  if (mounted) {
+                    setState(() {});
+                  }
+                }
               },
               validator: (value) {
                 if (value == null) {
                   return 'Please select a course';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: _selectedGroupId,
+              decoration: const InputDecoration(
+                labelText: 'Group *',
+                prefixIcon: Icon(Icons.group_work),
+              ),
+              items: [
+                for (final group in _groups)
+                  DropdownMenuItem(
+                    value: group.id,
+                    child: Text(
+                      group.groupName.isNotEmpty
+                          ? group.groupName
+                          : 'Group ${group.id}',
+                    ),
+                  ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedGroupId = value;
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select a group';
                 }
                 return null;
               },
@@ -301,11 +428,15 @@ class QuestionItem {
   final String questionText;
   final double points;
   final String level;
+  final List<String> options;
+  final String correctAnswer;
 
   QuestionItem({
     required this.questionText,
     required this.points,
     required this.level,
+    required this.options,
+    required this.correctAnswer,
   });
 }
 
@@ -322,6 +453,11 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
   final _questionController = TextEditingController();
   final _pointsController = TextEditingController(text: '1');
   String _selectedLevel = AppConstants.levelEasy;
+  final _optionAController = TextEditingController();
+  final _optionBController = TextEditingController();
+  final _optionCController = TextEditingController();
+  final _optionDController = TextEditingController();
+  int _correctOptionIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +509,98 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
                 });
               },
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _optionAController,
+              decoration: const InputDecoration(
+                labelText: 'Option A',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _optionBController,
+              decoration: const InputDecoration(
+                labelText: 'Option B',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _optionCController,
+              decoration: const InputDecoration(
+                labelText: 'Option C',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _optionDController,
+              decoration: const InputDecoration(
+                labelText: 'Option D',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Correct answer',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<int>(
+                    value: 0,
+                    groupValue: _correctOptionIndex,
+                    title: const Text('A'),
+                    onChanged: (value) {
+                      setState(() {
+                        _correctOptionIndex = value ?? 0;
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<int>(
+                    value: 1,
+                    groupValue: _correctOptionIndex,
+                    title: const Text('B'),
+                    onChanged: (value) {
+                      setState(() {
+                        _correctOptionIndex = value ?? 1;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<int>(
+                    value: 2,
+                    groupValue: _correctOptionIndex,
+                    title: const Text('C'),
+                    onChanged: (value) {
+                      setState(() {
+                        _correctOptionIndex = value ?? 2;
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<int>(
+                    value: 3,
+                    groupValue: _correctOptionIndex,
+                    title: const Text('D'),
+                    onChanged: (value) {
+                      setState(() {
+                        _correctOptionIndex = value ?? 3;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -383,12 +611,26 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
         ),
         ElevatedButton(
           onPressed: () {
-            if (_questionController.text.isNotEmpty) {
+            if (_questionController.text.isNotEmpty &&
+                _optionAController.text.isNotEmpty &&
+                _optionBController.text.isNotEmpty &&
+                _optionCController.text.isNotEmpty &&
+                _optionDController.text.isNotEmpty) {
+              final options = [
+                _optionAController.text,
+                _optionBController.text,
+                _optionCController.text,
+                _optionDController.text,
+              ];
+              final correctAnswer = options[_correctOptionIndex.clamp(0, 3)];
+
               widget.onAdd(
                 QuestionItem(
                   questionText: _questionController.text,
                   points: double.tryParse(_pointsController.text) ?? 1,
                   level: _selectedLevel,
+                  options: options,
+                  correctAnswer: correctAnswer,
                 ),
               );
               Navigator.pop(context);

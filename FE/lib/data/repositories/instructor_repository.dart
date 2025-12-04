@@ -15,7 +15,7 @@ class InstructorRepository {
       instructorId = prefs.getInt(AppConstants.userIdKey) ?? instructorId;
 
       final response = await _apiService.get('/instructors/$instructorId/summary');
-      return SummaryModel.fromJson(response['summary'] ?? response['data']);
+      return SummaryModel.fromJson(response);
     } catch (e) {
       throw Exception('Failed to load summary: $e');
     }
@@ -26,8 +26,10 @@ class InstructorRepository {
       final prefs = await SharedPreferences.getInstance();
       instructorId = prefs.getInt(AppConstants.userIdKey) ?? instructorId;
 
-      final response = await _apiService.get('/instructors/students');
-      final List<dynamic> studentsJson = response['students'] ?? response['data'] ?? [];
+      final response = await _apiService.get('/instructors/$instructorId/students');
+      final List<dynamic> studentsJson = response is List
+          ? response
+          : (response['students'] ?? response['data'] ?? []);
       return studentsJson.map((json) => UserModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load students: $e');
@@ -37,7 +39,9 @@ class InstructorRepository {
   Future<List<UserModel>> getStudentsInCourse(int courseId) async {
     try {
       final response = await _apiService.get('/instructors/students/courses/$courseId');
-      final List<dynamic> studentsJson = response['students'] ?? response['data'] ?? [];
+      final List<dynamic> studentsJson = response is List
+          ? response
+          : (response['students'] ?? response['data'] ?? []);
       return studentsJson.map((json) => UserModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load students: $e');
