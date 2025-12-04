@@ -1,9 +1,11 @@
+from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from ..database import get_db 
 from . import schema, model
 from .._Course import model as CourseModel
+
 
 router = APIRouter(
     prefix="/groups",
@@ -74,3 +76,4 @@ def delete(group_id : int, db : Session = Depends(get_db)):
     db.delete(db_group)
     
     return
+

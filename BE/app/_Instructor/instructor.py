@@ -1,7 +1,7 @@
 from fastapi import APIRouter, FastAPI, HTTPException, status, Depends
 from typing import List, Optional
 
-from sqlalchemy import distinct, func, literal_column
+from sqlalchemy import distinct, func, literal_column, select
 from .schema import InstructorCreate
 from sqlalchemy.orm import Session
 from . import model, schema
@@ -9,11 +9,13 @@ from .._Customer import model as CustomerModel
 from .._Course.model import Course
 from .._Course.schema import CourseRead
 from .._Student.model import Student
+from .._Student.schema import StudentOutput
 from .._Group.model import Group
 from .._Assignment.model import Assignment
 from .._Quiz.model import Quiz
 from .._Student_Group.model import StudentGroupAssociation
 from .._Student_Score.model import StudentScore
+from .._Customer.model import Customer
 from ..database import get_db
 
 router = APIRouter(
@@ -167,3 +169,43 @@ def get_instructor_courses(
         return []
         
     return courses
+
+# get students by instructor id
+@router.get("/{instructor_id}/students", response_model=List[StudentOutput])
+def get_instructor_students(instructor_id: int, db: Session = Depends(get_db)):
+    student_group_info_cte = (
+        select(
+            StudentGroupAssociation.studentID.label("student_id"),
+            Group.groupID.label("group_id"),
+            func.concat('Group ', Group.id).label("group_name")
+        )
+        .join(Group, Group.groupID == StudentGroupAssociation.groupID)
+        .join(Course, Course.courseID == Group.courseID)
+        .where(Course.instructorID == instructor_id)
+        .cte("student_group_info")
+    )
+
+    query = (
+        select(
+            Customer.customerID,
+            Customer.fullname,
+            Customer.email,
+            Customer.avatar,
+            Customer.phone_number,
+            Customer.role,
+            student_group_info_cte.c.group_id.label("groupId"),
+            student_group_info_cte.c.group_name.label("groupName")
+        )
+        .join(Student, Student.studentID == student_group_info_cte.c.student_id)
+        .join(Customer, Customer.customerID == Student.studentID)
+        .select_from(student_group_info_cte) # Bắt đầu truy vấn từ CTE
+    )
+    
+    results = db.execute(query).mappings().all()
+    
+    if not results:
+        # Tùy chọn: Trả về danh sách rỗng nếu không có học viên nào
+        return []
+
+    # Chuyển đổi kết quả Mapping sang list các Pydantic model
+    return [StudentOutput.model_validate(dict(r)) for r in results]
