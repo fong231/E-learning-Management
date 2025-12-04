@@ -45,13 +45,12 @@ class _StudentForumScreenState extends State<StudentForumScreen> {
       return;
     }
 
-    // Load current semester courses for student
-    // todo call CourseProvider.loadSemesters() and CourseProvider.loadStudentCoursesWithSemester(semesterId)
+    // Load current semester courses for student using saved semester
     await courseProvider.loadSemesters();
 
     List<CourseModel> courses = [];
-    if (courseProvider.semesters.isNotEmpty) {
-      final SemesterModel semester = courseProvider.semesters.last;
+    final SemesterModel? semester = courseProvider.currentSemester;
+    if (semester != null) {
       await courseProvider.loadStudentCoursesWithSemester(semester.id);
       courses = courseProvider.courses;
     }

@@ -24,3 +24,5 @@ openapi.json
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+endpoint_diff.py

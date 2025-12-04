@@ -103,8 +103,11 @@ class _InstructorHomeTabState extends State<InstructorHomeTab> {
 
     setState(() {
       _semesters = semesters;
-      if (_semesters.isNotEmpty && _selectedSemesterId == null) {
-        _selectedSemesterId = _semesters.last.id;
+      if (_semesters.isNotEmpty) {
+        _selectedSemesterId =
+            courseProvider.selectedSemesterId ?? _semesters.last.id;
+      } else {
+        _selectedSemesterId = null;
       }
       _isLoadingSemesters = false;
     });
@@ -115,7 +118,9 @@ class _InstructorHomeTabState extends State<InstructorHomeTab> {
       context,
       listen: false,
     );
-    await instructorProvider.loadInstructorSummary();
+    await instructorProvider.loadInstructorSummary(
+      semesterId: _selectedSemesterId,
+    );
 
     final summary = instructorProvider.summary;
 
@@ -127,6 +132,11 @@ class _InstructorHomeTabState extends State<InstructorHomeTab> {
       chartData[3].value = summary?.totalAssignments.toDouble() ?? 0;
       chartData[4].value = summary?.totalQuizzes.toDouble() ?? 0;
     });
+  }
+
+  Future<void> _refreshOverview() async {
+    await _loadSemesters();
+    await loadChartData();
   }
 
   @override
@@ -160,257 +170,270 @@ class _InstructorHomeTabState extends State<InstructorHomeTab> {
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Welcome Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hello,',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        user?.fullname ?? 'Instructor',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Welcome to the LMS system',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                if (_isLoadingSemesters)
-                  const Center(child: CircularProgressIndicator())
-                else if (_semesters.isNotEmpty) ...[
-                  Text(
-                    'Semester',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<int>(
-                    value: _selectedSemesterId,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.calendar_today),
+          body: RefreshIndicator(
+            onRefresh: _refreshOverview,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Welcome Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    items: [
-                      for (final semester in _semesters)
-                        DropdownMenuItem(
-                          value: semester.id,
-                          child: Text(semester.description),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello,',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.white70),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user?.fullname ?? 'Instructor',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Welcome to the LMS system',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  if (_isLoadingSemesters)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_semesters.isNotEmpty) ...[
+                    Text(
+                      'Semester',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<int>(
+                      value: _selectedSemesterId,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.calendar_today),
+                      ),
+                      items: [
+                        for (final semester in _semesters)
+                          DropdownMenuItem(
+                            value: semester.id,
+                            child: Text(semester.description),
+                          ),
+                      ],
+                      onChanged: (value) async {
+                        if (value == null) return;
+
+                        setState(() {
+                          _selectedSemesterId = value;
+                        });
+
+                        final courseProvider = Provider.of<CourseProvider>(
+                          context,
+                          listen: false,
+                        );
+                        await courseProvider.setSelectedSemester(value);
+
+                        await loadChartData();
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Statistics
+                  Text(
+                    'Statistics',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Biểu đồ dạng cột
+                  _CustomBarChart(data: chartData),
+                  const SizedBox(height: 24),
+
+                  // Stat Cards - Row 1 (3 card: Courses, Students, Groups)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.book,
+                          title: 'Courses',
+                          value: chartData[0].value.toStringAsFixed(0),
+                          color: chartData[0].color,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.people,
+                          title: 'Students',
+                          value: chartData[1].value.toStringAsFixed(0),
+                          color: chartData[1].color,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          // NEW CARD: Groups
+                          icon: Icons.group_work,
+                          title: 'Groups',
+                          value: chartData[2].value.toStringAsFixed(0),
+                          color: chartData[2].color,
+                        ),
+                      ),
                     ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedSemesterId = value;
-                      });
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Stat Cards - Row 2 (2 card: Assignments, Quizzes)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.assignment,
+                          title: 'Assignments',
+                          value: chartData[3].value.toStringAsFixed(0),
+                          color: chartData[3].color,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.quiz,
+                          title: 'Quizzes',
+                          value: chartData[4].value.toStringAsFixed(0),
+                          color: chartData[4].color,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Quick Actions
+                  Text(
+                    'Quick Actions',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  _QuickActionButton(
+                    icon: Icons.add_circle_outline,
+                    title: 'Create New Course',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CreateCourseScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _QuickActionButton(
+                    icon: Icons.assignment_add,
+                    title: 'Create New Assignment',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CreateAssignmentScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _QuickActionButton(
+                    icon: Icons.quiz,
+                    title: 'Create New Quiz',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CreateQuizScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _QuickActionButton(
+                    icon: Icons.announcement,
+                    title: 'Create New Announcement',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CreateAnnouncementScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 24),
+
+                  // Course Management
+                  Text(
+                    'Course Management',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  _QuickActionButton(
+                    icon: Icons.analytics_outlined,
+                    title: 'View Grading Reports',
+                    onTap: () {
+                      // Giả định có màn hình tương ứng
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Navigating to Grading Reports'),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _QuickActionButton(
+                    icon: Icons.settings_applications_outlined,
+                    title: 'Manage Course Settings',
+                    onTap: () {
+                      // Giả định có màn hình tương ứng
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Navigating to Course Settings'),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Recent Activities
+                  Text(
+                    'Recent Activities',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActivityCard(
+                    context,
+                    icon: Icons.assignment_turned_in,
+                    title: 'Assignment Submitted',
+                    subtitle: '5 students have submitted their assignments',
+                    time: '1 hour ago',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActivityCard(
+                    context,
+                    icon: Icons.message,
+                    title: 'New Message',
+                    subtitle: 'Student 123456 has sent a message',
+                    time: '3 hours ago',
+                  ),
                 ],
-
-                // Statistics
-                Text(
-                  'Statistics',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-
-                // Biểu đồ dạng cột
-                _CustomBarChart(data: chartData),
-                const SizedBox(height: 24),
-
-                // Stat Cards - Row 1 (3 card: Courses, Students, Groups)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.book,
-                        title: 'Courses',
-                        value: chartData[0].value.toStringAsFixed(0),
-                        color: chartData[0].color,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.people,
-                        title: 'Students',
-                        value: chartData[1].value.toStringAsFixed(0),
-                        color: chartData[1].color,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        // NEW CARD: Groups
-                        icon: Icons.group_work,
-                        title: 'Groups',
-                        value: chartData[2].value.toStringAsFixed(0),
-                        color: chartData[2].color,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Stat Cards - Row 2 (2 card: Assignments, Quizzes)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.assignment,
-                        title: 'Assignments',
-                        value: chartData[3].value.toStringAsFixed(0),
-                        color: chartData[3].color,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.quiz,
-                        title: 'Quizzes',
-                        value: chartData[4].value.toStringAsFixed(0),
-                        color: chartData[4].color,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Quick Actions
-                Text(
-                  'Quick Actions',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                _QuickActionButton(
-                  icon: Icons.add_circle_outline,
-                  title: 'Create New Course',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreateCourseScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _QuickActionButton(
-                  icon: Icons.assignment_add,
-                  title: 'Create New Assignment',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreateAssignmentScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _QuickActionButton(
-                  icon: Icons.quiz,
-                  title: 'Create New Quiz',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreateQuizScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _QuickActionButton(
-                  icon: Icons.announcement,
-                  title: 'Create New Announcement',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreateAnnouncementScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Course Management
-                Text(
-                  'Course Management',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                _QuickActionButton(
-                  icon: Icons.analytics_outlined,
-                  title: 'View Grading Reports',
-                  onTap: () {
-                    // Giả định có màn hình tương ứng
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Navigating to Grading Reports'),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _QuickActionButton(
-                  icon: Icons.settings_applications_outlined,
-                  title: 'Manage Course Settings',
-                  onTap: () {
-                    // Giả định có màn hình tương ứng
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Navigating to Course Settings'),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Recent Activities
-                Text(
-                  'Recent Activities',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                _buildActivityCard(
-                  context,
-                  icon: Icons.assignment_turned_in,
-                  title: 'Assignment Submitted',
-                  subtitle: '5 students have submitted their assignments',
-                  time: '1 hour ago',
-                ),
-                const SizedBox(height: 12),
-                _buildActivityCard(
-                  context,
-                  icon: Icons.message,
-                  title: 'New Message',
-                  subtitle: 'Student 123456 has sent a message',
-                  time: '3 hours ago',
-                ),
-              ],
+              ),
             ),
           ),
         );

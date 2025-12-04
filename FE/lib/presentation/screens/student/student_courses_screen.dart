@@ -31,15 +31,13 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
     setState(() {
       _isLoading = true;
     });
-
-    // todo call CourseProvider.loadSemesters()
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
     await courseProvider.loadSemesters();
     _semesters = courseProvider.semesters;
 
     if (_semesters.isNotEmpty) {
-      // default to nearest (last) semester
-      _selectedSemesterId = _semesters.last.id;
+      _selectedSemesterId =
+          courseProvider.selectedSemesterId ?? _semesters.last.id;
     }
 
     setState(() {
@@ -97,9 +95,16 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
                 DropdownMenuItem(value: semester.id, child: Text(semester.description)),
             ],
             onChanged: (value) async {
+              if (value == null) return;
+
               setState(() {
                 _selectedSemesterId = value;
               });
+
+              final courseProvider =
+                  Provider.of<CourseProvider>(context, listen: false);
+              await courseProvider.setSelectedSemester(value);
+
               await _loadCoursesWithSemester();
             },
             validator: (value) {

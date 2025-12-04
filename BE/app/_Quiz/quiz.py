@@ -48,6 +48,11 @@ def update(quiz_id : int, quiz_data: schema.QuizUpdate, db : Session = Depends(g
     
     return db_quiz
     
+@router.put("/{quiz_id}")
+def put_update(quiz_id: int, quiz_data: schema.QuizUpdate, db: Session = Depends(get_db)):
+    updated = update(quiz_id, quiz_data, db)
+    return {"quiz": updated}
+
 # delete quiz
 @router.delete("/{quiz_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete(quiz_id : int, db : Session = Depends(get_db)):

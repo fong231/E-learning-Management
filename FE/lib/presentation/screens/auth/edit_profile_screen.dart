@@ -133,6 +133,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
   }
 
+  String? getAvatarUrl(String? avatarPath) {
+    if (avatarPath == null || avatarPath.isEmpty) {
+      return null;
+    }
+
+    if (avatarPath.startsWith('https://ui-avatars.com')) {
+      return avatarPath;
+    }
+
+    return "${AppConstants.baseUrl}/uploads/$avatarPath";
+  }
+
   @override
   Widget build(BuildContext context) {
     // Xác định ImageProvider để hiển thị (File hay Network)
@@ -140,8 +152,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (_selectedImageFile != null) {
       backgroundImage = FileImage(_selectedImageFile!);
     } else if (_currentAvatarUrl.isNotEmpty) {
-      print('Current avatar URL: $_currentAvatarUrl');
-      backgroundImage = NetworkImage('${AppConstants.baseUrl}/uploads/$_currentAvatarUrl');
+      backgroundImage = NetworkImage(getAvatarUrl(_currentAvatarUrl)!);
     }
 
     return Scaffold(

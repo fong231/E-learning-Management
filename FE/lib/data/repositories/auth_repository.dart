@@ -54,6 +54,20 @@ class AuthRepository {
     }
   }
 
+  Future<Map<String, dynamic>> registerStudentForInstructor(
+      Map<String, dynamic> userData) async {
+    try {
+      final response = await _apiService.post(
+        '/auth/register-student',
+        userData,
+      );
+      // Do NOT change current token or saved user data here.
+      return response;
+    } catch (e) {
+      throw Exception('Registration failed: $e');
+    }
+  }
+
   void saveUserData(Map<String, dynamic> response) async {
     try {
       final prefs = await SharedPreferences.getInstance();

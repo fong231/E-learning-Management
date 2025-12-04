@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../data/models/course_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/course_provider.dart';
 import '../../providers/message_provider.dart';
 import 'student_chat_screen.dart';
 
@@ -23,12 +26,16 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
   Future<void> _loadMessages() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final messageProvider = Provider.of<MessageProvider>(context, listen: false);
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
 
     final userId = authProvider.userId;
     if (userId == null) return;
 
     await messageProvider.loadUserMessages(userId);
     await messageProvider.refreshUnreadCounts(userId: userId, studentId: userId);
+
+    // Preload all courses the student participates in for instructor list
+    await courseProvider.loadStudentCoursesAll(userId);
   }
 
   @override
@@ -78,6 +85,36 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
             final existing = latestByPartner[partnerId];
             if (existing == null || m.sentAt.isAfter(existing.sentAt)) {
               latestByPartner[partnerId] = m;
+            }
+          }
+
+          // Ensure all instructors from enrolled courses appear at least once
+          final courseProvider =
+              Provider.of<CourseProvider>(context, listen: false);
+          final List<CourseModel> courses = courseProvider.courses;
+          final Map<int, String> instructors = {};
+          for (final c in courses) {
+            if (c.instructorId != 0) {
+              instructors[c.instructorId] = c.instructorName ?? 'Instructor';
+            }
+          }
+
+          for (final entry in instructors.entries) {
+            final int instructorId = entry.key;
+            final String instructorName = entry.value;
+            if (!latestByPartner.containsKey(instructorId)) {
+              latestByPartner[instructorId] = MessageModel(
+                id: 0,
+                senderId: currentUserId,
+                senderName: null,
+                senderRole: AppConstants.roleStudent,
+                receiverId: instructorId,
+                receiverName: instructorName,
+                receiverRole: AppConstants.roleInstructor,
+                content: 'Start a conversation',
+                isRead: true,
+                sentAt: DateTime.now(),
+              );
             }
           }
 

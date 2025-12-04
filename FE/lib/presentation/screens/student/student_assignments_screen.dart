@@ -46,26 +46,23 @@ class _StudentAssignmentsScreenState extends State<StudentAssignmentsScreen> {
       return;
     }
 
-    // Load current semester courses for student
-    // todo call CourseProvider.loadSemesters() and CourseProvider.loadStudentCoursesWithSemester(semesterId)
-    await courseProvider.loadSemesters();
+    // Load all courses the student participates in (all semesters)
+    await courseProvider.loadStudentCoursesAll(studentId);
 
-    List<CourseModel> courses = [];
-    if (courseProvider.semesters.isNotEmpty) {
-      final SemesterModel semester = courseProvider.semesters.last;
-      await courseProvider.loadStudentCoursesWithSemester(semester.id);
-      courses = courseProvider.courses;
-    }
+    final List<CourseModel> courses = courseProvider.courses;
 
     final courseIds = courses.map((c) => c.id).toList();
 
-    // Load only pending assignments for this student
+    // Load only pending assignments for this student across all courses
     await assignmentProvider.loadPendingAssignmentsForStudent(
       studentId,
       courseIds,
     );
 
-    _assignments = assignmentProvider.assignments;
+    final loaded = List<AssignmentModel>.from(assignmentProvider.assignments);
+    loaded.sort((a, b) => b.deadline.compareTo(a.deadline));
+
+    _assignments = loaded;
 
     setState(() {
       _isLoading = false;

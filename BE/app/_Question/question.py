@@ -53,7 +53,13 @@ def update(question_id : int, assignment_data: schema.QuestionUpdate, db : Sessi
     db.refresh(db_question)
     
     return db_question
-    
+
+# update question (PUT alias)
+@router.put("/{question_id}")
+def put_update(question_id: int, question_data: schema.QuestionUpdate, db: Session = Depends(get_db)):
+    updated = update(question_id, question_data, db)
+    return {"question": updated}
+
 # delete question
 @router.delete("/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete(question_id : int, db : Session = Depends(get_db)):

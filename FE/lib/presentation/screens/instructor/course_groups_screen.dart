@@ -54,28 +54,16 @@ class _CourseGroupsScreenState extends State<CourseGroupsScreen> {
   }
 
   Future<void> _updateGroups() async {
-    final desiredStr = _groupCountController.text.trim();
-    final desiredCount = int.tryParse(desiredStr) ?? 0;
-
-    if (desiredCount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid number of groups')),
-      );
-      return;
-    }
-
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
 
     setState(() {
       _isLoading = true;
     });
 
-    // Create additional groups until reaching desired count
-    while (_groups.length < desiredCount) {
-      // todo call CourseProvider.createGroup(courseId)
-      await courseProvider.createGroup(widget.course.id);
-      _groups = courseProvider.groups;
-    }
+    // Create a single new group for this course
+    await courseProvider.createGroup(widget.course.id);
+    _groups = courseProvider.groups;
+    _groupCountController.text = _groups.length.toString();
 
     setState(() {
       _isLoading = false;
@@ -99,7 +87,7 @@ class _CourseGroupsScreenState extends State<CourseGroupsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Choose how many groups this course should have. New groups will be created as needed.',
+              'Tap "Create Group" to add a new group. You can delete groups that have no students.',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
@@ -108,9 +96,10 @@ class _CourseGroupsScreenState extends State<CourseGroupsScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _groupCountController,
+              readOnly: true,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Number of groups',
+                labelText: 'Total groups',
                 prefixIcon: Icon(Icons.group_work),
               ),
             ),
@@ -125,7 +114,7 @@ class _CourseGroupsScreenState extends State<CourseGroupsScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Update Groups'),
+                    : const Text('Create Group'),
               ),
             ),
             const SizedBox(height: 24),
@@ -178,6 +167,71 @@ class _CourseGroupsScreenState extends State<CourseGroupsScreen> {
                                     : 'Group ${index + 1}'),
                                 subtitle: Text(
                                   '${group.students} students',
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    if (group.students > 0) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Please move all students to another group before deleting this group',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Delete Group'),
+                                        content: const Text(
+                                          'Are you sure you want to delete this group?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(true),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirmed != true) return;
+
+                                    final courseProvider =
+                                        Provider.of<CourseProvider>(
+                                      context,
+                                      listen: false,
+                                    );
+
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+
+                                    await courseProvider.deleteGroup(
+                                      group.id,
+                                      widget.course.id,
+                                    );
+
+                                    _groups = courseProvider.groups;
+                                    _groupCountController.text =
+                                        _groups.length.toString();
+
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                  },
                                 ),
                               ),
                             );

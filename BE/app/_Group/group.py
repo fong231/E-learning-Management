@@ -70,7 +70,16 @@ def delete(group_id : int, db : Session = Depends(get_db)):
     
     if not db_group:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-    
+    if db_group.student_association:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Cannot delete group with enrolled students. "
+                "Please move all students to another group first."
+            ),
+        )
+
     db.delete(db_group)
+    db.commit()
     
-    return
+    return {"message": "Group deleted successfully"}

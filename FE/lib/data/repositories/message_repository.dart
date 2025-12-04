@@ -34,7 +34,9 @@ class MessageRepository {
   Future<MessageModel> sendMessage(Map<String, dynamic> messageData) async {
     try {
       final response = await _apiService.post('/messages', messageData);
-      return MessageModel.fromJson(response['message'] ?? response['data']);
+      return MessageModel.fromJson(
+        response['message'] ?? response['data'] ?? response,
+      );
     } catch (e) {
       throw Exception('Failed to send message: $e');
     }

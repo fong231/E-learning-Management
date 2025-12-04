@@ -3,7 +3,7 @@
 Base URL (in FE `AppConstants.baseUrl`):
 
 ```text
-http://10.0.2.2:80
+http://10.0.2.2:8000
 ```
 
 All endpoints below are **relative** to this base URL.
@@ -297,6 +297,81 @@ Used by `CourseRepository.deleteCourse()`.
 ```json
 {
   "message": "Course deleted successfully"
+}
+```
+
+### 3.9 GET `/instructors/{instructorId}/summary`
+
+Used by `InstructorRepository.getInstructorSummary()` for the instructor overview dashboard.
+
+**Query params (optional)**
+
+- `semester_id`: filter statistics for a specific semester.
+
+**Response**
+
+```json
+{
+  "id": 101,
+  "totalCourses": 3,
+  "totalStudents": 120,
+  "totalGroups": 6,
+  "totalAssignments": 12,
+  "totalQuizzes": 5
+}
+```
+
+### 3.10 GET `/instructors/{instructorId}/students`
+
+Used by `InstructorRepository.getInstructorStudents()` for the instructor students tab.
+
+**Query params (optional)**
+
+- `semester_id`: only students in courses of that semester.
+
+**Response**
+
+```json
+{
+  "students": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "fullname": "Student A",
+      "email": "student1@university.edu",
+      "avatar": "/avatar1.png",
+      "phone_number": "0900000001",
+      "address": null,
+      "role": "student",
+      "created_at": "2024-09-01T10:00:00Z",
+      "updated_at": null
+    }
+  ]
+}
+```
+
+### 3.11 GET `/instructors/students/courses/{courseId}`
+
+Used by `InstructorRepository.getStudentsInCourse()` for course-specific student lists.
+
+**Response**
+
+```json
+{
+  "students": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "fullname": "Student A",
+      "email": "student1@university.edu",
+      "avatar": "/avatar1.png",
+      "phone_number": "0900000001",
+      "address": null,
+      "role": "student",
+      "group_id": 1,
+      "group_name": "Group 1"
+    }
+  ]
 }
 ```
 

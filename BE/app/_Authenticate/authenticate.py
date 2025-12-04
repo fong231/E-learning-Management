@@ -8,6 +8,8 @@ from ..database import get_db
 from . import schema, model
 from .._Customer import model as CustomerModel
 from .._Customer import schema as CustomerSchema
+from .._Student import schema as StudentSchema
+from .._Student.student import create_student
 from .._Customer.customer import create_customer
 from ..dependencies.auth import CustomJWTError, create_access_token, decode_access_token, get_token_from_header
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -172,6 +174,51 @@ def register(customer: schema.AccountCreate, db: Session = Depends(get_db)):
         "token": access_token, 
         "token_type": "bearer",
         "customer" : customer}
+
+# register student account
+@router.post("/register-student", status_code=status.HTTP_201_CREATED)
+def register_student_for_instructor(
+    account: schema.AccountCreate,
+    db: Session = Depends(get_db),
+):
+    existing = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.email == account.email
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Customer with email '{account.email}' already exists.",
+        )
+
+    hashed_password = hash_password(account.password)
+
+    customer_data = CustomerSchema.CustomerCreate(
+        fullname=account.fullname,
+        email=account.email,
+        phone_number=account.phone_number,
+        password=hashed_password,
+    )
+    customer = create_customer(customer_data, db)
+
+    if not customer:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Can't create customer",
+        )
+
+    # Ensure role is student
+    customer.role = CustomerSchema.RoleEnum.student
+    db.commit()
+    db.refresh(customer)
+
+    # Register as Student as well
+    student_payload = StudentSchema.StudentCreate(studentID=customer.customerID)
+    create_student(db, student_payload)
+
+    return {
+        "student_id": customer.customerID,
+        "customer": CustomerSchema.CustomerRead.from_orm(customer),
+    }
 
 # login account
 @router.post("/login", response_model=CustomerSchema.TokenWithCustomer)

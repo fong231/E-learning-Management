@@ -328,23 +328,28 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- ============================================
+-- DEMO SAMPLE DATA - FOCUSED ON JOHN DOE (ID=1) & ADMIN (ID=101)
+-- Main Course: Cross-Platform Mobile Application Development
+-- ============================================
+
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ============================================
--- SAMPLE DATA FOR LEARNING MANAGEMENT SYSTEM
+-- 1. CUSTOMERS (Users)
 -- ============================================
+-- Password for all: "admin" hashed with bcrypt
+-- You can verify at: https://bcrypt-generator.com/
 
--- ============================================
--- CUSTOMERS (Base users)
--- ============================================
 INSERT INTO `Customers` (`customerID`, `phone_number`, `email`, `avatar`, `fullname`, `password`, `role`) VALUES
 -- MAIN DEMO STUDENT: John Doe (ID=1)
-(1, '0901234567', 'john.doe@university.edu', 'https://ui-avatars.com/api/?name=John+Doe&background=4285F4&color=fff', 'John Doe', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(1, '0901234567', 'john.doe@university.edu', 'https://ui-avatars.com/api/?name=John%20Doe&background=4285F4&color=fff', 'John Doe', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
 
 -- Other students (supporting cast)
-(2, '0902345678', 'jane.smith@university.edu', 'https://ui-avatars.com/api/?name=Jane+Smith&background=EA4335&color=fff', 'Jane Smith', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
-(3, '0903456789', 'bob.wilson@university.edu', 'https://ui-avatars.com/api/?name=Bob+Wilson&background=FBBC04&color=fff', 'Bob Wilson', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
-(4, '0904567890', 'alice.brown@university.edu', 'https://ui-avatars.com/api/?name=Alice+Brown&background=34A853&color=fff', 'Alice Brown', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
-(5, '0905678901', 'charlie.davis@university.edu', 'https://ui-avatars.com/api/?name=Charlie+Davis&background=9C27B0&color=fff', 'Charlie Davis', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(2, '0902345678', 'jane.smith@university.edu', 'https://ui-avatars.com/api/?name=Jane%20Smith&background=EA4335&color=fff', 'Jane Smith', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(3, '0903456789', 'bob.wilson@university.edu', 'https://ui-avatars.com/api/?name=Bob%20Wilson&background=FBBC04&color=fff', 'Bob Wilson', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(4, '0904567890', 'alice.brown@university.edu', 'https://ui-avatars.com/api/?name=Alice%20Brown&background=34A853&color=fff', 'Alice Brown', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
+(5, '0905678901', 'charlie.davis@university.edu', 'https://ui-avatars.com/api/?name=Charlie%20Davis&background=9C27B0&color=fff', 'Charlie Davis', '$2b$12$Cb1GHq4oYxRAZFmtJJRKKu3bIne/JlSZGPq6gwoILEwfvsFjEcLd6', 'student'),
 
 -- MAIN DEMO INSTRUCTOR: Admin (ID=101)
 (101, '0911111111', 'admin@gmail.com', 'https://ui-avatars.com/api/?name=Admin&background=FF5722&color=fff', 'admin', '$2b$12$yGIqw4/uaAsIVa4n/6j5ouz4Ekq6LHXhmP8RJTH5nkq8bVAFsYGny', 'instructor');
@@ -357,38 +362,74 @@ INSERT INTO `Instructors` (`instructorID`) VALUES (101);
 INSERT INTO `Students` (`studentID`) VALUES (1), (2), (3), (4), (5);
 
 -- ============================================
--- 3. SEMESTER
+-- 3. SEMESTERS
 -- ============================================
 INSERT INTO `Semesters` (`semesterID`, `description`) VALUES
-(1, 'Semester 1 - Academic Year 2024-2025');
+(1, 'Semester 1 - Academic Year 2024-2025'),
+(2, 'Semester 2 - Academic Year 2024-2025');
 
 -- ============================================
 -- 4. MAIN DEMO COURSE
 -- ============================================
 INSERT INTO `Courses` (`courseID`, `number_of_sessions`, `course_name`, `description`, `semesterID`, `instructorID`) VALUES
-(1, '15', 'Cross-Platform Mobile Application Development', 'Learn Flutter and build mobile apps for Android, iOS, and Web', 1, 101);
+(1, '15', 'Cross-Platform Mobile Application Development', 'Learn Flutter and build mobile apps for Android, iOS, and Web', 2, 101);
 
 -- ============================================
--- 5. GROUPS
+-- 5. GROUPS (Multiple groups across courses)
 -- ============================================
+-- SEMESTER 1: Cross-Platform Mobile Dev
 INSERT INTO `Groups` (`groupID`, `id`, `courseID`) VALUES
-(1, 1, 1),  -- Group 1 of Course 1
-(2, 2, 1);  -- Group 2 of Course 1
+(1, 1, 1),  -- Course 1 - Group 1
+(2, 2, 1);  -- Course 1 - Group 2
+
+-- SEMESTER 2: Database Design
+INSERT INTO `Groups` (`groupID`, `id`, `courseID`) VALUES
+(3, 1, 2),  -- Course 2 - Group 1
+(4, 2, 2);  -- Course 2 - Group 2
+
+-- SEMESTER 2: Web Development
+INSERT INTO `Groups` (`groupID`, `id`, `courseID`) VALUES
+(5, 1, 3),  -- Course 3 - Group 1
+(6, 2, 3);  -- Course 3 - Group 2
+
+-- SEMESTER 2: AI Fundamentals
+INSERT INTO `Groups` (`groupID`, `id`, `courseID`) VALUES
+(7, 1, 4);  -- Course 4 - Group 1
 
 -- ============================================
--- 6. STUDENT ENROLLMENTS
+-- 6. STUDENT ENROLLMENTS (Across multiple courses)
 -- ============================================
--- John Doe in Group 1 (MAIN DEMO)
+-- SEMESTER 1: Cross-Platform Mobile Dev
 INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
-(1, 1),  -- John Doe -> Group 1
-(2, 1),  -- Jane Smith -> Group 1
-(3, 1),  -- Bob Wilson -> Group 1
-(4, 2),  -- Alice Brown -> Group 2
-(5, 2);  -- Charlie Davis -> Group 2
+(1, 1),  -- John Doe -> Course 1, Group 1
+(2, 1),  -- Jane Smith -> Course 1, Group 1
+(3, 1),  -- Bob Wilson -> Course 1, Group 1
+(4, 2),  -- Alice Brown -> Course 1, Group 2
+(5, 2);  -- Charlie Davis -> Course 1, Group 2
+
+-- SEMESTER 2: Database Design
+INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
+(1, 3),  -- John Doe -> Course 2, Group 1
+(2, 3),  -- Jane Smith -> Course 2, Group 1
+(3, 4),  -- Bob Wilson -> Course 2, Group 2
+(4, 4);  -- Alice Brown -> Course 2, Group 2
+
+-- SEMESTER 2: Web Development
+INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
+(1, 5),  -- John Doe -> Course 3, Group 1
+(5, 5),  -- Charlie Davis -> Course 3, Group 1
+(2, 6);  -- Jane Smith -> Course 3, Group 2
+
+-- SEMESTER 2: AI Fundamentals
+INSERT INTO `Student_Group` (`studentID`, `groupID`) VALUES
+(1, 7),  -- John Doe -> Course 4, Group 1
+(3, 7),  -- Bob Wilson -> Course 4, Group 1
+(4, 7);  -- Alice Brown -> Course 4, Group 1
 
 -- ============================================
--- 7. LEARNING CONTENT (Base for all content types)
+-- 7. LEARNING CONTENT (Base for all content types - All courses)
 -- ============================================
+-- SEMESTER 1: Cross-Platform Mobile Dev
 INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
 -- Announcements
 (1, 'Welcome to Cross-Platform Development!', 'Welcome everyone! This course will teach you Flutter development.'),
@@ -410,13 +451,79 @@ INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
 (11, 'Quiz 1: Flutter Basics', 'Test your knowledge on Flutter fundamentals.'),
 (12, 'Quiz 2: Widgets and State', 'Quiz about Flutter widgets and state management.');
 
+-- SEMESTER 2: Database Design Course
+INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
+-- Announcements
+(13, 'Welcome to Database Design!', 'This course covers database fundamentals, SQL, and normalization.'),
+(14, 'Project Guidelines Released', 'Final project guidelines are now available. Check the materials section.'),
+
+-- Assignments
+(15, 'Assignment 1: ER Diagram Design', 'Design an ER diagram for a university management system.'),
+(16, 'Assignment 2: SQL Queries', 'Write SQL queries to solve the given problems.'),
+(17, 'Assignment 3: Database Normalization', 'Normalize the provided database schema to 3NF.'),
+
+-- Materials
+(18, 'Week 1: Database Fundamentals', 'Introduction to DBMS, relational model, and SQL basics.'),
+(19, 'Week 2: ER Modeling', 'Entity-Relationship diagrams and database design principles.'),
+(20, 'Week 3: SQL Advanced Queries', 'Joins, subqueries, and aggregate functions.'),
+
+-- Quizzes
+(21, 'Quiz 1: Database Basics', 'Test on database concepts and ER modeling.'),
+(22, 'Quiz 2: SQL Mastery', 'SQL queries and optimization quiz.');
+
+-- SEMESTER 2: Web Development Course
+INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
+-- Announcements
+(23, 'Welcome to Web Development!', 'Learn React.js and build modern single-page applications.'),
+
+-- Assignments
+(24, 'Assignment 1: React Components', 'Build a todo list app using React functional components.'),
+(25, 'Assignment 2: React Hooks', 'Implement useState, useEffect, and custom hooks.'),
+
+-- Materials
+(26, 'Week 1: React Fundamentals', 'JSX, components, props, and state management.'),
+(27, 'Week 2: React Hooks Deep Dive', 'Master useState, useEffect, useContext, and more.'),
+
+-- Quizzes
+(28, 'Quiz 1: React Basics', 'Test your React fundamentals knowledge.');
+
+-- SEMESTER 2: AI Fundamentals Course
+INSERT INTO `Learning_Content` (`contentID`, `title`, `description`) VALUES
+-- Announcements
+(29, 'Welcome to AI Fundamentals!', 'Introduction to Machine Learning and Neural Networks.'),
+
+-- Assignments
+(30, 'Assignment 1: Linear Regression', 'Implement linear regression from scratch using Python.'),
+(31, 'Assignment 2: Neural Networks', 'Build a simple neural network for image classification.'),
+
+-- Materials
+(32, 'Week 1: Introduction to AI', 'History of AI, types of learning, and applications.'),
+(33, 'Week 2: Machine Learning Basics', 'Supervised vs unsupervised learning, regression, classification.'),
+
+-- Quizzes
+(34, 'Quiz 1: AI Concepts', 'Test on AI and ML fundamentals.');
+
 -- ============================================
--- 8. ANNOUNCEMENTS
+-- 8. ANNOUNCEMENTS (All courses)
 -- ============================================
+-- Semester 1: Cross-Platform Mobile Dev
 INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
 (1, 1),  -- Welcome announcement for Group 1
 (2, 1),  -- Midterm schedule for Group 1
 (3, 2);  -- Deadline extension for Group 2
+
+-- Semester 2: Database Design
+INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
+(13, 3),  -- Welcome to Database Design - Group 1
+(14, 3);  -- Project guidelines - Group 1
+
+-- Semester 2: Web Development
+INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
+(23, 5);  -- Welcome to Web Development - Group 1
+
+-- Semester 2: AI Fundamentals
+INSERT INTO `Announcements` (`announcementID`, `groupID`) VALUES
+(29, 7);  -- Welcome to AI Fundamentals - Group 1
 
 -- ============================================
 -- 9. COMMENTS ON ANNOUNCEMENTS
@@ -428,30 +535,81 @@ INSERT INTO `Comments` (`commentID`, `message`, `ownerID`, `announcementID`) VAL
 (4, 'Thanks for the extension!', 2, 3);  -- Jane Smith
 
 -- ============================================
--- 10. ASSIGNMENTS
+-- 10. ASSIGNMENTS (All courses)
 -- ============================================
+-- Semester 1: Cross-Platform Mobile Dev
 INSERT INTO `Assignments` (`assignmentID`, `title`, `description`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
 (4, 'Assignment 1: Flutter UI Basics', 'Create a simple Flutter app with Material Design widgets. Include AppBar, ListView, and Cards.', '2024-11-01 00:00:00', '2024-11-15 23:59:59', '2024-11-17 23:59:59', 10.00, '.zip,.dart', 1),
 (5, 'Assignment 2: State Management', 'Implement a counter app using Provider. Show increment, decrement, and reset functionality.', '2024-11-16 00:00:00', '2024-11-30 23:59:59', '2024-12-02 23:59:59', 10.00, '.zip,.dart', 1),
 (6, 'Assignment 3: API Integration', 'Build an app that fetches data from JSONPlaceholder API and displays posts in a list.', '2024-12-01 00:00:00', '2024-12-15 23:59:59', NULL, 15.00, '.zip,.dart', 1);
 
+-- Semester 2: Database Design
+INSERT INTO `Assignments` (`assignmentID`, `title`, `description`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
+(15, 'Assignment 1: ER Diagram Design', 'Design an ER diagram for a university management system with at least 8 entities.', '2025-01-10 00:00:00', '2025-01-24 23:59:59', '2025-01-26 23:59:59', 5.00, '.pdf,.png', 3),
+(16, 'Assignment 2: SQL Queries', 'Write SQL queries to solve 20 problems. Submit .sql file with all queries.', '2025-01-25 00:00:00', '2025-02-08 23:59:59', NULL, 2.00, '.sql,.txt', 3),
+(17, 'Assignment 3: Database Normalization', 'Normalize the provided schema to 3NF. Show all steps with explanations.', '2025-02-09 00:00:00', '2025-02-23 23:59:59', '2025-02-25 23:59:59', 5.00, '.pdf,.docx', 3);
+
+-- Semester 2: Web Development
+INSERT INTO `Assignments` (`assignmentID`, `title`, `description`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
+(24, 'Assignment 1: React Components', 'Build a todo list app with add, delete, and mark complete functionality.', '2025-01-15 00:00:00', '2025-01-29 23:59:59', NULL, 10.00, '.zip', 5),
+(25, 'Assignment 2: React Hooks', 'Create a weather app using useEffect to fetch data from OpenWeather API.', '2025-01-30 00:00:00', '2025-02-13 23:59:59', '2025-02-15 23:59:59', 10.00, '.zip', 5);
+
+-- Semester 2: AI Fundamentals
+INSERT INTO `Assignments` (`assignmentID`, `title`, `description`, `start_date`, `deadline`, `late_deadline`, `size_limit`, `file_format`, `groupID`) VALUES
+(30, 'Assignment 1: Linear Regression', 'Implement linear regression from scratch. Use NumPy only, no sklearn.', '2025-01-12 00:00:00', '2025-01-26 23:59:59', NULL, 5.00, '.py,.ipynb', 7),
+(31, 'Assignment 2: Neural Networks', 'Build a 2-layer neural network for MNIST digit classification.', '2025-01-27 00:00:00', '2025-02-10 23:59:59', '2025-02-12 23:59:59', 10.00, '.py,.ipynb', 7);
+
 -- ============================================
--- 11. MATERIALS
+-- 11. MATERIALS (All courses)
 -- ============================================
+-- Semester 1: Cross-Platform Mobile Dev
 INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
 (7, 'Week 1: Introduction to Flutter', 'Lecture slides covering Flutter installation, project structure, and first app.'),
 (8, 'Week 2: Widgets and Layouts', 'Comprehensive guide on Flutter widgets - Container, Row, Column, Stack, etc.'),
 (9, 'Week 3: Navigation and Routing', 'Learn Navigator, Routes, and passing data between screens.'),
 (10, 'Week 4: State Management with Provider', 'Deep dive into Provider package with examples and best practices.');
 
+-- Semester 2: Database Design
+INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
+(18, 'Week 1: Database Fundamentals', 'Introduction to DBMS, relational model, SQL data types and basic queries.'),
+(19, 'Week 2: ER Modeling', 'Entity-Relationship diagrams, cardinality, and database design principles.'),
+(20, 'Week 3: SQL Advanced Queries', 'Joins (INNER, LEFT, RIGHT), subqueries, and aggregate functions.');
+
+-- Semester 2: Web Development
+INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
+(26, 'Week 1: React Fundamentals', 'JSX syntax, components hierarchy, props vs state.'),
+(27, 'Week 2: React Hooks Deep Dive', 'Master useState, useEffect, useContext, useReducer, and custom hooks.');
+
+-- Semester 2: AI Fundamentals
+INSERT INTO `Materials` (`materialID`, `title`, `description`) VALUES
+(32, 'Week 1: Introduction to AI', 'History of AI, types of learning (supervised, unsupervised), AI applications.'),
+(33, 'Week 2: Machine Learning Basics', 'Regression vs classification, training vs testing, model evaluation.');
+
 -- ============================================
--- 12. COURSE_MATERIALS (Link materials to course)
+-- 12. COURSE_MATERIALS (Link materials to courses)
 -- ============================================
+-- Semester 1: Cross-Platform Mobile Dev
 INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
 (1, 7),
 (1, 8),
 (1, 9),
 (1, 10);
+
+-- Semester 2: Database Design
+INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
+(2, 18),
+(2, 19),
+(2, 20);
+
+-- Semester 2: Web Development
+INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
+(3, 26),
+(3, 27);
+
+-- Semester 2: AI Fundamentals
+INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
+(4, 32),
+(4, 33);
 
 -- ============================================
 -- 13. FILES FOR CONTENT

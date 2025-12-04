@@ -34,15 +34,13 @@ class _InstructorCoursesScreenState extends State<InstructorCoursesScreen> {
     setState(() {
       _isLoading = true;
     });
-
-    // todo call CourseProvider.loadSemesters()
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
     await courseProvider.loadSemesters();
     _semesters = courseProvider.semesters;
 
     if (_semesters.isNotEmpty) {
-      // default to nearest (last) semester
-      _selectedSemesterId = _semesters.last.id;
+      _selectedSemesterId =
+          courseProvider.selectedSemesterId ?? _semesters.last.id;
     }
 
     setState(() {
@@ -100,74 +98,79 @@ class _InstructorCoursesScreenState extends State<InstructorCoursesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Courses')),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            if (_semesters.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: DropdownButtonFormField<int>(
-                  value: _selectedSemesterId,
-                  decoration: const InputDecoration(
-                    labelText: 'Semester',
-                    prefixIcon: Icon(Icons.calendar_today),
-                  ),
-                  items: [
-                    for (final semester in _semesters)
-                      DropdownMenuItem(
-                        value: semester.id,
-                        child: Text(semester.description),
-                      ),
-                  ],
-                  onChanged: (value) async {
-                    setState(() {
-                      _selectedSemesterId = value;
-                    });
-                    await _loadCoursesWithSemester();
-                  },
+      body: Column(
+        children: [
+          if (_semesters.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: DropdownButtonFormField<int>(
+                value: _selectedSemesterId,
+                decoration: const InputDecoration(
+                  labelText: 'Semester',
+                  prefixIcon: Icon(Icons.calendar_today),
                 ),
+                items: [
+                  for (final semester in _semesters)
+                    DropdownMenuItem(
+                      value: semester.id,
+                      child: Text(semester.description),
+                    ),
+                ],
+                onChanged: (value) async {
+                  if (value == null) return;
+
+                  setState(() {
+                    _selectedSemesterId = value;
+                  });
+
+                  final courseProvider =
+                      Provider.of<CourseProvider>(context, listen: false);
+                  await courseProvider.setSelectedSemester(value);
+
+                  await _loadCoursesWithSemester();
+                },
               ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _courses.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.book_outlined,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No courses yet',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _loadCoursesWithSemester,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _courses.length,
-                            itemBuilder: (context, index) {
-                              final course = _courses[index];
-                              return _InstructorCourseCard(
-                                course: course,
-                                onDelete: () => _deleteCourse(course),
-                              );
-                            },
-                          ),
-                        ),
             ),
-          ],
-        ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _courses.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.book_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No courses yet',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadCoursesWithSemester,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _courses.length,
+                          itemBuilder: (context, index) {
+                            final course = _courses[index];
+                            return _InstructorCourseCard(
+                              course: course,
+                              onDelete: () => _deleteCourse(course),
+                            );
+                          },
+                        ),
+                      ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -203,7 +206,7 @@ class _InstructorCourseCard extends StatelessWidget {
         title: Text(course.name),
         subtitle: Text(
           course.description ?? 'No description',
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: PopupMenuButton<String>(

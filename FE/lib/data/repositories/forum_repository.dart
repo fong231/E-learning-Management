@@ -21,7 +21,10 @@ class ForumRepository {
   Future<TopicModel> getTopicById(int topicId) async {
     try {
       final response = await _apiService.get('/topics/$topicId');
-      return TopicModel.fromJson(response['topic'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['topic'] ?? response['data'] ?? response)
+          : response;
+      return TopicModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to load topic: $e');
     }
@@ -31,7 +34,10 @@ class ForumRepository {
   Future<TopicModel> createTopic(Map<String, dynamic> topicData) async {
     try {
       final response = await _apiService.post('/topics', topicData);
-      return TopicModel.fromJson(response['topic'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['topic'] ?? response['data'] ?? response)
+          : response;
+      return TopicModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to create topic: $e');
     }
@@ -41,7 +47,10 @@ class ForumRepository {
   Future<TopicModel> updateTopic(int topicId, Map<String, dynamic> topicData) async {
     try {
       final response = await _apiService.put('/topics/$topicId', topicData);
-      return TopicModel.fromJson(response['topic'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['topic'] ?? response['data'] ?? response)
+          : response;
+      return TopicModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to update topic: $e');
     }
@@ -73,7 +82,10 @@ class ForumRepository {
   Future<TopicChatModel> addTopicChat(Map<String, dynamic> chatData) async {
     try {
       final response = await _apiService.post('/topic-chats', chatData);
-      return TopicChatModel.fromJson(response['chat'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['chat'] ?? response['data'] ?? response)
+          : response;
+      return TopicChatModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to add chat: $e');
     }
@@ -105,7 +117,10 @@ class ForumRepository {
   Future<AnnouncementModel> getAnnouncementById(int announcementId) async {
     try {
       final response = await _apiService.get('/announcements/$announcementId');
-      return AnnouncementModel.fromJson(response['announcement'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['announcement'] ?? response['data'] ?? response)
+          : response;
+      return AnnouncementModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to load announcement: $e');
     }
@@ -115,7 +130,10 @@ class ForumRepository {
   Future<AnnouncementModel> createAnnouncement(Map<String, dynamic> announcementData) async {
     try {
       final response = await _apiService.post('/announcements', announcementData);
-      return AnnouncementModel.fromJson(response['announcement'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['announcement'] ?? response['data'] ?? response)
+          : response;
+      return AnnouncementModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to create announcement: $e');
     }
@@ -128,7 +146,10 @@ class ForumRepository {
   ) async {
     try {
       final response = await _apiService.put('/announcements/$announcementId', announcementData);
-      return AnnouncementModel.fromJson(response['announcement'] ?? response['data']);
+      final data = response is Map<String, dynamic>
+          ? (response['announcement'] ?? response['data'] ?? response)
+          : response;
+      return AnnouncementModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to update announcement: $e');
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../data/models/course_model.dart';
 import '../../providers/course_provider.dart';
 
 class CreateCourseScreen extends StatefulWidget {
@@ -29,39 +30,55 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _numberOfSessionsController = TextEditingController();
   final _semesterController = TextEditingController();
 
   int? _selectedSemesterId;
-  DateTime? _startDate;
-  DateTime? _endDate;
+  int? _selectedNumberOfSessions;
+  List<SemesterModel> _semesters = [];
 
   @override
   void initState() {
     super.initState();
-    if (widget.isEdit) {
-      _nameController.text = widget.name ?? '';
-      _descriptionController.text = widget.description ?? '';
-      _numberOfSessionsController.text = widget.numberOfSessions?.toString() ?? '';
-      _selectedSemesterId = widget.semesterId;
-    } else {
-      _loadSemesters();
-    }
+    _nameController.text = widget.name ?? '';
+    _descriptionController.text = widget.description ?? '';
+    _selectedSemesterId = widget.semesterId;
+    _selectedNumberOfSessions = widget.numberOfSessions;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadSemesters();
+    });
   }
 
   Future<void> _loadSemesters() async {
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
     await courseProvider.loadSemesters();
+    _semesters = courseProvider.semesters;
 
-    _semesterController.text =
-        courseProvider.currentSemester?.description ?? '';
+    if (_semesters.isEmpty) {
+      return;
+    }
+
+    SemesterModel? selected;
+    if (_selectedSemesterId != null) {
+      for (final s in _semesters) {
+        if (s.id == _selectedSemesterId) {
+          selected = s;
+          break;
+        }
+      }
+    }
+
+    selected ??= courseProvider.currentSemester ?? _semesters.last;
+    _selectedSemesterId = selected.id;
+    _semesterController.text = selected.description;
+
+    _selectedNumberOfSessions ??= 10;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _numberOfSessionsController.dispose();
     _semesterController.dispose();
     super.dispose();
   }
@@ -76,9 +93,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       'name': _nameController.text,
       'description': _descriptionController.text,
       'semester_id': _selectedSemesterId,
-      'number_of_sessions': int.parse(_numberOfSessionsController.text),
-      'start_date': _startDate,
-      'end_date': _endDate,
+      'number_of_sessions': _selectedNumberOfSessions,
     });
 
     if (mounted) {
@@ -135,6 +150,40 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
                 suffixIcon: Icon(Icons.arrow_drop_down),
                 border: OutlineInputBorder(),
               ),
+              onTap: () async {
+                if (_semesters.isEmpty) return;
+
+                final selectedId = await showDialog<int>(
+                  context: context,
+                  builder: (context) => SimpleDialog(
+                    title: const Text('Select Semester'),
+                    children: [
+                      for (final semester in _semesters)
+                        SimpleDialogOption(
+                          onPressed: () =>
+                              Navigator.of(context).pop(semester.id),
+                          child: Text(semester.description),
+                        ),
+                    ],
+                  ),
+                );
+
+                if (selectedId != null) {
+                  final courseProvider =
+                      Provider.of<CourseProvider>(context, listen: false);
+
+                  await courseProvider.setSelectedSemester(selectedId);
+
+                  setState(() {
+                    _selectedSemesterId = selectedId;
+                    final semester = _semesters.firstWhere(
+                      (s) => s.id == selectedId,
+                      orElse: () => _semesters.last,
+                    );
+                    _semesterController.text = semester.description;
+                  });
+                }
+              },
               validator: (value) {
                 if (_selectedSemesterId == null) {
                   return 'Please select semester';
@@ -144,20 +193,30 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
             ),
             const SizedBox(height: 16),
 
-            TextFormField(
-              controller: _numberOfSessionsController,
+            DropdownButtonFormField<int>(
+              value: _selectedNumberOfSessions,
               decoration: const InputDecoration(
                 labelText: 'Number of Sessions *',
-                hintText: 'Enter number of sessions',
                 prefixIcon: Icon(Icons.class_),
               ),
-              keyboardType: TextInputType.number,
+              items: const [
+                DropdownMenuItem(
+                  value: 10,
+                  child: Text('10 sessions'),
+                ),
+                DropdownMenuItem(
+                  value: 15,
+                  child: Text('15 sessions'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedNumberOfSessions = value;
+                });
+              },
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter number of sessions';
-                }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                if (value == null) {
+                  return 'Please select number of sessions';
                 }
                 return null;
               },

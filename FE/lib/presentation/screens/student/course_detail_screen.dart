@@ -14,6 +14,7 @@ import '../../providers/assignment_provider.dart';
 import '../../providers/course_provider.dart';
 import '../../providers/instructor_student_provider.dart';
 import 'student_submit_assignment_screen.dart';
+import 'student_topic_chat_screen.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final CourseModel course;
@@ -42,7 +43,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
 
     _isReadOnly = isStudent && currentSemesterId != widget.course.semesterId;
 
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -62,6 +63,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
             Tab(text: 'Stream'),
             Tab(text: 'Classwork'),
             Tab(text: 'People'),
+            Tab(text: 'Forum'),
           ],
         ),
       ),
@@ -74,8 +76,164 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
             isReadOnly: _isReadOnly,
           ),
           _PeopleTab(course: widget.course),
+          _ForumTab(
+            courseId: widget.course.id,
+            isReadOnly: _isReadOnly,
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _ForumTab extends StatefulWidget {
+  final int courseId;
+  final bool isReadOnly;
+
+  const _ForumTab({required this.courseId, required this.isReadOnly});
+
+  @override
+  State<_ForumTab> createState() => _ForumTabState();
+}
+
+class _ForumTabState extends State<_ForumTab> {
+  bool _isLoading = false;
+  List<TopicModel> _topics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadTopics();
+    });
+  }
+
+  Future<void> _loadTopics() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final forumProvider = Provider.of<ForumProvider>(context, listen: false);
+
+    await forumProvider.loadCourseTopics(widget.courseId);
+
+    setState(() {
+      _topics = forumProvider.topics;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _showCreateTopicDialog() async {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Topic'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: contentController,
+              decoration: const InputDecoration(
+                labelText: 'Content',
+              ),
+              maxLines: 4,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (titleController.text.trim().isEmpty) {
+                return;
+              }
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+
+    if (created != true) return;
+
+    final forumProvider = Provider.of<ForumProvider>(context, listen: false);
+
+    await forumProvider.createTopic({
+      'course_id': widget.courseId,
+      'title': titleController.text.trim(),
+      'content': contentController.text.trim(),
+    });
+
+    await _loadTopics();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _topics.isEmpty
+              ? Center(
+                  child: Text(
+                    'No topics yet',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadTopics,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _topics.length,
+                    itemBuilder: (context, index) {
+                      final topic = _topics[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                Colors.orange.withOpacity(0.1),
+                            child: const Icon(Icons.forum, color: Colors.orange),
+                          ),
+                          title: Text(topic.title),
+                          subtitle: Text(
+                            '${topic.replyCount} replies',
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => StudentTopicChatScreen(
+                                  topic: topic,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+      floatingActionButton: widget.isReadOnly
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _showCreateTopicDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('Create Topic'),
+            ),
     );
   }
 }
@@ -120,7 +278,12 @@ class _QuizzesTabState extends State<_QuizzesTab> {
   Widget build(BuildContext context) {
     return Consumer<QuizProvider>(
       builder: (context, quizProvider, child) {
-        final quizzes = quizProvider.quizzes;
+        final quizzes = List.of(quizProvider.quizzes)
+          ..sort((a, b) {
+            final aTime = a.startTime ?? a.createdAt;
+            final bTime = b.startTime ?? b.createdAt;
+            return bTime.compareTo(aTime);
+          });
 
         if (_isLoading && quizzes.isEmpty) {
           return const Center(child: CircularProgressIndicator());
@@ -521,8 +684,11 @@ class _AssignmentsTabState extends State<_AssignmentsTab> {
     // todo call AssignmentProvider.loadCourseAssignments(courseId)
     await assignmentProvider.loadCourseAssignments(widget.courseId);
 
+    final loaded = List<AssignmentModel>.from(assignmentProvider.assignments);
+    loaded.sort((a, b) => b.deadline.compareTo(a.deadline));
+
     setState(() {
-      _assignments = assignmentProvider.assignments;
+      _assignments = loaded;
       _isLoading = false;
     });
   }
@@ -656,7 +822,7 @@ class _PeopleTabState extends State<_PeopleTab> {
 
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
     await courseProvider.loadCourseGroups(widget.course.id);
-    final groups = courseProvider.groups;
+    var groups = courseProvider.groups;
 
     List<UserModel> students = [];
     try {
@@ -665,6 +831,24 @@ class _PeopleTabState extends State<_PeopleTab> {
       await instructorStudentProvider.loadStudentsInCourse(widget.course.id);
       students = instructorStudentProvider.students;
     } catch (_) {}
+
+    // Filter to only the group and students that match the current student
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUserId = authProvider.userId;
+    if (currentUserId != null) {
+      int? userGroupId;
+      for (final s in students) {
+        if (s.id == currentUserId) {
+          userGroupId = s.groupId;
+          break;
+        }
+      }
+
+      if (userGroupId != null) {
+        groups = groups.where((g) => g.id == userGroupId).toList();
+        students = students.where((s) => s.groupId == userGroupId).toList();
+      }
+    }
 
     setState(() {
       _groups = groups;
