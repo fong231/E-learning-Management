@@ -2,8 +2,12 @@ from fastapi import APIRouter, FastAPI, HTTPException, status, Depends
 from typing import List, Optional
 from datetime import datetime
 
+<<<<<<< HEAD
 from sqlalchemy import distinct, func, literal_column
 
+=======
+from sqlalchemy import distinct, func, literal_column, select
+>>>>>>> 70c0966c1e81997ec19688e6aafe5116206c8684
 from .schema import InstructorCreate
 from sqlalchemy.orm import Session
 from . import model, schema
@@ -11,11 +15,13 @@ from .._Customer import model as CustomerModel
 from .._Course.model import Course
 from .._Course.schema import CourseRead
 from .._Student.model import Student
+from .._Student.schema import StudentOutput
 from .._Group.model import Group
 from .._Assignment.model import Assignment
 from .._Quiz.model import Quiz
 from .._Student_Group.model import StudentGroupAssociation
 from .._Student_Score.model import StudentScore
+from .._Customer.model import Customer
 from ..database import get_db
 
 router = APIRouter(

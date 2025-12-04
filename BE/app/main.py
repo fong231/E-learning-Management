@@ -82,4 +82,4 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "This is Account Service API"}
+    return {"message": "This is Backend API"}
