@@ -34,6 +34,43 @@ class AssignmentProvider with ChangeNotifier {
     }
   }
 
+  // Helper: load pending assignments for a student across multiple courses
+  Future<void> loadPendingAssignmentsForStudent(
+    int studentId,
+    List<int> courseIds,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final List<AssignmentModel> pending = [];
+
+      for (final courseId in courseIds) {
+        final courseAssignments =
+            await _assignmentRepository.getCourseAssignments(courseId);
+
+        for (final assignment in courseAssignments) {
+          final submissions = await _assignmentRepository.getStudentSubmissions(
+            assignment.id,
+            studentId,
+          );
+
+          if (submissions.isEmpty) {
+            pending.add(assignment);
+          }
+        }
+      }
+
+      _assignments = pending;
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // WORKING: GET /assignments/{assignmentId}
   Future<void> loadAssignment(int assignmentId) async {
     _isLoading = true;

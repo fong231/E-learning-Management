@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
@@ -21,6 +22,14 @@ class ApiService {
     await prefs.setString(AppConstants.tokenKey, token);
   }
 
+  Future<String?> getToken() async {
+    if (_token == null) {
+      final prefs = await SharedPreferences.getInstance();
+      _token = prefs.getString(AppConstants.tokenKey);
+    }
+    return _token;
+  }
+
   Future<void> clearToken() async {
     _token = null;
     final prefs = await SharedPreferences.getInstance();
@@ -38,11 +47,11 @@ class ApiService {
     return headers;
   }
 
-  Future<Map<String, dynamic>> get(String endpoint) async {
+  Future<dynamic> get(String endpoint) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final response = await http.get(url, headers: _headers);
-      return _handleResponse(response);
+      return _handleResponseDynamic(response);
     } catch (e) {
       throw Exception('Network error: $e');
     }
@@ -76,11 +85,44 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> patch(String endpoint, Map<String, dynamic> data) async {
+    try {
+      final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
+      final response = await http.patch(
+        url,
+        headers: _headers,
+        body: jsonEncode(data),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> delete(String endpoint) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final response = await http.delete(url, headers: _headers);
       return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> dioPatch(String endpoint, FormData formData) async {
+    try {
+      final dio = Dio();
+      final response = await dio.patch(
+        '${AppConstants.baseUrl}$endpoint',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${await getToken()}',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
     } catch (e) {
       throw Exception('Network error: $e');
     }
@@ -112,12 +154,13 @@ class ApiService {
     }
   }
 
-  Map<String, dynamic> _handleResponse(http.Response response) {
+  dynamic _handleResponseDynamic(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) {
         return {'success': true};
       }
       return jsonDecode(response.body);
+
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized: Please login again');
     } else if (response.statusCode == 403) {
@@ -132,5 +175,19 @@ class ApiService {
           : {'message': 'Unknown error'};
       throw Exception(errorBody['message'] ?? 'Request failed');
     }
+  }
+
+  Map<String, dynamic> _handleResponse(http.Response response) {
+    final decoded = _handleResponseDynamic(response);
+
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    if (decoded is List) {
+      return {'data': decoded};
+    }
+
+    return {'data': decoded};
   }
 }

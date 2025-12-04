@@ -1,9 +1,11 @@
+import 'package:source_code/data/models/user_model.dart';
+
 class GroupModel {
   final int id;
   final int courseId;
   final String? courseName;
   final String groupName;
-  final int students;
+  final List<UserModel> students;
   final DateTime createdAt;
 
   GroupModel({
@@ -21,7 +23,9 @@ class GroupModel {
       courseId: json['course_id'] ?? 0,
       courseName: json['course_name'],
       groupName: json['group_name'] ?? '',
-      students: json['students'] ?? 0,
+      students: (json['students'] ?? [])
+          .map((json) => UserModel.fromJson(json))
+          .toList(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -34,7 +38,7 @@ class GroupModel {
       'course_id': courseId,
       'course_name': courseName,
       'group_name': groupName,
-      'students': students,
+      'students': students.map((e) => e.toJson()).toList(),
       'created_at': createdAt.toIso8601String(),
     };
   }

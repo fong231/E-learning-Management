@@ -12,8 +12,6 @@ class CreateCourseScreen extends StatefulWidget {
     this.description,
     this.semesterId,
     this.numberOfSessions,
-    this.startDate,
-    this.endDate,
   });
 
   final bool isEdit;
@@ -22,8 +20,6 @@ class CreateCourseScreen extends StatefulWidget {
   final String? description;
   final int? semesterId;
   final int? numberOfSessions;
-  final DateTime? startDate;
-  final DateTime? endDate;
 
   @override
   State<CreateCourseScreen> createState() => _CreateCourseScreenState();
@@ -48,8 +44,6 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       _descriptionController.text = widget.description ?? '';
       _numberOfSessionsController.text = widget.numberOfSessions?.toString() ?? '';
       _selectedSemesterId = widget.semesterId;
-      _startDate = widget.startDate;
-      _endDate = widget.endDate;
     } else {
       _loadSemesters();
     }
@@ -72,46 +66,11 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime initial = isStartDate
-        ? (_startDate ?? DateTime.now())
-        : (_endDate ?? _startDate ?? DateTime.now());
-
-    final DateTime first = isStartDate
-        ? DateTime.now().subtract(const Duration(days: 1 * 365))
-        : (_startDate ??
-              DateTime.now().subtract(const Duration(days: 1 * 365)));
-
-    final DateTime last = DateTime.now().add(const Duration(days: 1 * 365));
-
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: first,
-      lastDate: last,
-    );
-
-    if (picked != null) {
-      setState(() {
-        if (isStartDate) {
-          _startDate = picked;
-
-          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
-            _endDate = null;
-          }
-        } else {
-          _endDate = picked;
-        }
-      });
-    }
-  }
-
   Future<void> _saveCourse() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // TODO: Call API to create course
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
     await courseProvider.createCourse({
       'name': _nameController.text,
@@ -204,34 +163,6 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               },
             ),
             const SizedBox(height: 16),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event),
-              title: const Text('Start Date'),
-              subtitle: Text(
-                _startDate != null
-                    ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
-                    : 'No date selected',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _selectDate(context, true),
-            ),
-            const Divider(),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event_available),
-              title: const Text('End Date'),
-              subtitle: Text(
-                _endDate != null
-                    ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                    : 'No date selected',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _selectDate(context, false),
-            ),
-            const SizedBox(height: 32),
 
             Consumer<CourseProvider>(
               builder: (context, courseProvider, child) {

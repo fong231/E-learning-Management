@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../data/models/course_model.dart';
+import '../../data/models/content_model.dart';
 import '../../data/repositories/course_repository.dart';
 
 class CourseProvider with ChangeNotifier {
@@ -9,13 +10,18 @@ class CourseProvider with ChangeNotifier {
   SemesterModel? _currentSemester;
   List<CourseModel> _courses = [];
   CourseModel? _currentCourse;
+  List<GroupModel> _groups = [];
+  List<LearningContentModel> _content = [];
   bool _isLoading = false;
   String? _error;
 
   List<SemesterModel> get semesters => _semesters;
-  SemesterModel? get currentSemester => _semesters.last;
+  SemesterModel? get currentSemester =>
+      _semesters.isNotEmpty ? _semesters.last : null;
   List<CourseModel> get courses => _courses;
   CourseModel? get currentCourse => _currentCourse;
+  List<GroupModel> get groups => _groups;
+  List<LearningContentModel> get content => _content;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -25,6 +31,21 @@ class CourseProvider with ChangeNotifier {
 
     try {
       _currentCourse = await _courseRepository.getCourseById(courseId);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadCourseContent(int courseId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _content = await _courseRepository.getCourseContent(courseId);
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -120,6 +141,61 @@ class CourseProvider with ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // WORKING: GET /courses/{courseId}/groups
+  Future<void> loadCourseGroups(int courseId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _groups = await _courseRepository.getCourseGroups(courseId);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // WORKING: POST /groups
+  Future<void> createGroup(int courseId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _courseRepository.createGroup(courseId);
+      _error = null;
+      await loadCourseGroups(courseId);
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // WORKING: POST /groups/{groupId}/students
+  Future<void> enrollStudentToGroup(int studentId, int groupId) async {
+    try {
+      await _courseRepository.enrollStudent(studentId, groupId);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  // WORKING: DELETE /groups/{groupId}/students/{studentId}
+  Future<void> unenrollStudentFromGroup(int studentId, int groupId) async {
+    try {
+      await _courseRepository.unenrollStudent(studentId, groupId);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
       notifyListeners();
     }
   }

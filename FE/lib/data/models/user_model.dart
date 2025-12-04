@@ -8,6 +8,8 @@ class UserModel {
   final String role; // 'student' or 'instructor'
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final int? groupId;
+  final String? groupName;
 
   UserModel({
     required this.id,
@@ -19,6 +21,8 @@ class UserModel {
     required this.role,
     required this.createdAt,
     this.updatedAt,
+    this.groupId,
+    this.groupName,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +40,8 @@ class UserModel {
       updatedAt: json['updated_at'] != null 
           ? DateTime.parse(json['updated_at']) 
           : null,
+      groupId: json['group_id'],
+      groupName: json['group_name'],
     );
   }
 
@@ -50,6 +56,8 @@ class UserModel {
       'role': role,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'group_id': groupId,
+      'group_name': groupName,
     };
   }
 
@@ -63,6 +71,8 @@ class UserModel {
     String? role,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? groupId,
+    String? groupName,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -74,6 +84,8 @@ class UserModel {
       role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      groupId: groupId ?? this.groupId,
+      groupName: groupName ?? this.groupName,
     );
   }
 }

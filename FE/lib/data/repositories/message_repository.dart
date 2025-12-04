@@ -8,7 +8,9 @@ class MessageRepository {
   Future<List<MessageModel>> getUserMessages(int userId) async {
     try {
       final response = await _apiService.get('/users/$userId/messages');
-      final List<dynamic> messagesJson = response['messages'] ?? response['data'] ?? [];
+      final List<dynamic> messagesJson = response is List
+          ? response
+          : (response['messages'] ?? response['data'] ?? []);
       return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load messages: $e');
@@ -19,7 +21,9 @@ class MessageRepository {
   Future<List<MessageModel>> getConversation(int userId1, int userId2) async {
     try {
       final response = await _apiService.get('/messages/conversation/$userId1/$userId2');
-      final List<dynamic> messagesJson = response['messages'] ?? response['data'] ?? [];
+      final List<dynamic> messagesJson = response is List
+          ? response
+          : (response['messages'] ?? response['data'] ?? []);
       return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load conversation: $e');
@@ -68,7 +72,9 @@ class MessageRepository {
   Future<List<NotificationModel>> getNotifications(int studentId) async {
     try {
       final response = await _apiService.get('/students/$studentId/notifications');
-      final List<dynamic> notificationsJson = response['notifications'] ?? response['data'] ?? [];
+      final List<dynamic> notificationsJson = response is List
+          ? response
+          : (response['notifications'] ?? response['data'] ?? []);
       return notificationsJson.map((json) => NotificationModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load notifications: $e');

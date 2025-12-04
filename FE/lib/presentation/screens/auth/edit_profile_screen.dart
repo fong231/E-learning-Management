@@ -1,10 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 
@@ -56,7 +56,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       _fullnameController.text = user['fullname'] ?? '';
       _emailController.text = user['email'] ?? '';
       _phoneController.text = user['phone_number'] ?? '';
-      _currentAvatarUrl = user['avatar'] ?? 'https://ui-avatars.com/api/?name=$encodedUrl&background=random&color=fff';
+      _currentAvatarUrl =
+          user['avatar'] ??
+          'https://ui-avatars.com/api/?name=$encodedUrl&background=random&color=fff&format=png';
     });
   }
 
@@ -73,7 +75,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final ImagePicker picker = ImagePicker();
     try {
       // Mở thư viện ảnh
-      final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+      );
 
       if (pickedFile != null) {
         setState(() {
@@ -81,9 +85,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         });
       }
     } catch (e) {
-      print('Lỗi chọn ảnh: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể chọn ảnh, vui lòng cấp quyền truy cập.')),
+        const SnackBar(
+          content: Text('Failed to pick image.'),
+        ),
       );
     }
   }
@@ -94,12 +99,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         'fullname': _fullnameController.text,
         'email': _emailController.text,
         'phone_number': _phoneController.text,
-        // Nếu có file ảnh mới, bạn cần xử lý upload file này lên server trước
-        // sau đó lấy URL trả về để lưu vào DB.
-        'avatar': _selectedImageFile != null ? _selectedImageFile!.path : _currentAvatarUrl,
+        if (_selectedImageFile != null) 'avatar': _selectedImageFile,
       };
 
-      // TODO: Logic upload ảnh cần được thực hiện trong AuthProvider nếu có file mới
+      // Lưu ý: Logic upload ảnh nên được thực hiện trong AuthProvider nếu có file mới
       // Ví dụ: await authProvider.updateProfileWithImage(updatedData, _selectedImageFile);
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -110,14 +113,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!')),
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: AppTheme.successColor,
+            ),
           );
           Navigator.pop(context, updatedData);
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Update failed!')),
+            const SnackBar(
+              content: Text('Update failed!'),
+              backgroundColor: AppTheme.errorColor,
+            ),
           );
         }
       }
@@ -131,14 +140,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (_selectedImageFile != null) {
       backgroundImage = FileImage(_selectedImageFile!);
     } else if (_currentAvatarUrl.isNotEmpty) {
-      backgroundImage = NetworkImage(_currentAvatarUrl);
+      print('Current avatar URL: $_currentAvatarUrl');
+      backgroundImage = NetworkImage('${AppConstants.baseUrl}/uploads/$_currentAvatarUrl');
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Edit Profile'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -154,14 +161,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       backgroundColor: Colors.grey.shade200,
                       backgroundImage: backgroundImage,
                       child: backgroundImage == null
-                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                          ? const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.grey,
+                            )
                           : null,
                     ),
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: _pickImage, // Gọi hàm chọn ảnh thay vì showDialog
+                        onTap: _pickImage,
+                        // Gọi hàm chọn ảnh thay vì showDialog
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: const BoxDecoration(
@@ -209,7 +221,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter email';
                   }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                  if (!RegExp(
+                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                  ).hasMatch(value)) {
                     return 'Please enter a valid email';
                   }
                   return null;

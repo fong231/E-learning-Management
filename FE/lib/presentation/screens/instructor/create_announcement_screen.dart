@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../data/models/course_model.dart';
+import '../../providers/course_provider.dart';
+import '../../providers/forum_provider.dart';
 class CreateAnnouncementScreen extends StatefulWidget {
   const CreateAnnouncementScreen({super.key});
 
@@ -13,7 +17,45 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   final _contentController = TextEditingController();
 
   int? _selectedCourseId;
+  int? _selectedGroupId;
   bool _isLoading = false;
+  List<CourseModel> _courses = [];
+  List<GroupModel> _groups = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadCourses();
+    });
+  }
+
+  Future<void> _loadCourses() async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+
+    await courseProvider.loadSemesters();
+
+    if (courseProvider.semesters.isNotEmpty) {
+      final SemesterModel semester = courseProvider.semesters.last;
+      await courseProvider.loadInstructorCoursesWithSemester(semester.id);
+      _courses = courseProvider.courses;
+    } else {
+      _courses = [];
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _loadGroupsForCourse(int courseId) async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadCourseGroups(courseId);
+    _groups = courseProvider.groups;
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void dispose() {
@@ -31,8 +73,13 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       _isLoading = true;
     });
 
-    // TODO: Call API to create announcement
-    await Future.delayed(const Duration(seconds: 2));
+    final forumProvider = Provider.of<ForumProvider>(context, listen: false);
+    await forumProvider.createAnnouncement({
+      'course_id': _selectedCourseId,
+      'group_id': _selectedGroupId,
+      'title': _titleController.text,
+      'content': _contentController.text,
+    });
 
     if (mounted) {
       setState(() {
@@ -65,20 +112,52 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 prefixIcon: Icon(Icons.book),
               ),
               items: [
-                DropdownMenuItem(value: 1, child: Text('Mobile Programming')),
-                DropdownMenuItem(value: 2, child: Text('Database')),
-                DropdownMenuItem(value: 3, child: Text('Computer Network')),
+                for (final course in _courses)
+                  DropdownMenuItem(
+                    value: course.id,
+                    child: Text(course.name),
+                  ),
               ],
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _selectedCourseId = value;
+                  _selectedGroupId = null;
+                  _groups = [];
                 });
+
+                if (value != null) {
+                  await _loadGroupsForCourse(value);
+                }
               },
               validator: (value) {
                 if (value == null) {
                   return 'Please select a course';
                 }
                 return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: _selectedGroupId,
+              decoration: const InputDecoration(
+                labelText: 'Group',
+                prefixIcon: Icon(Icons.group_work),
+              ),
+              items: [
+                for (final group in _groups)
+                  DropdownMenuItem(
+                    value: group.id,
+                    child: Text(
+                      group.groupName.isNotEmpty
+                          ? group.groupName
+                          : 'Group ${group.id}',
+                    ),
+                  ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedGroupId = value;
+                });
               },
             ),
             const SizedBox(height: 16),

@@ -40,6 +40,29 @@ class ForumProvider with ChangeNotifier {
     }
   }
 
+  // Helper: load topics for multiple courses (student view)
+  Future<void> loadTopicsForCourses(List<int> courseIds) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final List<TopicModel> all = [];
+
+      for (final courseId in courseIds) {
+        final topicsForCourse = await _forumRepository.getCourseTopics(courseId);
+        all.addAll(topicsForCourse);
+      }
+
+      _topics = all;
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // WORKING: GET /topics/{topicId}
   Future<void> loadTopic(int topicId) async {
     _isLoading = true;
