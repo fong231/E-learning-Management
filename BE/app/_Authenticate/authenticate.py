@@ -33,11 +33,19 @@ async def validate_token(token : str = Depends(get_token_from_header), db: Sessi
         #     session_model.Session.session_id == session_id_in_jwt,
         #     session_model.Session.user_id == account_id
         # ).first()
+        
+        customer = db.query(CustomerModel.Customer).filter(
+            CustomerModel.Customer.fullname == username
+        ).first()
+        
+        if not customer:
+            raise CustomJWTError(status_code=401, detail="Token invalid")
 
         # if not session_exists:
         #     raise CustomJWTError(status_code=401, detail="Token revoked (Session terminated)")
 
-        return model.TokenData(username=username)
+        # return model.TokenData(username=username)
+        return customer
         
     except CustomJWTError as e:
         raise HTTPException(
@@ -256,10 +264,10 @@ def get_current_user(token : str = Depends(get_token_from_header), db : Session 
     """
     
     payload = decode_access_token(token)
-    email = payload.get("sub")
+    fullname = payload.get("sub")
     
     customer = db.query(CustomerModel.Customer).filter(
-        CustomerModel.Customer.fullname == email
+        CustomerModel.Customer.fullname == fullname
     ).first()
     
     if not customer:

@@ -84,9 +84,4 @@ def delete(group_id : int, db : Session = Depends(get_db)):
     db.delete(db_group)
     db.commit()
     
-<<<<<<< HEAD
     return {"message": "Group deleted successfully"}
-=======
-    return
-
->>>>>>> 70c0966c1e81997ec19688e6aafe5116206c8684

@@ -26,6 +26,7 @@ from ._Student_Group import student_group
 from ._Student_Score import student_score
 from ._Submission import submission
 from ._Topic import topic
+from ._Websocket import realtime
 
 from .dependencies.auth import get_current_active_user
 
@@ -69,6 +70,7 @@ app.include_router(message.user_router, dependencies=auth_dependency)
 app.include_router(notification.student_router, dependencies=auth_dependency)
 app.include_router(notification.notification_router, dependencies=auth_dependency)
 app.include_router(submission.router, dependencies=auth_dependency)
+app.include_router(realtime.router)
 
 app.add_middleware(
     CORSMiddleware,

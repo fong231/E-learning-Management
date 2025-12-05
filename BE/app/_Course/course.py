@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 from typing import List
 from datetime import datetime
-=======
 from typing import Dict, List
->>>>>>> 70c0966c1e81997ec19688e6aafe5116206c8684
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session, joinedload
@@ -16,7 +13,6 @@ from .._Learning_Content import model as ContentModel
 from .._Course_Material import model as Course_MaterialModel
 from .._Material import model as MaterialModel
 from .._File_Image import model as FileImageModel
-<<<<<<< HEAD
 from .._Assignment import model as AssignmentModel
 from .._Quiz import model as QuizModel
 from .._Student_Score import model as StudentScoreModel
@@ -24,13 +20,11 @@ from .._Topic import model as TopicModel
 from .._Announcement import model as AnnouncementModel
 from .._Customer import model as CustomerModel
 # from .._Instructor import 
-=======
 from .._Student_Group.model import StudentGroupAssociation
 from .._Group.schema import GroupOutput
 from .._Customer.model import Customer
 from .._Student.model import Student
 from .._Student.schema import StudentOutput
->>>>>>> 70c0966c1e81997ec19688e6aafe5116206c8684
 
 router = APIRouter(
     prefix="/courses",
@@ -461,9 +455,6 @@ def get_course_content(
         )
         session_number += 1
 
-<<<<<<< HEAD
-    return {"content": content_list}
-=======
     content_data = {
         "content_id": result.contentID,
         "course_id": result.courseID,
@@ -550,4 +541,3 @@ def get_groups_by_course(course_id: int, db: Session = Depends(get_db)):
     
     
     return results
->>>>>>> 70c0966c1e81997ec19688e6aafe5116206c8684

@@ -2,12 +2,7 @@ from fastapi import APIRouter, FastAPI, HTTPException, status, Depends
 from typing import List, Optional
 from datetime import datetime
 
-<<<<<<< HEAD
-from sqlalchemy import distinct, func, literal_column
-
-=======
 from sqlalchemy import distinct, func, literal_column, select
->>>>>>> 70c0966c1e81997ec19688e6aafe5116206c8684
 from .schema import InstructorCreate
 from sqlalchemy.orm import Session
 from . import model, schema
