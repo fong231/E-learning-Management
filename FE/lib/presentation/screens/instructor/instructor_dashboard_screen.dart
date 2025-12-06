@@ -6,6 +6,10 @@ import 'instructor_courses_screen.dart';
 import 'instructor_students_screen.dart';
 import 'instructor_messages_screen.dart';
 import 'instructor_profile_screen.dart';
+import 'create_course_screen.dart';
+import 'create_assignment_screen.dart';
+import 'create_quiz_screen.dart';
+import 'create_announcement_screen.dart';
 
 class InstructorDashboardScreen extends StatefulWidget {
   const InstructorDashboardScreen({super.key});
@@ -118,7 +122,7 @@ class InstructorHomeTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Chào mừng bạn đến với hệ thống quản lý LMS',
+                    'Welcome to the LMS system',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.white70,
                         ),
@@ -181,32 +185,56 @@ class InstructorHomeTab extends StatelessWidget {
 
             // Quick Actions
             Text(
-              'Thao tác nhanh',
+              'Quick Actions',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
             _QuickActionButton(
               icon: Icons.add_circle_outline,
-              title: 'Tạo khóa học mới',
-              onTap: () {},
+              title: 'Create New Course',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateCourseScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _QuickActionButton(
               icon: Icons.assignment_add,
-              title: 'Tạo bài tập mới',
-              onTap: () {},
+              title: 'Create New Assignment',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateAssignmentScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _QuickActionButton(
               icon: Icons.quiz,
-              title: 'Tạo bài kiểm tra mới',
-              onTap: () {},
+              title: 'Create New Quiz',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateQuizScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _QuickActionButton(
               icon: Icons.announcement,
-              title: 'Đăng thông báo',
-              onTap: () {},
+              title: 'Create New Announcement',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CreateAnnouncementScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -219,17 +247,17 @@ class InstructorHomeTab extends StatelessWidget {
             _buildActivityCard(
               context,
               icon: Icons.assignment_turned_in,
-              title: 'Assignment mới được nộp',
-              subtitle: '5 sinh viên đã nộp bài tập',
-              time: '1 giờ trước',
+              title: 'Assignment Submitted',
+              subtitle: '5 students have submitted their assignments',
+              time: '1 hour ago',
             ),
             const SizedBox(height: 12),
             _buildActivityCard(
               context,
               icon: Icons.message,
               title: 'New Message',
-              subtitle: 'Sinh viên Nguyễn Văn A đã gửi tin nhắn',
-              time: '3 giờ trước',
+              subtitle: 'Student 123456 has sent a message',
+              time: '3 hours ago',
             ),
           ],
         ),

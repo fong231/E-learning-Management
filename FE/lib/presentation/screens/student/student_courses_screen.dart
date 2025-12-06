@@ -187,7 +187,7 @@ class _CourseCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   _InfoChip(
                     icon: Icons.class_,
-                    label: '${course.numberOfSessions} buổi',
+                    label: '${course.numberOfSessions} lesson',
                   ),
                 ],
               ),

@@ -27,7 +27,7 @@ class InstructorStudentsScreen extends StatelessWidget {
                 backgroundColor: AppTheme.accentColor,
                 child: Text('SV${index + 1}'),
               ),
-              title: Text('Sinh viên ${index + 1}'),
+              title: Text('Student ${index + 1}'),
               subtitle: Text('MSSV: 2024${(index + 1).toString().padLeft(4, '0')}'),
               trailing: IconButton(
                 icon: const Icon(Icons.message),
