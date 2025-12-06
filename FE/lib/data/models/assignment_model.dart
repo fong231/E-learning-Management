@@ -1,4 +1,4 @@
-class AssignmentModel { // đổi tên thuộc tính cho phù hợp backend
+class AssignmentModel { 
   final int id;
   final int courseId;
   final String? courseName;

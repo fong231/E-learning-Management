@@ -1,4 +1,3 @@
-// connect FB to BE
 class AppConstants {
   // API Base URL
   static const String baseUrl = 'http://10.0.2.2:80/api';
@@ -13,7 +12,6 @@ class AppConstants {
   static const String notificationsEndpoint = '/notifications';
   static const String topicsEndpoint = '/topics';
   static const String announcementsEndpoint = '/announcements';
-  // thêm endpoint ở đây
   
   // Storage Keys
   static const String tokenKey = 'auth_token';
