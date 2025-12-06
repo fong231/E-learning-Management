@@ -29,3 +29,15 @@ class Announcement(Base):
         "Group", 
         back_populates="announcements"
     )
+
+
+class Comment(Base):
+    __tablename__ = "Comments"
+
+    commentID = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    message = Column(Text, nullable=False)
+    ownerID = Column(Integer, ForeignKey('Customers.customerID', ondelete='SET NULL'), nullable=True)
+    announcementID = Column(Integer, ForeignKey('Announcements.announcementID', ondelete='CASCADE'), nullable=False)
+
+    owner = relationship("Customer")
+    announcement = relationship("Announcement")

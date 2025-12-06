@@ -1,7 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../data/models/course_model.dart';
+import '../../providers/course_provider.dart';
 
 class CreateCourseScreen extends StatefulWidget {
-  const CreateCourseScreen({super.key});
+  const CreateCourseScreen({
+    super.key,
+    this.isEdit = false,
+    this.courseId,
+    this.name,
+    this.description,
+    this.semesterId,
+    this.numberOfSessions,
+  });
+
+  final bool isEdit;
+  final int? courseId;
+  final String? name;
+  final String? description;
+  final int? semesterId;
+  final int? numberOfSessions;
 
   @override
   State<CreateCourseScreen> createState() => _CreateCourseScreenState();
@@ -11,37 +30,57 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _numberOfSessionsController = TextEditingController();
-  
+  final _semesterController = TextEditingController();
+
   int? _selectedSemesterId;
-  DateTime? _startDate;
-  DateTime? _endDate;
-  bool _isLoading = false;
+  int? _selectedNumberOfSessions;
+  List<SemesterModel> _semesters = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.text = widget.name ?? '';
+    _descriptionController.text = widget.description ?? '';
+    _selectedSemesterId = widget.semesterId;
+    _selectedNumberOfSessions = widget.numberOfSessions;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadSemesters();
+    });
+  }
+
+  Future<void> _loadSemesters() async {
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadSemesters();
+    _semesters = courseProvider.semesters;
+
+    if (_semesters.isEmpty) {
+      return;
+    }
+
+    SemesterModel? selected;
+    if (_selectedSemesterId != null) {
+      for (final s in _semesters) {
+        if (s.id == _selectedSemesterId) {
+          selected = s;
+          break;
+        }
+      }
+    }
+
+    selected ??= courseProvider.currentSemester ?? _semesters.last;
+    _selectedSemesterId = selected.id;
+    _semesterController.text = selected.description;
+
+    _selectedNumberOfSessions ??= 10;
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _numberOfSessionsController.dispose();
+    _semesterController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStartDate) {
-          _startDate = picked;
-        } else {
-          _endDate = picked;
-        }
-      });
-    }
   }
 
   Future<void> _saveCourse() async {
@@ -49,22 +88,19 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.createCourse({
+      'name': _nameController.text,
+      'description': _descriptionController.text,
+      'semester_id': _selectedSemesterId,
+      'number_of_sessions': _selectedNumberOfSessions,
     });
 
-    // TODO: Call API to create course
-    await Future.delayed(const Duration(seconds: 2));
-
     if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Create course successfully!')),
       );
-      
+
       Navigator.of(context).pop();
     }
   }
@@ -72,9 +108,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Course'),
-      ),
+      appBar: AppBar(title: const Text('Create Course')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -95,7 +129,7 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -106,92 +140,110 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
               maxLines: 4,
             ),
             const SizedBox(height: 16),
-            
-            DropdownButtonFormField<int>(
-              value: _selectedSemesterId,
+
+            TextFormField(
+              controller: _semesterController,
+              readOnly: true,
               decoration: const InputDecoration(
                 labelText: 'Semester *',
                 prefixIcon: Icon(Icons.calendar_today),
+                suffixIcon: Icon(Icons.arrow_drop_down),
+                border: OutlineInputBorder(),
               ),
-              items: [
-                DropdownMenuItem(value: 1, child: Text('HK1 2024-2025')),
-                DropdownMenuItem(value: 2, child: Text('HK2 2024-2025')),
-                DropdownMenuItem(value: 3, child: Text('HK3 2024-2025')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedSemesterId = value;
-                });
+              onTap: () async {
+                if (_semesters.isEmpty) return;
+
+                final selectedId = await showDialog<int>(
+                  context: context,
+                  builder: (context) => SimpleDialog(
+                    title: const Text('Select Semester'),
+                    children: [
+                      for (final semester in _semesters)
+                        SimpleDialogOption(
+                          onPressed: () =>
+                              Navigator.of(context).pop(semester.id),
+                          child: Text(semester.description),
+                        ),
+                    ],
+                  ),
+                );
+
+                if (selectedId != null) {
+                  final courseProvider =
+                      Provider.of<CourseProvider>(context, listen: false);
+
+                  await courseProvider.setSelectedSemester(selectedId);
+
+                  setState(() {
+                    _selectedSemesterId = selectedId;
+                    final semester = _semesters.firstWhere(
+                      (s) => s.id == selectedId,
+                      orElse: () => _semesters.last,
+                    );
+                    _semesterController.text = semester.description;
+                  });
+                }
               },
               validator: (value) {
-                if (value == null) {
+                if (_selectedSemesterId == null) {
                   return 'Please select semester';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            
-            TextFormField(
-              controller: _numberOfSessionsController,
+
+            DropdownButtonFormField<int>(
+              value: _selectedNumberOfSessions,
               decoration: const InputDecoration(
                 labelText: 'Number of Sessions *',
-                hintText: 'Enter number of sessions',
                 prefixIcon: Icon(Icons.class_),
               ),
-              keyboardType: TextInputType.number,
+              items: const [
+                DropdownMenuItem(
+                  value: 10,
+                  child: Text('10 sessions'),
+                ),
+                DropdownMenuItem(
+                  value: 15,
+                  child: Text('15 sessions'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedNumberOfSessions = value;
+                });
+              },
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter number of sessions';
-                }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                if (value == null) {
+                  return 'Please select number of sessions';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event),
-              title: const Text('Start Date'),
-              subtitle: Text(
-                _startDate != null
-                    ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
-                    : 'No date selected',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _selectDate(context, true),
-            ),
-            const Divider(),
-            
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event_available),
-              title: const Text('End Date'),
-              subtitle: Text(
-                _endDate != null
-                    ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                    : 'No date selected',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _selectDate(context, false),
-            ),
-            const SizedBox(height: 32),
-            
-            ElevatedButton(
-              onPressed: _isLoading ? null : _saveCourse,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Create Course'),
+
+            Consumer<CourseProvider>(
+              builder: (context, courseProvider, child) {
+                return ElevatedButton(
+                  onPressed: courseProvider.isLoading ? null : _saveCourse,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: courseProvider.isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(widget.isEdit ? 'Update Course' : 'Create Course'),
+                );
+              },
             ),
           ],
         ),
@@ -199,4 +251,3 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
     );
   }
 }
-

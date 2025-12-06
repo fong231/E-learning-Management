@@ -8,6 +8,7 @@ class Group(Base):
     __tablename__ = "Groups"
     
     groupID = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, nullable=False) # group 1, 2, 3 for each courses
     
     # Foreign Keys
     courseID = Column(Integer, ForeignKey('Courses.courseID', ondelete="SET NULL"))

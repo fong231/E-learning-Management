@@ -8,6 +8,8 @@ from ..database import get_db
 from . import schema, model
 from .._Customer import model as CustomerModel
 from .._Customer import schema as CustomerSchema
+from .._Student import schema as StudentSchema
+from .._Student.student import create_student
 from .._Customer.customer import create_customer
 from ..dependencies.auth import CustomJWTError, create_access_token, decode_access_token, get_token_from_header
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -21,21 +23,29 @@ router = APIRouter(
 async def validate_token(token : str = Depends(get_token_from_header), db: Session = Depends(get_db)): # <== THÊM DB
     try:
         payload = decode_access_token(token)
-        email = payload.get("sub")
+        username = payload.get("sub")
         # session_id_in_jwt = payload.get("sid")
 
-        if not email:
+        if not username:
             raise CustomJWTError(status_code=401, detail="Invalid token structure")
 
         # session_exists = db.query(session_model.Session).filter(
         #     session_model.Session.session_id == session_id_in_jwt,
         #     session_model.Session.user_id == account_id
         # ).first()
+        
+        customer = db.query(CustomerModel.Customer).filter(
+            CustomerModel.Customer.fullname == username
+        ).first()
+        
+        if not customer:
+            raise CustomJWTError(status_code=401, detail="Token invalid")
 
         # if not session_exists:
         #     raise CustomJWTError(status_code=401, detail="Token revoked (Session terminated)")
 
-        return model.TokenData(email==email)
+        # return model.TokenData(username=username)
+        return customer
         
     except CustomJWTError as e:
         raise HTTPException(
@@ -92,7 +102,7 @@ def check_password_complexity(password: str) -> Tuple[bool, Dict[str, Any]]:
     return is_complex, results
 
 # update account password
-@router.patch("/{customer_id}/reset-password")
+@router.patch("/{customer_id}/change-password")
 def reset_password(
     customer_id: int, 
     account_data: schema.AccountPasswordReset, 
@@ -110,16 +120,16 @@ def reset_password(
 
     if not db_customer.verify_password(account_data.current_password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Incorrect current password."
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Current password is incorrect"
         )
         
-    is_valid, detail = check_password_complexity(account_data.new_password)
-    if not is_valid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": "Password does not meet complexity requirements", "details": detail}
-        )
+    # is_valid, detail = check_password_complexity(account_data.new_password)
+    # if not is_valid:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail={"error": "Password does not meet complexity requirements", "details": detail}
+    #     )
 
     hashed_password = hash_password(account_data.new_password)
 
@@ -128,13 +138,13 @@ def reset_password(
     db.commit()
     db.refresh(db_customer)
 
-    return {"message": "Successful update password"}    
+    return {"message": "Password changed successfully"}    
 
 # register account
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=CustomerSchema.TokenWithCustomer)
 def register(customer: schema.AccountCreate, db: Session = Depends(get_db)):
     username_exist = db.query(CustomerModel.Customer).filter(
-        CustomerModel.Customer.email == customer.email
+        CustomerModel.Customer.fullname == customer.email
     ).first()
     if username_exist:
         raise HTTPException(
@@ -159,8 +169,64 @@ def register(customer: schema.AccountCreate, db: Session = Depends(get_db)):
         password=hashed_password
     )
     customer = create_customer(customer_data, db)
+    
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Can't create customer")
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": customer.fullname}, expires_delta=access_token_expires
+    )
 
-    return {"message": "Account registered successfully"}
+    return {
+        "token": access_token, 
+        "token_type": "bearer",
+        "customer" : customer}
+
+# register student account
+@router.post("/register-student", status_code=status.HTTP_201_CREATED)
+def register_student_for_instructor(
+    account: schema.AccountCreate,
+    db: Session = Depends(get_db),
+):
+    existing = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.email == account.email
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Customer with email '{account.email}' already exists.",
+        )
+
+    hashed_password = hash_password(account.password)
+
+    customer_data = CustomerSchema.CustomerCreate(
+        fullname=account.fullname,
+        email=account.email,
+        phone_number=account.phone_number,
+        password=hashed_password,
+    )
+    customer = create_customer(customer_data, db)
+
+    if not customer:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Can't create customer",
+        )
+
+    # Ensure role is student
+    customer.role = CustomerSchema.RoleEnum.student
+    db.commit()
+    db.refresh(customer)
+
+    # Register as Student as well
+    student_payload = StudentSchema.StudentCreate(studentID=customer.customerID)
+    create_student(db, student_payload)
+
+    return {
+        "student_id": customer.customerID,
+        "customer": CustomerSchema.CustomerRead.from_orm(customer),
+    }
 
 # login account
 @router.post("/login", response_model=CustomerSchema.TokenWithCustomer)
@@ -168,7 +234,7 @@ def login(form_data : schema.AccountLogin,
         db: Session = Depends(get_db)):
 
     user = db.query(CustomerModel.Customer).filter(
-        CustomerModel.Customer.email == form_data.email
+        CustomerModel.Customer.fullname == form_data.username
     ).first()
     
     if not user or not user.verify_password(form_data.password):
@@ -181,10 +247,30 @@ def login(form_data : schema.AccountLogin,
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.fullname}, expires_delta=access_token_expires
     )
     
     return {
-        "access_token": access_token, 
+        "token": access_token,
         "token_type": "bearer",
         "customer" : user}
+    
+@router.get("/me", response_model=CustomerSchema.CustomerRead)
+def get_current_user(token : str = Depends(get_token_from_header), db : Session = Depends(get_db)):
+    """
+        input: token in header,
+        output: customer data,
+        you should test this in postman for header input
+    """
+    
+    payload = decode_access_token(token)
+    fullname = payload.get("sub")
+    
+    customer = db.query(CustomerModel.Customer).filter(
+        CustomerModel.Customer.fullname == fullname
+    ).first()
+    
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="error get current user data")
+    
+    return customer

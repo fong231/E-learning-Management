@@ -10,6 +10,7 @@ class Course(Base):
     courseID = Column(Integer, primary_key=True, index=True)
     
     number_of_sessions = Column(Enum('10', '15'), nullable=False)
+    course_name = Column(String(255), nullable=False)
     description = Column(Text)
     instructorID = Column(Integer, nullable=True, index=True) # in another service
     

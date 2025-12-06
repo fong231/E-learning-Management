@@ -14,6 +14,8 @@ class Assignment(Base):
         autoincrement=True
     )
 
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
     start_date = Column(DateTime)
     deadline = Column(DateTime, nullable=False)
     late_deadline = Column(DateTime)

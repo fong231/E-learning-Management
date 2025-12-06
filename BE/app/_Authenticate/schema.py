@@ -15,7 +15,7 @@ class AccountUpdate(BaseModel):
     role : Optional[RoleEnum] = RoleEnum.student
     
 class AccountLogin(BaseModel):
-    email: str
+    username: str
     password: str
     
 class AccountPasswordReset(BaseModel):

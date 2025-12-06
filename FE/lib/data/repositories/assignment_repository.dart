@@ -8,7 +8,9 @@ class AssignmentRepository {
   Future<List<AssignmentModel>> getCourseAssignments(int courseId) async {
     try {
       final response = await _apiService.get('/courses/$courseId/assignments');
-      final List<dynamic> assignmentsJson = response['assignments'] ?? response['data'] ?? [];
+      final List<dynamic> assignmentsJson = response is List
+          ? response
+          : (response['assignments'] ?? response['data'] ?? []);
       return assignmentsJson.map((json) => AssignmentModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load assignments: $e');
@@ -66,7 +68,9 @@ class AssignmentRepository {
       final response = await _apiService.get(
         '/assignments/$assignmentId/submissions?student_id=$studentId',
       );
-      final List<dynamic> submissionsJson = response['submissions'] ?? response['data'] ?? [];
+      final List<dynamic> submissionsJson = response is List
+          ? response
+          : (response['submissions'] ?? response['data'] ?? []);
       return submissionsJson.map((json) => AssignmentSubmissionModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load submissions: $e');
@@ -77,7 +81,9 @@ class AssignmentRepository {
   Future<List<AssignmentSubmissionModel>> getAssignmentSubmissions(int assignmentId) async {
     try {
       final response = await _apiService.get('/assignments/$assignmentId/submissions');
-      final List<dynamic> submissionsJson = response['submissions'] ?? response['data'] ?? [];
+      final List<dynamic> submissionsJson = response is List
+          ? response
+          : (response['submissions'] ?? response['data'] ?? []);
       return submissionsJson.map((json) => AssignmentSubmissionModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load submissions: $e');

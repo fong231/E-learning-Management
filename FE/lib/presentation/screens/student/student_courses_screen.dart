@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/course_model.dart';
+import '../../providers/course_provider.dart';
 import 'course_detail_screen.dart';
 
 class StudentCoursesScreen extends StatefulWidget {
@@ -13,46 +15,53 @@ class StudentCoursesScreen extends StatefulWidget {
 class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
   bool _isLoading = false;
   List<CourseModel> _courses = [];
+  List<SemesterModel> _semesters = [];
+  int? _selectedSemesterId;
 
   @override
   void initState() {
     super.initState();
-    _loadCourses();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadSemesters();
+      await _loadCoursesWithSemester();
+    });
   }
 
-  Future<void> _loadCourses() async {
+  Future<void> _loadSemesters() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadSemesters();
+    _semesters = courseProvider.semesters;
+
+    if (_semesters.isNotEmpty) {
+      _selectedSemesterId =
+          courseProvider.selectedSemesterId ?? _semesters.last.id;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _loadCoursesWithSemester() async {
     setState(() {
       _isLoading = true;
     });
 
-    // TODO: Load courses from repository
-    await Future.delayed(const Duration(seconds: 1));
+    if (_selectedSemesterId == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
-    // Mock data
-    _courses = [
-      CourseModel(
-        id: 1,
-        name: 'Mobile Programming',
-        description: 'Learn mobile app development with Flutter',
-        instructorId: 1,
-        instructorName: 'John Doe',
-        semesterId: 1,
-        semesterName: 'HK1 2024-2025',
-        numberOfSessions: 15,
-        createdAt: DateTime.now(),
-      ),
-      CourseModel(
-        id: 2,
-        name: 'Database',
-        description: 'Database design and management',
-        instructorId: 2,
-        instructorName: 'Jane Smith',
-        semesterId: 1,
-        semesterName: 'HK1 2024-2025',
-        numberOfSessions: 15,
-        createdAt: DateTime.now(),
-      ),
-    ];
+    // todo call CourseProvider.loadStudentCoursesWithSemester(semesterId)
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await courseProvider.loadStudentCoursesWithSemester(_selectedSemesterId!);
+
+    _courses = courseProvider.courses;
 
     setState(() {
       _isLoading = false;
@@ -68,44 +77,83 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Search is under development'),
+                ),
+              );
             },
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _courses.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.book_outlined,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No courses yet',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.grey[600],
+      body: Column(
+        children: [
+          DropdownButtonFormField<int>(
+            value: _selectedSemesterId,
+            items: [
+              for (final semester in _semesters)
+                DropdownMenuItem(value: semester.id, child: Text(semester.description)),
+            ],
+            onChanged: (value) async {
+              if (value == null) return;
+
+              setState(() {
+                _selectedSemesterId = value;
+              });
+
+              final courseProvider =
+                  Provider.of<CourseProvider>(context, listen: false);
+              await courseProvider.setSelectedSemester(value);
+
+              await _loadCoursesWithSemester();
+            },
+            validator: (value) {
+              if (value == null) {
+                return 'Please select semester';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _courses.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.book_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
                             ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No courses yet',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          await _loadCoursesWithSemester();
+                        },
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _courses.length,
+                          itemBuilder: (context, index) {
+                            final course = _courses[index];
+                            return _CourseCard(course: course);
+                          },
+                        ),
                       ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadCourses,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _courses.length,
-                    itemBuilder: (context, index) {
-                      final course = _courses[index];
-                      return _CourseCard(course: course);
-                    },
-                  ),
-                ),
+          ),
+        ],
+      ),
     );
   }
 }

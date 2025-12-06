@@ -1,5 +1,6 @@
-from typing import Optional, Literal
-from pydantic import BaseModel
+from typing import List, Optional, Literal
+from pydantic import BaseModel, ConfigDict
+from .._Student.schema import StudentOutput
 
 class GroupBase(BaseModel):
     courseID: Optional[int] = None
@@ -15,3 +16,12 @@ class GroupRead(GroupBase):
 
 class GroupUpdate(BaseModel):
     courseID: Optional[int] = None
+    
+class GroupOutput(BaseModel):
+    id: int
+    courseId: int
+    courseName: str
+    groupName: str
+    students: List[StudentOutput]
+    
+    model_config = ConfigDict()

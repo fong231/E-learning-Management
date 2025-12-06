@@ -1,41 +1,53 @@
 class AssignmentModel { 
   final int id;
-  final int courseId;
+  final int? courseId;
   final String? courseName;
+  final int groupId;
   final String title;
   final String? description;
   final DateTime deadline;
-  final int maxScore;
+  final DateTime late_deadline;
+  final String? size_limit;
+  final String? file_format;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final List<String> filesUrl;
 
   AssignmentModel({
     required this.id,
-    required this.courseId,
+    this.courseId,
     this.courseName,
+    required this.groupId,
     required this.title,
     this.description,
     required this.deadline,
-    this.maxScore = 100,
+    required this.late_deadline,
+    this.size_limit,
+    this.file_format,
     required this.createdAt,
     this.updatedAt,
+    this.filesUrl = const [],
   });
 
   factory AssignmentModel.fromJson(Map<String, dynamic> json) {
     return AssignmentModel(
       id: json['assignment_id'] ?? json['id'] ?? 0,
       courseId: json['course_id'] ?? 0,
-      courseName: json['course_name'],
+      courseName: json['course_name'] ?? '',
+      groupId: json['group_id'] ?? 0,
       title: json['title'] ?? '',
-      description: json['description'],
+      description: json['description'] ?? '',
       deadline: DateTime.parse(json['deadline']),
-      maxScore: json['max_score'] ?? 100,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      late_deadline: DateTime.parse(json['late_deadline']),
+      size_limit: json['size_limit'],
+      file_format: json['file_format'],
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
+      filesUrl: json['files_url'] != null ? List<String>.from(json['files_url']) : [],
     );
   }
 
@@ -44,12 +56,16 @@ class AssignmentModel {
       'assignment_id': id,
       'course_id': courseId,
       'course_name': courseName,
+      'group_id': groupId,
       'title': title,
       'description': description,
       'deadline': deadline.toIso8601String(),
-      'max_score': maxScore,
+      'late_deadline': late_deadline.toIso8601String(),
+      'size_limit': size_limit,
+      'file_format': file_format,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'files_url': filesUrl,
     };
   }
 

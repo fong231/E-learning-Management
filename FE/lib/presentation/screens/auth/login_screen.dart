@@ -15,13 +15,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.login(
-      _emailController.text.trim(),
+      _usernameController.text.trim(),
       _passwordController.text,
     );
 
@@ -48,13 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (_) => const InstructorDashboardScreen()),
         );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? 'Login failed'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
     }
   }
 
@@ -100,24 +93,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // Email Field
+                  // Username Field
                   TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _usernameController,
+                    keyboardType: TextInputType.text,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      labelText: 'Username',
+                      hintText: 'Enter your username',
+                      prefixIcon: Icon(Icons.person_outlined),
                     ),
                     validator: (value) {
                       if (value == "admin") {
                         return null;
                       }
                       if (value == null || value.isEmpty) {
-                        return 'Please enter email';
-                      }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Invalid email';
+                        return 'Please enter username';
                       }
                       return null;
                     },
@@ -160,12 +150,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
 
+                  // Error Message
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      if (authProvider.error != null) {
+                        return Text(
+                          authProvider.error!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.errorColor,
+                              ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+
                   // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // TODO: Navigate to forgot password screen
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Feature under development'),

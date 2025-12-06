@@ -1,58 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../auth/change_password_screen.dart';
+import '../auth/edit_profile_screen.dart';
 import '../auth/login_screen.dart';
 
 class InstructorProfileScreen extends StatelessWidget {
   const InstructorProfileScreen({super.key});
 
+  String? getAvatarUrl(String? avatarPath) {
+    if (avatarPath == null || avatarPath.isEmpty) {
+      return null;
+    }
+
+    if (avatarPath.startsWith('https://ui-avatars.com')) {
+      return avatarPath;
+    }
+
+    return "${AppConstants.baseUrl}/uploads/$avatarPath";
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.currentUser;
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.currentUser;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
+        return Scaffold(
+          appBar: AppBar(title: const Text('Profile')),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-              ),
+              decoration: BoxDecoration(gradient: AppTheme.primaryGradient),
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.white,
-                    child: Text(
-                      user?.username.substring(0, 1).toUpperCase() ?? 'G',
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
+                    backgroundImage: user?.avatar != null
+                        ? NetworkImage(getAvatarUrl(user?.avatar) ?? '')
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    user?.username ?? 'Instructor',
+                    user?.fullname ?? 'Instructor',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     user?.email ?? '',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white70,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                   ),
                 ],
               ),
@@ -61,12 +69,22 @@ class InstructorProfileScreen extends StatelessWidget {
             _ProfileMenuItem(
               icon: Icons.person_outline,
               title: 'Personal Information',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+                );
+              },
             ),
             _ProfileMenuItem(
               icon: Icons.lock_outline,
               title: 'Change Password',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ChangePasswordScreen(),
+                  ),
+                );
+              },
             ),
             _ProfileMenuItem(
               icon: Icons.settings_outlined,
@@ -95,6 +113,9 @@ class InstructorProfileScreen extends StatelessWidget {
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.errorColor,
+                        ),
                         onPressed: () => Navigator.pop(context, true),
                         child: const Text('Logout'),
                       ),
@@ -117,6 +138,8 @@ class InstructorProfileScreen extends StatelessWidget {
         ),
       ),
     );
+      },
+    );
   }
 }
 
@@ -137,13 +160,9 @@ class _ProfileMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: textColor),
-      title: Text(
-        title,
-        style: TextStyle(color: textColor),
-      ),
+      title: Text(title, style: TextStyle(color: textColor)),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
   }
 }
-

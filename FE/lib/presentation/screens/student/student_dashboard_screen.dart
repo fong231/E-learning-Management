@@ -4,7 +4,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import 'student_courses_screen.dart';
 import 'student_assignments_screen.dart';
-import 'student_quizzes_screen.dart';
 import 'student_messages_screen.dart';
 import 'student_notifications_screen.dart';
 import 'student_forum_screen.dart';
@@ -22,10 +21,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const StudentHomeTab(),
     const StudentCoursesScreen(),
     const StudentAssignmentsScreen(),
-    const StudentQuizzesScreen(),
+    const StudentMessagesScreen(),
     const StudentProfileScreen(),
   ];
 
@@ -47,19 +45,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book_outlined),
-            activeIcon: Icon(Icons.book),
-            label: 'Courses',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
             activeIcon: Icon(Icons.assignment),
             label: 'Assignments',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.quiz_outlined),
-            activeIcon: Icon(Icons.quiz),
-            label: 'Quizzes',
+            icon: Icon(Icons.message_outlined),
+            activeIcon: Icon(Icons.message),
+            label: 'Messages',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
@@ -77,13 +70,14 @@ class StudentHomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.currentUser;
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.currentUser;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Home'),
+            actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
@@ -120,7 +114,7 @@ class StudentHomeTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.username ?? 'Student',
+                    user?.fullname ?? 'Student',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -235,6 +229,8 @@ class StudentHomeTab extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 

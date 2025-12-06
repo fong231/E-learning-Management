@@ -1,8 +1,9 @@
 # app/auth.py
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
+import httpx
 from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, Header, status
+from fastapi import Depends, HTTPException, Header, WebSocket, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -43,10 +44,10 @@ def decode_access_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         # 2. Extract the user identifier
-        email: str = payload.get("sub")
+        fullname: str = payload.get("sub")
         # session_id_in_jwt = payload.get("sid")
         
-        if email is None:
+        if fullname is None:
             raise CustomJWTError("Token is missing the 'sub' claim (email)", 
                                  status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -69,13 +70,28 @@ async def get_current_active_user(
     
     token = credentials.credentials
     
-    auth_record = await validate_token()
+    auth_record = await validate_token(token, db)
     
     if not auth_record:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
-    return auth_record
+    return auth_record.customerID
     # return
+    
+async def get_websocket_user_id(websocket: WebSocket, token: str, db : Session = Depends(get_db)):
+    from .._Authenticate.authenticate import validate_token
+    
+    try:      
+        auth_record = await validate_token(token, db)
+        
+        if not auth_record:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        
+        return auth_record.customerID
+
+    except httpx.HTTPError:
+        raise WebSocketException(code=status.WS_1013_TRY_AGAIN_LATER, 
+                                 reason="Authentication service unavailable.")
 
 
 def get_token_from_header(authorization: Annotated[Optional[str], Header()] = None) -> str:

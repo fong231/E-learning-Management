@@ -36,25 +36,26 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String username, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final response = await _authRepository.login(email, password);
-      _currentUser = UserModel.fromJson(response['user']);
+      final response = await _authRepository.login(username, password);
+      _currentUser = UserModel.fromJson(response['customer']);
       _isLoggedIn = true;
       _error = null;
+      _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = e.toString().replaceFirst('Exception: ', '');
       _isLoggedIn = false;
+      _isLoading = false;
       notifyListeners();
       return false;
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -67,14 +68,15 @@ class AuthProvider with ChangeNotifier {
     try {
       await _authRepository.register(userData);
       _error = null;
+      _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
       return false;
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -96,6 +98,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<Map<String, dynamic>> getUserProfile() async {
+    try {
+      final response = await _authRepository.getUserProfile();
+      return response;
+    } catch (e) {
+      throw Exception('Get user profile failed: $e');
+    }
+  }
+
   Future<bool> updateProfile(Map<String, dynamic> userData) async {
     _isLoading = true;
     _error = null;
@@ -103,7 +114,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final response = await _authRepository.updateProfile(userData);
-      _currentUser = UserModel.fromJson(response['user']);
+      _currentUser = UserModel.fromJson(response);
       _error = null;
       notifyListeners();
       return true;

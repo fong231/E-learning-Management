@@ -1,3 +1,6 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/constants/app_constants.dart';
 import '../models/course_model.dart';
 import '../models/content_model.dart';
 import '../services/api_service.dart';
@@ -9,29 +12,57 @@ class CourseRepository {
   Future<List<CourseModel>> getCourses() async {
     try {
       final response = await _apiService.get('/courses');
-      final List<dynamic> coursesJson = response['courses'] ?? response['data'] ?? [];
+      final List<dynamic> coursesJson = response is List
+          ? response
+          : (response['courses'] ?? response['data'] ?? []);
       return coursesJson.map((json) => CourseModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load courses: $e');
     }
   }
 
-  // Get courses for student
-  Future<List<CourseModel>> getStudentCourses(int studentId) async {
+  // Get courses for student with semester
+  Future<List<CourseModel>> getStudentCoursesWithSemester(int semesterId, [int? studentId]) async {
     try {
-      final response = await _apiService.get('/students/$studentId/courses');
-      final List<dynamic> coursesJson = response['courses'] ?? response['data'] ?? [];
+      final prefs = await SharedPreferences.getInstance();
+      studentId = prefs.getInt(AppConstants.userIdKey) ?? studentId;
+
+      final response = await _apiService.get('/students/$studentId/courses?semester_id=$semesterId');
+      final List<dynamic> coursesJson = response is List
+          ? response
+          : (response['courses'] ?? response['data'] ?? []);
       return coursesJson.map((json) => CourseModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load student courses: $e');
     }
   }
 
-  // Get courses for instructor
-  Future<List<CourseModel>> getInstructorCourses(int instructorId) async {
+  // Get all courses for student (all semesters)
+  Future<List<CourseModel>> getStudentCoursesAll([int? studentId]) async {
     try {
-      final response = await _apiService.get('/instructors/$instructorId/courses');
-      final List<dynamic> coursesJson = response['courses'] ?? response['data'] ?? [];
+      final prefs = await SharedPreferences.getInstance();
+      studentId = prefs.getInt(AppConstants.userIdKey) ?? studentId;
+
+      final response = await _apiService.get('/students/$studentId/courses');
+      final List<dynamic> coursesJson = response is List
+          ? response
+          : (response['courses'] ?? response['data'] ?? []);
+      return coursesJson.map((json) => CourseModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to load student courses: $e');
+    }
+  }
+
+  // Get courses for instructor with semester
+  Future<List<CourseModel>> getInstructorCoursesWithSemester(int semesterId, [int? instructorId]) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      instructorId = prefs.getInt(AppConstants.userIdKey) ?? instructorId;
+
+      final response = await _apiService.get('/instructors/$instructorId/courses?semester_id=$semesterId');
+      final List<dynamic> coursesJson = response is List
+          ? response
+          : (response['courses'] ?? response['data'] ?? []);
       return coursesJson.map((json) => CourseModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load instructor courses: $e');
@@ -51,8 +82,23 @@ class CourseRepository {
   // Create course (instructor only)
   Future<CourseModel> createCourse(Map<String, dynamic> courseData) async {
     try {
-      final response = await _apiService.post('/courses', courseData);
-      return CourseModel.fromJson(response['course'] ?? response['data']);
+      final prefs = await SharedPreferences.getInstance();
+      final instructorId = prefs.getInt(AppConstants.userIdKey);
+
+      final payload = <String, dynamic>{
+        'course_name': courseData['course_name'] ?? courseData['name'],
+        'description': courseData['description'],
+        'semesterID': courseData['semesterID'] ?? courseData['semester_id'],
+        'number_of_sessions':
+            (courseData['number_of_sessions'] ?? '').toString(),
+        if (instructorId != null) 'instructorID': instructorId,
+      };
+
+      final response = await _apiService.post('/courses', payload);
+      final data = response is Map<String, dynamic>
+          ? (response['course'] ?? response['data'] ?? response)
+          : response;
+      return CourseModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to create course: $e');
     }
@@ -81,7 +127,9 @@ class CourseRepository {
   Future<List<LearningContentModel>> getCourseContent(int courseId) async {
     try {
       final response = await _apiService.get('/courses/$courseId/content');
-      final List<dynamic> contentJson = response['content'] ?? response['data'] ?? [];
+      final List<dynamic> contentJson = response is List
+          ? response
+          : (response['content'] ?? response['data'] ?? []);
       return contentJson.map((json) => LearningContentModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load course content: $e');
@@ -123,33 +171,54 @@ class CourseRepository {
     }
   }
 
+  // Create group for a course (instructor only)
+  Future<void> createGroup(int courseId) async {
+    try {
+      await _apiService.post('/groups/', {
+        'courseID': courseId,
+      });
+    } catch (e) {
+      throw Exception('Failed to create group: $e');
+    }
+  }
+
+  // Delete group for a course (instructor only)
+  Future<void> deleteGroup(int groupId) async {
+    try {
+      await _apiService.delete('/groups/$groupId');
+    } catch (e) {
+      throw Exception('Failed to delete group: $e');
+    }
+  }
+
   // Get groups for course
   Future<List<GroupModel>> getCourseGroups(int courseId) async {
     try {
       final response = await _apiService.get('/courses/$courseId/groups');
-      final List<dynamic> groupsJson = response['groups'] ?? response['data'] ?? [];
+      final List<dynamic> groupsJson = response is List
+          ? response
+          : (response['groups'] ?? response['data'] ?? []);
       return groupsJson.map((json) => GroupModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to load course groups: $e');
     }
   }
 
-  // Enroll student in course
+  // Enroll student in a specific group of a course
   Future<void> enrollStudent(int studentId, int groupId) async {
     try {
-      await _apiService.post('/enrollments', {
+      await _apiService.post('/groups/$groupId/students', {
         'student_id': studentId,
-        'group_id': groupId,
       });
     } catch (e) {
       throw Exception('Failed to enroll student: $e');
     }
   }
 
-  // Unenroll student from course
+  // Unenroll student from a specific group
   Future<void> unenrollStudent(int studentId, int groupId) async {
     try {
-      await _apiService.delete('/enrollments/$studentId/$groupId');
+      await _apiService.delete('/groups/$groupId/students/$studentId');
     } catch (e) {
       throw Exception('Failed to unenroll student: $e');
     }
@@ -159,8 +228,12 @@ class CourseRepository {
   Future<List<SemesterModel>> getSemesters() async {
     try {
       final response = await _apiService.get('/semesters');
-      final List<dynamic> semestersJson = response['semesters'] ?? response['data'] ?? [];
-      return semestersJson.map((json) => SemesterModel.fromJson(json)).toList();
+      final List<dynamic> semestersJson = response is List
+          ? response
+          : (response['semesters'] ?? response['data'] ?? []);
+      return semestersJson
+          .map((json) => SemesterModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       throw Exception('Failed to load semesters: $e');
     }

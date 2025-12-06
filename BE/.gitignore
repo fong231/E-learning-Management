@@ -16,9 +16,13 @@
 /public/build
 /public/hot
 /public/storage
+/uploads/
+openapi.json
 /storage/*.key
 /storage/pail
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+endpoint_diff.py

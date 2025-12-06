@@ -1,9 +1,11 @@
+from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from ..database import get_db 
 from . import schema, model
 from .._Course import model as CourseModel
+
 
 router = APIRouter(
     prefix="/groups",
@@ -38,7 +40,7 @@ def read(group_id : int, db : Session = Depends(get_db)):
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
-    return group
+    return group 
 
 # update group
 @router.patch("/{group_id}", response_model=schema.GroupRead)
@@ -70,7 +72,16 @@ def delete(group_id : int, db : Session = Depends(get_db)):
     
     if not db_group:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
-    
+    if db_group.student_association:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Cannot delete group with enrolled students. "
+                "Please move all students to another group first."
+            ),
+        )
+
     db.delete(db_group)
+    db.commit()
     
-    return
+    return {"message": "Group deleted successfully"}
