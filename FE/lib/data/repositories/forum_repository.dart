@@ -44,7 +44,10 @@ class ForumRepository {
   }
 
   // Update topic
-  Future<TopicModel> updateTopic(int topicId, Map<String, dynamic> topicData) async {
+  Future<TopicModel> updateTopic(
+    int topicId,
+    Map<String, dynamic> topicData,
+  ) async {
     try {
       final response = await _apiService.put('/topics/$topicId', topicData);
       final data = response is Map<String, dynamic>
@@ -78,6 +81,36 @@ class ForumRepository {
     }
   }
 
+  // Get files attached to a topic
+  Future<List<TopicFileModel>> getTopicFiles(int topicId) async {
+    try {
+      final response = await _apiService.get('/topics/$topicId/files');
+      final List<dynamic> filesJson = response is List
+          ? response
+          : (response['files'] ?? response['data'] ?? []);
+      return filesJson.map((json) => TopicFileModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to load topic files: $e');
+    }
+  }
+
+  // Upload a file for a topic
+  Future<TopicFileModel> uploadTopicFile(int topicId, String filePath) async {
+    try {
+      final response = await _apiService.uploadFile(
+        '/topics/$topicId/files',
+        filePath,
+        'file',
+      );
+      final data = response is Map<String, dynamic>
+          ? (response['file'] ?? response['data'] ?? response)
+          : response;
+      return TopicFileModel.fromJson(data as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to upload topic file: $e');
+    }
+  }
+
   // Add chat to topic
   Future<TopicChatModel> addTopicChat(Map<String, dynamic> chatData) async {
     try {
@@ -103,11 +136,15 @@ class ForumRepository {
   // Get announcements for a course
   Future<List<AnnouncementModel>> getCourseAnnouncements(int courseId) async {
     try {
-      final response = await _apiService.get('/courses/$courseId/announcements');
+      final response = await _apiService.get(
+        '/courses/$courseId/announcements',
+      );
       final List<dynamic> announcementsJson = response is List
           ? response
           : (response['announcements'] ?? response['data'] ?? []);
-      return announcementsJson.map((json) => AnnouncementModel.fromJson(json)).toList();
+      return announcementsJson
+          .map((json) => AnnouncementModel.fromJson(json))
+          .toList();
     } catch (e) {
       throw Exception('Failed to load announcements: $e');
     }
@@ -127,9 +164,14 @@ class ForumRepository {
   }
 
   // Create announcement (instructor only)
-  Future<AnnouncementModel> createAnnouncement(Map<String, dynamic> announcementData) async {
+  Future<AnnouncementModel> createAnnouncement(
+    Map<String, dynamic> announcementData,
+  ) async {
     try {
-      final response = await _apiService.post('/announcements', announcementData);
+      final response = await _apiService.post(
+        '/announcements',
+        announcementData,
+      );
       final data = response is Map<String, dynamic>
           ? (response['announcement'] ?? response['data'] ?? response)
           : response;
@@ -145,7 +187,10 @@ class ForumRepository {
     Map<String, dynamic> announcementData,
   ) async {
     try {
-      final response = await _apiService.put('/announcements/$announcementId', announcementData);
+      final response = await _apiService.put(
+        '/announcements/$announcementId',
+        announcementData,
+      );
       final data = response is Map<String, dynamic>
           ? (response['announcement'] ?? response['data'] ?? response)
           : response;
@@ -167,7 +212,9 @@ class ForumRepository {
   // Get comments for announcement
   Future<List<CommentModel>> getAnnouncementComments(int announcementId) async {
     try {
-      final response = await _apiService.get('/announcements/$announcementId/comments');
+      final response = await _apiService.get(
+        '/announcements/$announcementId/comments',
+      );
       final List<dynamic> commentsJson = response is List
           ? response
           : (response['comments'] ?? response['data'] ?? []);
@@ -196,4 +243,3 @@ class ForumRepository {
     }
   }
 }
-

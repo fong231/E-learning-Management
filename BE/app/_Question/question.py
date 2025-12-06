@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
+from datetime import datetime
 from ..database import get_db 
 from . import schema, model
 from .._Quiz import model as QuizModel
@@ -13,18 +14,38 @@ router = APIRouter(
 # create question
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create(question: schema.QuestionCreate, db: Session = Depends(get_db)):
+
     if question.quizID:
         db_quiz = db.query(QuizModel.Quiz).filter(QuizModel.Quiz.quizID == question.quizID).first()
         if not db_quiz:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found")
 
     db_question = model.Question(**question.model_dump())
-    
+
     db.add(db_question)
     db.commit()
-    
     db.refresh(db_question)
-    return {"message": "Question created successfully"}
+
+    options = [
+        getattr(db_question, "answer_1", ""),
+        getattr(db_question, "answer_2", ""),
+        getattr(db_question, "answer_3", ""),
+        getattr(db_question, "answer_4", ""),
+    ]
+
+    return {
+        "question": {
+            "question_id": db_question.questionID,
+            "quiz_id": db_question.quizID,
+            "question_text": getattr(db_question, "question_text", ""),
+            "question_type": "multiple_choice",
+            "level": getattr(db_question, "level", "medium_question"),
+            "points": 1,
+            "options": options,
+            "correct_answer": getattr(db_question, "correct_answer", None),
+            "created_at": datetime.utcnow().isoformat(),
+        }
+    }
 
 # read question
 @router.get("/{question_id}", response_model=schema.QuestionRead)

@@ -5,6 +5,7 @@ from ..database import get_db
 from . import schema, model
 from .._Learning_Content import model as Learning_ContentModel
 from fastapi import File, UploadFile, Form
+from ..dependencies.auth import get_current_active_user
 import os
 import uuid
 import shutil
@@ -25,7 +26,8 @@ router = APIRouter(
 async def create(
     file : UploadFile = File(..., description="File content to upload."),
     content_id : int = Form(..., description="ID of this content."),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_active_user),
 ):
     
     # check if content id exist
@@ -53,7 +55,8 @@ async def create(
     db_resource = model.FileImage(
         path = file_path_on_disk,
         contentID = content_id,
-        upload_at = datetime.now(timezone.utc)
+        uploaded_at = datetime.now(timezone.utc),
+        uploaded_by = current_user_id,
     )
     
     db.add(db_resource)

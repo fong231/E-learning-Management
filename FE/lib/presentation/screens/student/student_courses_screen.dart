@@ -226,13 +226,14 @@ class _CourseCard extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 12),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   _InfoChip(
                     icon: Icons.calendar_today,
                     label: course.semesterName ?? 'Semester',
                   ),
-                  const SizedBox(width: 8),
                   _InfoChip(
                     icon: Icons.class_,
                     label: '${course.numberOfSessions} lesson',

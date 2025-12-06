@@ -101,14 +101,24 @@ class GroupModel {
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> json) {
+    final studentsRaw = json['students'];
+    int studentsCount;
+    if (studentsRaw is int) {
+      studentsCount = studentsRaw;
+    } else if (studentsRaw is List) {
+      studentsCount = studentsRaw.length;
+    } else {
+      studentsCount = 0;
+    }
+
     return GroupModel(
       id: json['group_id'] ?? json['id'] ?? 0,
-      courseId: json['course_id'] ?? 0,
-      courseName: json['course_name'],
-      groupName: json['group_name'] ?? '',
-      students: json['students'] ?? 0,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      courseId: json['course_id'] ?? json['courseId'] ?? 0,
+      courseName: json['course_name'] ?? json['courseName'],
+      groupName: json['group_name'] ?? json['groupName'] ?? '',
+      students: studentsCount,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
     );
   }

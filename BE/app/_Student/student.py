@@ -8,6 +8,8 @@ from .._Course.model import Course
 from .._Course.schema import CourseRead
 from .._Group.model import Group
 from .._Student_Group.model import StudentGroupAssociation
+from .._Semester import model as SemesterModel
+from .._Customer import model as CustomerModel
 
 router = APIRouter(
     prefix="/students",
@@ -98,23 +100,58 @@ def get_courses(student_id: int, semester_id: Optional[int] = None, db: Session 
     query = db.query(Course)
 
     query = query.join(
-        Group, 
-        Group.courseID == Course.courseID
+        Group,
+        Group.courseID == Course.courseID,
     ).join(
-        StudentGroupAssociation, 
-        StudentGroupAssociation.groupID == Group.groupID
+        StudentGroupAssociation,
+        StudentGroupAssociation.groupID == Group.groupID,
     ).filter(
         StudentGroupAssociation.studentID == student_id
     )
 
     if semester_id is not None:
-        query = query.filter(
-            Course.semesterID == semester_id
-        )
+        query = query.filter(Course.semesterID == semester_id)
 
     courses = query.distinct().all()
 
     if not courses:
         return []
 
-    return courses
+    results: List[CourseRead] = []
+
+    for course in courses:
+        semester_name = None
+        instructor_name = None
+
+        if course.semesterID is not None:
+            semester = (
+                db.query(SemesterModel.Semester)
+                .filter(SemesterModel.Semester.semesterID == course.semesterID)
+                .first()
+            )
+            if semester:
+                semester_name = semester.description
+
+        if course.instructorID is not None:
+            customer = (
+                db.query(CustomerModel.Customer)
+                .filter(CustomerModel.Customer.customerID == course.instructorID)
+                .first()
+            )
+            if customer:
+                instructor_name = customer.fullname
+
+        results.append(
+            CourseRead(
+                courseID=course.courseID,
+                course_name=course.course_name,
+                description=course.description,
+                number_of_sessions=course.number_of_sessions,
+                semesterID=course.semesterID,
+                instructorID=course.instructorID,
+                semester_name=semester_name,
+                instructor_name=instructor_name,
+            )
+        )
+
+    return results

@@ -171,6 +171,19 @@ class CourseRepository {
     }
   }
 
+  // Upload a material file for a course
+  Future<void> uploadCourseMaterialFile(int courseId, String filePath) async {
+    try {
+      await _apiService.uploadFile(
+        '/courses/$courseId/materials/files',
+        filePath,
+        'file',
+      );
+    } catch (e) {
+      throw Exception('Failed to upload course material: $e');
+    }
+  }
+
   // Create group for a course (instructor only)
   Future<void> createGroup(int courseId) async {
     try {

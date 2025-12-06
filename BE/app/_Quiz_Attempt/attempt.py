@@ -115,7 +115,7 @@ def submit_quiz_attempt(attempt_id: int, payload: AttemptSchema.QuizAttemptSubmi
     if total > 0:
         for q in questions:
             ans = answers.get(q.questionID)
-            if ans is not None and ans == q.answer:
+            if ans is not None and ans == getattr(q, "correct_answer", None):
                 correct += 1
         score = (correct / total) * 100.0
     else:
@@ -161,6 +161,9 @@ def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
         "easy": "easy_question",
         "medium": "medium_question",
         "hard": "hard_question",
+        "easy_question": "easy_question",
+        "medium_question": "medium_question",
+        "hard_question": "hard_question",
     }
 
     results = []
@@ -169,12 +172,17 @@ def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
             {
                 "question_id": q.questionID,
                 "quiz_id": q.quizID,
-                "question_text": "",
+                "question_text": getattr(q, "question_text", ""),
                 "question_type": "multiple_choice",
                 "level": level_map.get(getattr(q, "level", None), "medium_question"),
                 "points": 1,
-                "options": ["A", "B", "C", "D"],
-                "correct_answer": getattr(q, "answer", None),
+                "options": [
+                    getattr(q, "answer_1", ""),
+                    getattr(q, "answer_2", ""),
+                    getattr(q, "answer_3", ""),
+                    getattr(q, "answer_4", ""),
+                ],
+                "correct_answer": getattr(q, "correct_answer", None),
                 "created_at": datetime.utcnow().isoformat(),
             }
         )

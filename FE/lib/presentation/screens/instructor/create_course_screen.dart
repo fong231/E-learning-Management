@@ -96,13 +96,21 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       'number_of_sessions': _selectedNumberOfSessions,
     });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Create course successfully!')),
-      );
+    if (!mounted) return;
 
-      Navigator.of(context).pop();
+    final error = courseProvider.error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Create course successfully!')),
+    );
+
+    Navigator.of(context).pop(true);
   }
 
   @override

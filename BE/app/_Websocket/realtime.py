@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from ..database import get_db 
 # from _Message.model import Message, MessageRead
 from .._Message import schema as MessageSchema
+from .._Topic import schema as TopicSchema
+from .._Topic.topic import create_topic_chat as create_topic_chat_handler
 # from .config import ACCOUNT_SERVICE_BASE_URL
 from ..dependencies.auth import get_raw_token, get_current_active_user, get_websocket_user_id
 # from .Realtime.channel_utils import add_message_to_db
@@ -96,26 +98,69 @@ async def websocket_endpoint(
             # SEND MESSAGE
             elif action == "message":
                 
+                channel_type = message.get("channel_type", "dm")
                 message_content = message.get("content")
                 
-                message_data = MessageSchema.MessageCreate(
-                    content=message_content,
-                    receiver_id=channel_id,
-                    sender_id=account_id,
-                )
+                if not message_content:
+                    await manager._send_to_local_user(
+                        account_id,
+                        {"error": "Missing content for message action"},
+                    )
+                    continue
 
-                # await add_message_to_db(message_data, db)
-                create_message(message_data, db)
-                
-                payload = {
-                    "type": "new_message",
-                    "sender_id": account_id,
-                    "content": message_content,
-                    "receiver_id": channel_id,
-                    "created_at": datetime.now().isoformat()
-                }
-                
-                await manager.publish_to_channel(channel_id, payload)
+                # Topic / forum group message
+                if channel_type == "topic":
+                    channel_str = str(channel_id)
+                    topic_id = None
+
+                    # Allow either "topic:123" or plain numeric "123"
+                    if isinstance(channel_id, int):
+                        topic_id = channel_id
+                        channel_str = f"topic:{topic_id}"
+                    else:
+                        if channel_str.startswith("topic:"):
+                            _, topic_id_str = channel_str.split(":", 1)
+                            topic_id = int(topic_id_str)
+                        else:
+                            topic_id = int(channel_str)
+                            channel_str = f"topic:{topic_id}"
+
+                    try:
+                        topic_chat_payload = TopicSchema.TopicChatCreate(
+                            topic_id=topic_id,
+                            user_id=int(account_id),
+                            user_role="",
+                            user_name=None,
+                            message=message_content,
+                        )
+                        chat = create_topic_chat_handler(topic_chat_payload, db)
+                    except HTTPException as exc:
+                        await manager._send_to_local_user(
+                            account_id, {"error": exc.detail}
+                        )
+                        continue
+
+                    ws_payload = {
+                        "type": "new_topic_chat",
+                        "chat": chat.model_dump(),
+                    }
+                    await manager.publish_to_channel(channel_str, ws_payload)
+
+                # Direct private message (student <-> instructor)
+                else:
+                    message_data = MessageSchema.MessageCreate(
+                        content=message_content,
+                        receiver_id=int(channel_id),
+                        sender_id=int(account_id),
+                    )
+
+                    created = create_message(message_data, db)
+
+                    payload = {
+                        "type": "new_message",
+                        "message": created.model_dump(),
+                    }
+                    await manager.publish_to_channel(str(channel_id), payload)
                 
             else:
                 await manager._send_to_local_user(account_id, {"error": f"Unknown action: {action}"})

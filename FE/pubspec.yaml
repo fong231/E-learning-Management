@@ -59,6 +59,9 @@ dependencies:
   # Utils
   url_launcher: ^6.2.4
 
+  # Realtime WebSocket
+  web_socket_channel: ^2.4.0
+
   # Chart
   fl_chart: ^1.1.1
 

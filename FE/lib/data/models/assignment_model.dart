@@ -30,15 +30,25 @@ class AssignmentModel {
   });
 
   factory AssignmentModel.fromJson(Map<String, dynamic> json) {
+    final deadlineRaw = json['deadline'];
+    final lateDeadlineRaw = json['late_deadline'];
+
     return AssignmentModel(
       id: json['assignment_id'] ?? json['id'] ?? 0,
-      courseId: json['course_id'] ?? 0,
-      courseName: json['course_name'] ?? '',
+      courseId: json['course_id'],
+      courseName: json['course_name'],
       groupId: json['group_id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      deadline: DateTime.parse(json['deadline']),
-      late_deadline: DateTime.parse(json['late_deadline']),
+      deadline: deadlineRaw != null && deadlineRaw.toString().isNotEmpty
+          ? DateTime.parse(deadlineRaw as String)
+          : DateTime.now(),
+      late_deadline:
+          lateDeadlineRaw != null && lateDeadlineRaw.toString().isNotEmpty
+              ? DateTime.parse(lateDeadlineRaw as String)
+              : (deadlineRaw != null && deadlineRaw.toString().isNotEmpty
+                  ? DateTime.parse(deadlineRaw as String)
+                  : DateTime.now()),
       size_limit: json['size_limit'],
       file_format: json['file_format'],
       createdAt: json['created_at'] != null

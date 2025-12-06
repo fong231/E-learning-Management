@@ -13,6 +13,8 @@ class CourseCreate(CourseBase):
 
 class CourseRead(CourseBase):
     courseID: int
+    instructor_name: Optional[str] = None
+    semester_name: Optional[str] = None
     
     class Config:
         from_attributes = True 

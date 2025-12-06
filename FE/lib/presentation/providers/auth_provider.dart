@@ -44,6 +44,8 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await _authRepository.login(username, password);
       _currentUser = UserModel.fromJson(response['customer']);
+      print('login: ${_currentUser?.role}');
+      print('login: ${response['customer']}');
       _isLoggedIn = true;
       _error = null;
       _isLoading = false;

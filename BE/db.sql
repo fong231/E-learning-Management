@@ -124,9 +124,11 @@ CREATE TABLE `Files_Images` (
     `resourceID` INT NOT NULL AUTO_INCREMENT,
     `path` VARCHAR(500) NOT NULL,
     `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `uploaded_by` INT NOT NULL,
     `contentID` INT NOT NULL,
     PRIMARY KEY (`resourceID`, `contentID`),
-    FOREIGN KEY (`contentID`) REFERENCES `Learning_Content`(`contentID`) ON DELETE CASCADE
+    FOREIGN KEY (`contentID`) REFERENCES `Learning_Content`(`contentID`) ON DELETE CASCADE,
+    FOREIGN KEY (`uploaded_by`) REFERENCES `Customers`(`customerID`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ============================================
@@ -191,8 +193,13 @@ CREATE TABLE `Quizzes` (
 -- Questions
 CREATE TABLE `Questions` (
     `questionID` INT NOT NULL AUTO_INCREMENT,
+    `question_text` TEXT NOT NULL,
+    `answer_1` TEXT NOT NULL,
+    `answer_2` TEXT NOT NULL,
+    `answer_3` TEXT NOT NULL,
+    `answer_4` TEXT NOT NULL,
     `level` ENUM('easy_question', 'medium_question', 'hard_question') NOT NULL,
-    `answer` ENUM('A', 'B', 'C', 'D') NOT NULL,
+    `correct_answer` ENUM('A', 'B', 'C', 'D') NOT NULL,
     `quizID` INT,
     PRIMARY KEY (`questionID`),
     FOREIGN KEY (`quizID`) REFERENCES `Quizzes`(`quizID`) ON DELETE SET NULL
@@ -614,22 +621,22 @@ INSERT INTO `Course_Materials` (`courseID`, `materialID`) VALUES
 -- ============================================
 -- 13. FILES FOR CONTENT
 -- ============================================
-INSERT INTO `Files_Images` (`resourceID`, `path`, `contentID`, `uploaded_at`) VALUES
--- Announcement 1 files
-(1, 'https://example.com/files/course_syllabus.pdf', 1, '2024-11-01 08:00:00'),
-(2, 'https://example.com/files/welcome_guide.pdf', 1, '2024-11-01 08:00:00'),
+INSERT INTO `Files_Images` (`resourceID`, `path`, `uploaded_at`, `uploaded_by`, `contentID`) VALUES
+-- Announcement 1 files (uploaded by Admin instructor)
+(1, 'https://example.com/files/course_syllabus.pdf', '2024-11-01 08:00:00', 101, 1),
+(2, 'https://example.com/files/welcome_guide.pdf', '2024-11-01 08:00:00', 101, 1),
 
--- Assignment 1 files (instructor's reference)
-(3, 'https://example.com/files/assignment1_requirements.pdf', 4, '2024-11-01 09:00:00'),
-(4, 'https://example.com/files/ui_examples.png', 4, '2024-11-01 09:00:00'),
+-- Assignment 1 files (instructor's reference - uploaded by Admin)
+(3, 'https://example.com/files/assignment1_requirements.pdf', '2024-11-01 09:00:00', 101, 4),
+(4, 'https://example.com/files/ui_examples.png', '2024-11-01 09:00:00', 101, 4),
 
--- Material 1 files
-(5, 'https://example.com/materials/week1_slides.pdf', 7, '2024-11-01 10:00:00'),
-(6, 'https://example.com/materials/flutter_installation_guide.pdf', 7, '2024-11-01 10:00:00'),
+-- Material 1 files (uploaded by Admin instructor)
+(5, 'https://example.com/materials/week1_slides.pdf', '2024-11-01 10:00:00', 101, 7),
+(6, 'https://example.com/materials/flutter_installation_guide.pdf', '2024-11-01 10:00:00', 101, 7),
 
--- Material 2 files
-(7, 'https://example.com/materials/week2_widgets_demo.zip', 8, '2024-11-08 10:00:00'),
-(8, 'https://example.com/materials/widget_catalog.pdf', 8, '2024-11-08 10:00:00');
+-- Material 2 files (uploaded by Admin instructor)
+(7, 'https://example.com/materials/week2_widgets_demo.zip', '2024-11-08 10:00:00', 101, 8),
+(8, 'https://example.com/materials/widget_catalog.pdf', '2024-11-08 10:00:00', 101, 8);
 
 -- ============================================
 -- 14. QUIZZES
@@ -642,43 +649,177 @@ INSERT INTO `Quizzes` (`quizID`, `duration`, `open_time`, `close_time`, `easy_qu
 -- 15. QUESTIONS FOR QUIZZES
 -- ============================================
 -- Quiz 1: Flutter Basics (10 questions)
-INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
+INSERT INTO `Questions` (`questionID`, `question_text`, `answer_1`, `answer_2`, `answer_3`, `answer_4`, `level`, `correct_answer`, `quizID`) VALUES
+
 -- Easy Questions
-(1, 'easy_question', 'A', 11),  -- What is Flutter?
-(2, 'easy_question', 'B', 11),  -- Which language is Flutter based on?
-(3, 'easy_question', 'C', 11),  -- What is a StatelessWidget?
-(4, 'easy_question', 'D', 11),  -- What does hot reload do?
-(5, 'easy_question', 'A', 11),  -- What is Material Design?
+(1, 'What is Flutter?', 
+    'A UI framework for building cross-platform applications', 
+    'A programming language', 
+    'A database management system', 
+    'An operating system', 
+    'easy_question', 'A', 11),
+
+(2, 'Which programming language is Flutter primarily based on?', 
+    'Java', 
+    'Dart', 
+    'Kotlin', 
+    'Swift', 
+    'easy_question', 'B', 11),
+
+(3, 'What is a StatelessWidget in Flutter?', 
+    'A widget that can change over time', 
+    'A widget that never builds', 
+    'A widget that does not maintain any state', 
+    'A widget that only works on Android', 
+    'easy_question', 'C', 11),
+
+(4, 'What does Hot Reload do in Flutter?', 
+    'Restarts the entire application', 
+    'Clears all data', 
+    'Closes the app', 
+    'Instantly updates the UI without losing app state', 
+    'easy_question', 'D', 11),
+
+(5, 'What is Material Design?', 
+    'A design system developed by Google', 
+    'A type of widget', 
+    'A programming pattern', 
+    'A testing framework', 
+    'easy_question', 'A', 11),
 
 -- Medium Questions
-(6, 'medium_question', 'B', 11),  -- Difference between StatelessWidget and StatefulWidget
-(7, 'medium_question', 'C', 11),  -- What is BuildContext?
-(8, 'medium_question', 'A', 11),  -- How to pass data between screens?
+(6, 'What is the main difference between StatelessWidget and StatefulWidget?', 
+    'StatelessWidget is faster', 
+    'StatefulWidget can rebuild when internal state changes', 
+    'StatelessWidget uses less memory', 
+    'There is no difference', 
+    'medium_question', 'B', 11),
+
+(7, 'What is BuildContext in Flutter?', 
+    'A configuration file', 
+    'A database connection', 
+    'A handle to the location of a widget in the widget tree', 
+    'A type of animation', 
+    'medium_question', 'C', 11),
+
+(8, 'How do you pass data to a new screen in Flutter?', 
+    'Through constructor parameters or route arguments', 
+    'Using global variables only', 
+    'Data cannot be passed between screens', 
+    'Using SharedPreferences only', 
+    'medium_question', 'A', 11),
 
 -- Hard Questions
-(9, 'hard_question', 'D', 11),  -- Explain widget lifecycle
-(10, 'hard_question', 'B', 11); -- What is InheritedWidget?
+(9, 'Which method is called first in a StatefulWidget lifecycle?', 
+    'build()', 
+    'initState()', 
+    'dispose()', 
+    'createState()', 
+    'hard_question', 'D', 11),
+
+(10, 'What is the purpose of InheritedWidget?', 
+    'To create animations', 
+    'To efficiently propagate data down the widget tree', 
+    'To handle HTTP requests', 
+    'To manage routes', 
+    'hard_question', 'B', 11);
 
 -- Quiz 2: Widgets and State (13 questions)
-INSERT INTO `Questions` (`questionID`, `level`, `answer`, `quizID`) VALUES
+INSERT INTO `Questions` (`questionID`, `question_text`, `answer_1`, `answer_2`, `answer_3`, `answer_4`, `level`, `correct_answer`, `quizID`) VALUES
+
 -- Easy Questions
-(11, 'easy_question', 'A', 12),
-(12, 'easy_question', 'C', 12),
-(13, 'easy_question', 'B', 12),
-(14, 'easy_question', 'D', 12),
-(15, 'easy_question', 'A', 12),
-(16, 'easy_question', 'B', 12),
+(11, 'Which widget is used to create a scrollable list in Flutter?', 
+    'ListView', 
+    'Container', 
+    'AppBar', 
+    'Text', 
+    'easy_question', 'A', 12),
+
+(12, 'What does the setState() method do?', 
+    'Creates a new widget', 
+    'Deletes the current widget', 
+    'Notifies the framework that state has changed and triggers rebuild', 
+    'Saves data to disk', 
+    'easy_question', 'C', 12),
+
+(13, 'Which widget is used to arrange children horizontally?', 
+    'Column', 
+    'Row', 
+    'Stack', 
+    'ListView', 
+    'easy_question', 'B', 12),
+
+(14, 'What is the purpose of the Scaffold widget?', 
+    'To create animations', 
+    'To handle gestures', 
+    'To manage HTTP requests', 
+    'To provide a basic material design layout structure', 
+    'easy_question', 'D', 12),
+
+(15, 'Which widget creates a material design button?', 
+    'ElevatedButton', 
+    'Container', 
+    'Text', 
+    'Image', 
+    'easy_question', 'A', 12),
+
+(16, 'What does the const keyword do in Flutter?', 
+    'Declares a mutable variable', 
+    'Creates compile-time constant widgets for better performance', 
+    'Defines a function', 
+    'Imports a package', 
+    'easy_question', 'B', 12),
 
 -- Medium Questions
-(17, 'medium_question', 'C', 12),
-(18, 'medium_question', 'A', 12),
-(19, 'medium_question', 'D', 12),
-(20, 'medium_question', 'B', 12),
+(17, 'What is the difference between MainAxisAlignment and CrossAxisAlignment?', 
+    'They are the same', 
+    'MainAxisAlignment is for vertical only', 
+    'MainAxisAlignment aligns along the main axis, CrossAxisAlignment along the perpendicular axis', 
+    'CrossAxisAlignment does not exist', 
+    'medium_question', 'C', 12),
+
+(18, 'When should you use a StatefulWidget instead of a StatelessWidget?', 
+    'When the widget needs to rebuild based on changing internal state', 
+    'When the widget is small', 
+    'When the widget has no children', 
+    'Never, StatelessWidget is always better', 
+    'medium_question', 'A', 12),
+
+(19, 'What is the purpose of the Key parameter in widgets?', 
+    'To style the widget', 
+    'To add padding', 
+    'To set the color', 
+    'To preserve state when widgets move in the tree', 
+    'medium_question', 'D', 12),
+
+(20, 'Which lifecycle method is called when a StatefulWidget is removed from the tree?', 
+    'initState()', 
+    'dispose()', 
+    'build()', 
+    'setState()', 
+    'medium_question', 'B', 12),
 
 -- Hard Questions
-(21, 'hard_question', 'C', 12),
-(22, 'hard_question', 'A', 12),
-(23, 'hard_question', 'D', 12);
+(21, 'What is the difference between hot reload and hot restart?', 
+    'There is no difference', 
+    'Hot reload restarts the entire app', 
+    'Hot reload preserves app state while hot restart does not', 
+    'Hot restart is faster', 
+    'hard_question', 'C', 12),
+
+(22, 'What is the purpose of the FutureBuilder widget?', 
+    'To build widgets asynchronously based on the result of a Future', 
+    'To create animations', 
+    'To handle user input', 
+    'To manage routing', 
+    'hard_question', 'A', 12),
+
+(23, 'When would you use GlobalKey?', 
+    'Never, it should be avoided', 
+    'Only for styling', 
+    'For animations only', 
+    'To access widget state or properties from outside the widget tree', 
+    'hard_question', 'D', 12);
 
 -- ============================================
 -- 16. STUDENT SCORES (John Doe's quiz results)

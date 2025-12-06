@@ -106,7 +106,7 @@ class AssignmentRepository {
   Future<String> uploadAssignmentFile(String filePath) async {
     try {
       final response = await _apiService.uploadFile(
-        '/uploads/assignment',
+        '/assignments/files',
         filePath,
         'file',
       );

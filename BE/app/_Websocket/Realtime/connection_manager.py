@@ -2,6 +2,13 @@ import asyncio
 from fastapi import WebSocket
 from typing import Dict, List
 import json
+from datetime import datetime
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 class ConnectionManager:
     # { account_id: [WebSocket, WebSocket, ...] }
@@ -47,7 +54,7 @@ class ConnectionManager:
              return
 
         channel_name = f"channel:{channel_id}"
-        message_str = json.dumps(message)
+        message_str = json.dumps(message, cls=DateTimeEncoder)
 
         await redis_client.publish(channel_name, message_str)
         print(f"Message published to Redis Pub/Sub channel: {channel_name}")

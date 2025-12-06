@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/assignment_model.dart';
 import '../../providers/assignment_provider.dart';
@@ -22,8 +24,79 @@ class StudentSubmitAssignmentScreen extends StatefulWidget {
 class _StudentSubmitAssignmentScreenState
     extends State<StudentSubmitAssignmentScreen> {
   bool _isSubmitting = false;
+  bool _isUploading = false;
+  String? _selectedFileName;
+  String? _uploadedFileUrl;
+
+  Future<void> _pickAndUploadFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null || result.files.single.path == null) {
+      return;
+    }
+
+    final file = result.files.single;
+    final path = file.path!;
+    final extension = (file.extension ?? '').toLowerCase();
+
+    if (!AppConstants.allowedFileTypes.contains(extension)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Invalid file type. Allowed: ${AppConstants.allowedFileTypes.join(', ')}',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (file.size > AppConstants.maxFileSize) {
+      if (!mounted) return;
+      final maxMb = AppConstants.maxFileSize ~/ (1024 * 1024);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File is too large. Maximum size is ${maxMb}MB'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isUploading = true;
+      _selectedFileName = file.name;
+    });
+
+    final assignmentProvider =
+        Provider.of<AssignmentProvider>(context, listen: false);
+
+    final url = await assignmentProvider.uploadAssignmentFile(path);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isUploading = false;
+      _uploadedFileUrl = url;
+    });
+
+    if (url == null || url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to upload file')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File uploaded successfully')),
+      );
+    }
+  }
 
   Future<void> _submit() async {
+    if (_uploadedFileUrl == null || _uploadedFileUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please attach a file before submitting')),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -43,9 +116,9 @@ class _StudentSubmitAssignmentScreenState
     final submissionData = {
       'assignment_id': widget.assignment.id,
       'student_id': studentId,
+      'file_url': _uploadedFileUrl,
     };
 
-    // todo call AssignmentProvider.submitAssignment(submissionData)
     await assignmentProvider.submitAssignment(submissionData);
 
     if (!mounted) return;
@@ -54,8 +127,16 @@ class _StudentSubmitAssignmentScreenState
       _isSubmitting = false;
     });
 
+    final error = assignmentProvider.error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit assignment: $error')),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Assignment submitted successfully')), 
+      const SnackBar(content: Text('Assignment submitted successfully')),
     );
 
     Navigator.of(context).pop();
@@ -86,6 +167,43 @@ class _StudentSubmitAssignmentScreenState
             const SizedBox(height: 12),
             Text(
               'Deadline: ${assignment.deadline.day}/${assignment.deadline.month}/${assignment.deadline.year}',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: AppTheme.textSecondaryColor),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Attachment',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedFileName ?? 'No file selected',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: _isUploading ? null : _pickAndUploadFile,
+                  icon: _isUploading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child:
+                              CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.attach_file),
+                  label: Text(_isUploading ? 'Uploading...' : 'Choose File'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Allowed types: ${AppConstants.allowedFileTypes.join(', ')} · Max ${(AppConstants.maxFileSize ~/ (1024 * 1024))}MB',
               style: Theme.of(context)
                   .textTheme
                   .bodySmall

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/course_model.dart';
 import '../../../data/models/forum_model.dart';
@@ -123,6 +124,15 @@ class _ForumTabState extends State<_ForumTab> {
     });
   }
 
+  String _formatDateTime(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final year = dt.year.toString();
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year $hour:$minute';
+  }
+
   Future<void> _showCreateTopicDialog() async {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
@@ -178,6 +188,20 @@ class _ForumTabState extends State<_ForumTab> {
       'content': contentController.text.trim(),
     });
 
+    if (!mounted) return;
+
+    final error = forumProvider.error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create topic: $error')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Topic created successfully')),
+    );
+
     await _loadTopics();
   }
 
@@ -209,8 +233,19 @@ class _ForumTabState extends State<_ForumTab> {
                             child: const Icon(Icons.forum, color: Colors.orange),
                           ),
                           title: Text(topic.title),
-                          subtitle: Text(
-                            '${topic.replyCount} replies',
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${topic.replyCount} replies'),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatDateTime(topic.createdAt),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: AppTheme.textSecondaryColor),
+                              ),
+                            ],
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
@@ -272,6 +307,112 @@ class _QuizzesTabState extends State<_QuizzesTab> {
     setState(() {
       _isLoading = false;
     });
+  }
+
+  Future<void> _handleQuizTap(BuildContext context, quiz) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final quizProvider = Provider.of<QuizProvider>(context, listen: false);
+
+    final studentId = authProvider.userId;
+    if (studentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to determine current student.')),
+      );
+      return;
+    }
+
+    try {
+      await quizProvider.loadStudentAttempts(quiz.id, studentId);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load quiz attempts.')),
+      );
+      return;
+    }
+
+    final attempts = quizProvider.attempts
+        .where((a) => a.quizId == quiz.id && a.studentId == studentId)
+        .toList();
+
+    final bool isClosed = !quiz.isAvailable;
+    final completedAttempts = attempts.where((a) => a.isCompleted).toList();
+    final int attemptsUsed = completedAttempts.length;
+    final bool attemptsExhausted = attemptsUsed >= quiz.numberOfAttempts;
+
+    if (isClosed || attemptsExhausted) {
+      double? bestScore;
+      for (final a in completedAttempts) {
+        final s = a.score ?? 0;
+        if (bestScore == null || s > bestScore) {
+          bestScore = s;
+        }
+      }
+
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Quiz result'),
+          content: Text(
+            completedAttempts.isEmpty
+                ? 'Quiz is closed or attempts are exhausted. You have no completed attempts.'
+                : 'Quiz is closed or attempts are exhausted.\n'
+                    'Completed attempts: $attemptsUsed\n'
+                    'Best score: ${bestScore?.toStringAsFixed(1) ?? 'N/A'}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (attempts.isEmpty) {
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Quiz status'),
+          content: const Text('Not attempted.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    double? lastScore;
+    if (completedAttempts.isNotEmpty) {
+      lastScore = completedAttempts.last.score;
+    }
+
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Quiz attempts'),
+        content: Text(
+          'You have used $attemptsUsed of ${quiz.numberOfAttempts} attempts.'
+          '${lastScore != null ? '\nLast score: ${lastScore.toStringAsFixed(1)}' : ''}'
+          '\nQuiz attempt screen is under development.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -344,7 +485,7 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                             : AppTheme.warningColor)
                         .withOpacity(0.15),
                   ),
-                  onTap: () {
+                  onTap: () async {
                     if (widget.isReadOnly) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -356,11 +497,7 @@ class _QuizzesTabState extends State<_QuizzesTab> {
                       return;
                     }
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Quiz attempt screen is under development'),
-                      ),
-                    );
+                    await _handleQuizTap(context, quiz);
                   },
                 ),
               );
@@ -664,6 +801,7 @@ class _AssignmentsTab extends StatefulWidget {
 class _AssignmentsTabState extends State<_AssignmentsTab> {
   bool _isLoading = false;
   List<AssignmentModel> _assignments = [];
+  Set<int> _submittedAssignmentIds = {};
 
   @override
   void initState() {
@@ -680,15 +818,33 @@ class _AssignmentsTabState extends State<_AssignmentsTab> {
 
     final assignmentProvider =
         Provider.of<AssignmentProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final studentId = authProvider.userId;
 
-    // todo call AssignmentProvider.loadCourseAssignments(courseId)
+    // Load assignments for this course
     await assignmentProvider.loadCourseAssignments(widget.courseId);
 
     final loaded = List<AssignmentModel>.from(assignmentProvider.assignments);
     loaded.sort((a, b) => b.deadline.compareTo(a.deadline));
 
+    final submittedIds = <int>{};
+
+    if (studentId != null) {
+      for (final assignment in loaded) {
+        await assignmentProvider.loadStudentSubmissions(
+          assignment.id,
+          studentId,
+        );
+
+        if (assignmentProvider.submissions.isNotEmpty) {
+          submittedIds.add(assignment.id);
+        }
+      }
+    }
+
     setState(() {
       _assignments = loaded;
+      _submittedAssignmentIds = submittedIds;
       _isLoading = false;
     });
   }
@@ -715,6 +871,7 @@ class _AssignmentsTabState extends State<_AssignmentsTab> {
         itemCount: _assignments.length,
         itemBuilder: (context, index) {
           final assignment = _assignments[index];
+          final isSubmitted = _submittedAssignmentIds.contains(assignment.id);
 
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
@@ -728,7 +885,20 @@ class _AssignmentsTabState extends State<_AssignmentsTab> {
               subtitle: Text(
                 'Deadline: ${assignment.deadline.day}/${assignment.deadline.month}/${assignment.deadline.year}',
               ),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Chip(
+                    label: Text(isSubmitted ? 'Submitted' : 'Not submitted'),
+                    backgroundColor: (isSubmitted
+                            ? AppTheme.successColor
+                            : AppTheme.warningColor)
+                        .withOpacity(0.15),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
               onTap: () async {
                 if (widget.isReadOnly) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -806,6 +976,7 @@ class _PeopleTabState extends State<_PeopleTab> {
   bool _isLoading = false;
   List<GroupModel> _groups = [];
   List<UserModel> _students = [];
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -835,6 +1006,7 @@ class _PeopleTabState extends State<_PeopleTab> {
     // Filter to only the group and students that match the current student
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUserId = authProvider.userId;
+    _currentUserId = currentUserId;
     if (currentUserId != null) {
       int? userGroupId;
       for (final s in students) {
@@ -855,6 +1027,18 @@ class _PeopleTabState extends State<_PeopleTab> {
       _students = students;
       _isLoading = false;
     });
+  }
+
+  String? _getAvatarUrl(String? avatarPath) {
+    if (avatarPath == null || avatarPath.isEmpty) {
+      return null;
+    }
+
+    if (avatarPath.startsWith('https://ui-avatars.com')) {
+      return avatarPath;
+    }
+
+    return "${AppConstants.baseUrl}/uploads/$avatarPath";
   }
 
   @override
@@ -924,23 +1108,43 @@ class _PeopleTabState extends State<_PeopleTab> {
             )
           else
             ..._students.map(
-              (student) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    child: Text(
-                      (student.fullname.isNotEmpty
-                              ? student.fullname[0]
-                              : '?')
-                          .toUpperCase(),
-                      style: const TextStyle(color: AppTheme.primaryColor),
+              (student) {
+                final bool isCurrentUser =
+                    _currentUserId != null && student.id == _currentUserId;
+                final displayName = isCurrentUser
+                    ? '${student.fullname} (you)'
+                    : student.fullname;
+                final groupLabel =
+                    student.groupId != null ? 'Group ${student.groupId}' : null;
+                final subtitleText = groupLabel != null
+                    ? '${student.email} · $groupLabel'
+                    : student.email;
+                final avatarUrl = _getAvatarUrl(student.avatar);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor:
+                          AppTheme.primaryColor.withOpacity(0.1),
+                      backgroundImage:
+                          avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                      child: avatarUrl == null
+                          ? Text(
+                              (student.fullname.isNotEmpty
+                                      ? student.fullname[0]
+                                      : '?')
+                                  .toUpperCase(),
+                              style:
+                                  const TextStyle(color: AppTheme.primaryColor),
+                            )
+                          : null,
                     ),
+                    title: Text(displayName),
+                    subtitle: Text(subtitleText),
                   ),
-                  title: Text(student.fullname),
-                  subtitle: Text(student.email),
-                ),
-              ),
+                );
+              },
             ),
         ],
       ),
