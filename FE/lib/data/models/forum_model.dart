@@ -39,11 +39,11 @@ class TopicModel {
       content: json['content'] ?? '',
       viewCount: json['view_count'] ?? 0,
       replyCount: json['reply_count'] ?? 0,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
     );
   }
@@ -63,6 +63,30 @@ class TopicModel {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+  }
+}
+
+class TopicFileModel {
+  final int id;
+  final int topicId;
+  final String fileUrl;
+
+  TopicFileModel({
+    required this.id,
+    required this.topicId,
+    required this.fileUrl,
+  });
+
+  factory TopicFileModel.fromJson(Map<String, dynamic> json) {
+    return TopicFileModel(
+      id: json['file_id'] ?? json['id'] ?? 0,
+      topicId: json['topic_id'] ?? 0,
+      fileUrl: json['file_url'] ?? json['url'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'file_id': id, 'topic_id': topicId, 'file_url': fileUrl};
   }
 }
 
@@ -93,8 +117,8 @@ class TopicChatModel {
       userName: json['user_name'],
       userRole: json['user_role'] ?? 'student',
       message: json['message'] ?? '',
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
     );
   }
@@ -144,11 +168,11 @@ class AnnouncementModel {
       instructorName: json['instructor_name'],
       title: json['title'] ?? '',
       content: json['content'] ?? '',
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
     );
   }
@@ -198,8 +222,8 @@ class CommentModel {
       userName: json['user_name'],
       userRole: json['user_role'] ?? 'student',
       content: json['content'] ?? '',
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
     );
   }
@@ -217,4 +241,3 @@ class CommentModel {
     };
   }
 }
-

@@ -8,6 +8,8 @@ class MessageBase(BaseModel):
     sender_id: int
     receiver_id: int
     content: str
+    sender_role: Optional[str] = None
+    receiver_role: Optional[str] = None
 
 
 class MessageCreate(MessageBase):

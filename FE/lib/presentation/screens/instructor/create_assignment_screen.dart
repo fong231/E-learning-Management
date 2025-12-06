@@ -1,15 +1,18 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/course_model.dart';
-import '../../providers/course_provider.dart';
 import '../../providers/assignment_provider.dart';
+import '../../providers/course_provider.dart';
 
 class CreateAssignmentScreen extends StatefulWidget {
-  const CreateAssignmentScreen({super.key});
+  const CreateAssignmentScreen({super.key, this.courseId});
+
+  final int? courseId;
 
   @override
   State<CreateAssignmentScreen> createState() => _CreateAssignmentScreenState();
@@ -19,7 +22,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   int? _selectedCourseId;
   int? _selectedGroupId;
   File? _selectedFile;
@@ -56,7 +59,11 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       _courses = courseProvider.courses;
 
       if (_courses.isNotEmpty) {
-        _selectedCourseId = _selectedCourseId ?? _courses.first.id;
+        if (widget.courseId != null) {
+          _selectedCourseId = widget.courseId;
+        } else {
+          _selectedCourseId = _selectedCourseId ?? _courses.first.id;
+        }
         await _loadGroupsForCourse(_selectedCourseId!);
       }
     } else {
@@ -81,13 +88,13 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (pickedDate != null && context.mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
-      
+
       if (pickedTime != null) {
         setState(() {
           _dueDate = DateTime(
@@ -105,8 +112,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   Future<void> _selectLateDueDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate:
-          _dueDate ?? DateTime.now().add(const Duration(days: 7)),
+      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 7)),
       firstDate: _dueDate ?? DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
@@ -137,9 +143,9 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     }
 
     if (_dueDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choose due date')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Choose due date')));
       return;
     }
 
@@ -156,8 +162,10 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
     String? attachmentUrl;
     if (_selectedFile != null) {
-      final assignmentProvider =
-          Provider.of<AssignmentProvider>(context, listen: false);
+      final assignmentProvider = Provider.of<AssignmentProvider>(
+        context,
+        listen: false,
+      );
       attachmentUrl = await assignmentProvider.uploadAssignmentFile(
         _selectedFile!.path,
       );
@@ -175,14 +183,18 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       }
     }
 
-    final assignmentProvider = Provider.of<AssignmentProvider>(context, listen: false);
+    final assignmentProvider = Provider.of<AssignmentProvider>(
+      context,
+      listen: false,
+    );
     final assignmentData = {
       'course_id': _selectedCourseId,
       'group_id': _selectedGroupId,
       'title': _titleController.text,
       'description': _descriptionController.text,
       'deadline': _dueDate!.toIso8601String(),
-      if (_lateDueDate != null) 'late_deadline': _lateDueDate!.toIso8601String(),
+      if (_lateDueDate != null)
+        'late_deadline': _lateDueDate!.toIso8601String(),
       if (attachmentUrl != null) 'files_url': [attachmentUrl],
     };
 
@@ -192,11 +204,11 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Create assignment successfully!')),
       );
-      
+
       Navigator.of(context).pop();
     }
   }
@@ -215,9 +227,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Assignment'),
-      ),
+      appBar: AppBar(title: const Text('Create Assignment')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -229,27 +239,27 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                 labelText: 'Course *',
                 prefixIcon: Icon(Icons.book),
               ),
+              isExpanded: true,
               items: [
                 for (final course in _courses)
-                  DropdownMenuItem(
-                    value: course.id,
-                    child: Text(course.name),
-                  ),
+                  DropdownMenuItem(value: course.id, child: Text(course.name)),
               ],
-              onChanged: (value) async {
-                setState(() {
-                  _selectedCourseId = value;
-                  _selectedGroupId = null;
-                  _groups = [];
-                });
+              onChanged: widget.courseId != null
+                  ? null
+                  : (value) async {
+                      setState(() {
+                        _selectedCourseId = value;
+                        _selectedGroupId = null;
+                        _groups = [];
+                      });
 
-                if (value != null) {
-                  await _loadGroupsForCourse(value);
-                  if (mounted) {
-                    setState(() {});
-                  }
-                }
-              },
+                      if (value != null) {
+                        await _loadGroupsForCourse(value);
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      }
+                    },
               validator: (value) {
                 if (value == null) {
                   return 'Please select a course';
@@ -265,6 +275,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                 labelText: 'Group *',
                 prefixIcon: Icon(Icons.group_work),
               ),
+              isExpanded: true,
               items: [
                 for (final group in _groups)
                   DropdownMenuItem(
@@ -276,12 +287,20 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                     ),
                   ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedGroupId = value;
-                });
-              },
+              onChanged: (_selectedCourseId == null || _groups.isEmpty)
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedGroupId = value;
+                      });
+                    },
               validator: (value) {
+                if (_selectedCourseId == null) {
+                  return 'Please select a course first';
+                }
+                if (_groups.isEmpty) {
+                  return 'No groups available for this course';
+                }
                 if (value == null) {
                   return 'Please select a group';
                 }
@@ -289,7 +308,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -305,7 +324,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -322,7 +341,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
@@ -350,7 +369,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             ),
             const Divider(),
             const SizedBox(height: 16),
-            
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -359,7 +378,10 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.attach_file, color: AppTheme.primaryColor),
+                        const Icon(
+                          Icons.attach_file,
+                          color: AppTheme.primaryColor,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Attachment',
@@ -388,7 +410,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             ElevatedButton(
               onPressed: _isLoading ? null : _saveAssignment,
               style: ElevatedButton.styleFrom(
@@ -408,4 +430,3 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     );
   }
 }
-

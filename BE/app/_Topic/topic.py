@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import List
+import os
+import shutil
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -20,6 +23,12 @@ chat_router = APIRouter(
     prefix="/topic-chats",
     tags=["Topic Chats"],
 )
+
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(CURRENT_DIR, "..", "..", "uploads", "forum")
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 def _serialize_topic(db: Session, topic: TopicModel.Topic) -> TopicSchema.TopicRead:
@@ -108,7 +117,7 @@ def get_topic(topic_id: int, db: Session = Depends(get_db)) -> TopicSchema.Topic
     return _serialize_topic(db, topic)
 
 
-@router.post("/", response_model=TopicSchema.TopicRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TopicSchema.TopicRead, status_code=status.HTTP_201_CREATED)
 def create_topic(
     payload: TopicSchema.TopicCreate, db: Session = Depends(get_db)
 ) -> TopicSchema.TopicRead:
@@ -219,3 +228,79 @@ def delete_topic_chat(chat_id: int, db: Session = Depends(get_db)) -> None:
 
     db.delete(chat)
     db.commit()
+
+
+@router.post("/{topic_id}/files")
+async def upload_topic_file(
+    topic_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    topic = (
+        db.query(TopicModel.Topic)
+        .filter(TopicModel.Topic.topicID == topic_id)
+        .first()
+    )
+    if not topic:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+
+    file_extension = os.path.splitext(file.filename or "")[1]
+    unique_filename = f"topic_{topic_id}_{uuid.uuid4()}{file_extension}"
+    file_path_on_disk = os.path.join(UPLOAD_DIR, unique_filename)
+
+    try:
+        with open(file_path_on_disk, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save file to disk: {e}",
+        )
+    finally:
+        file.file.close()
+
+    relative_path = os.path.join("forum", unique_filename).replace("\\", "/")
+
+    db_file = TopicModel.TopicFile(
+        path=relative_path,
+        topicID=topic_id,
+    )
+
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+
+    return {
+        "file_id": db_file.fileID,
+        "topic_id": db_file.topicID,
+        "file_url": db_file.path,
+    }
+
+
+@router.get("/{topic_id}/files")
+def list_topic_files(topic_id: int, db: Session = Depends(get_db)):
+    topic = (
+        db.query(TopicModel.Topic)
+        .filter(TopicModel.Topic.topicID == topic_id)
+        .first()
+    )
+    if not topic:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+
+    files = (
+        db.query(TopicModel.TopicFile)
+        .filter(TopicModel.TopicFile.topicID == topic_id)
+        .order_by(TopicModel.TopicFile.fileID.asc())
+        .all()
+    )
+
+    return {
+        "files": [
+            {
+                "file_id": f.fileID,
+                "topic_id": f.topicID,
+                "file_url": f.path,
+            }
+            for f in files
+        ]
+    }

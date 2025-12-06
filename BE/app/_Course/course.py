@@ -1,9 +1,12 @@
 from typing import List
 from datetime import datetime
 from typing import Dict, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 import requests
 from sqlalchemy.orm import Session, joinedload
+import os
+import shutil
+import uuid
 from ..database import get_db 
 from . import schema, model
 from .._Semester import model as SemesterModel
@@ -19,6 +22,7 @@ from .._Student_Score import model as StudentScoreModel
 from .._Topic import model as TopicModel
 from .._Announcement import model as AnnouncementModel
 from .._Customer import model as CustomerModel
+from ..dependencies.auth import get_current_active_user
 # from .._Instructor import 
 from .._Student_Group.model import StudentGroupAssociation
 from .._Group.schema import GroupOutput
@@ -31,8 +35,13 @@ router = APIRouter(
     tags=["Courses"],
 )
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MATERIAL_UPLOAD_DIR = os.path.join(CURRENT_DIR, "..", "..", "uploads", "materials")
+
+os.makedirs(MATERIAL_UPLOAD_DIR, exist_ok=True)
+
 # create course
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create(course: schema.CourseCreate, db: Session = Depends(get_db)):
     instructor_id = course.instructorID
     
@@ -73,7 +82,7 @@ def read(course_id : int, db : Session = Depends(get_db)):
     return course
 
 # read all courses
-@router.get("/", response_model=List[schema.CourseRead])
+@router.get("", response_model=List[schema.CourseRead])
 def read_all(db : Session = Depends(get_db)):
     courses = db.query(model.Course).all()
     
@@ -302,7 +311,13 @@ def get_course_quizzes(course_id: int, db: Session = Depends(get_db)):
     )
 
     quizzes = []
+    seen_quiz_ids = set()
     for row in rows:
+        if row.quiz_id in seen_quiz_ids:
+            continue
+
+        seen_quiz_ids.add(row.quiz_id)
+
         quizzes.append(
             {
                 "quiz_id": row.quiz_id,
@@ -455,31 +470,93 @@ def get_course_content(
         )
         session_number += 1
 
-    content_data = {
-        "content_id": result.contentID,
-        "course_id": result.courseID,
-        "course_name": result.course_name,
-        "title": result.title,
-        "description": result.description,
-        # "content_type": result.content_type, 
-        "content_url": result.content_url,
-        # "session_number": result.session_number, 
-        
-        # "created_at": result.created_at.isoformat() + "Z" if result.created_at else None,
-        # Use LearningContent's updated_at if available, otherwise use FileImage's upload_at
-        # "updated_at": result.updated_at.isoformat() + "Z" if result.updated_at else (result.upload_at.isoformat() + "Z" if result.upload_at else None), 
-    }
+    return {"content": content_list}
 
-    return {"content": [content_data]}
+from fastapi import UploadFile, File
+from fastapi import status
+from uuid import uuid4
+import os
+import shutil
+from pathlib import Path
+
+MATERIAL_UPLOAD_DIR = Path(__file__).parent / "uploads/materials"
+
+@router.post("/{course_id}/materials/files")
+async def upload_course_material_file(
+    course_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_active_user),
+):
+    course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+
+    original_filename = file.filename or "material"
+    title = os.path.splitext(original_filename)[0]
+
+    db_content = ContentModel.LearningContent(
+        title=title,
+        description=None,
+    )
+    db.add(db_content)
+    db.commit()
+    db.refresh(db_content)
+
+    file_extension = os.path.splitext(file.filename or "")[1]
+    unique_filename = f"material_{course_id}_{db_content.contentID}_{uuid4()}{file_extension}"
+    file_path_on_disk = os.path.join(MATERIAL_UPLOAD_DIR, unique_filename)
+
+    try:
+        with open(file_path_on_disk, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save file to disk: {e}",
+        )
+    finally:
+        file.file.close()
+
+    relative_url = f"/uploads/materials/{unique_filename}"
+
+    db_file = FileImageModel.FileImage(
+        contentID=db_content.contentID,
+        path=relative_url,
+        uploaded_at=datetime.utcnow(),
+        uploaded_by=current_user_id,
+    )
+    db.add(db_file)
+
+    db_material = MaterialModel.Material(
+        materialID=db_content.contentID,
+        title=title,
+        description=None,
+    )
+    db.add(db_material)
+
+    db_association = Course_MaterialModel.CourseMaterialAssociation(
+        courseID=course_id,
+        materialID=db_material.materialID,
+    )
+    db.add(db_association)
+
+    db.commit()
+    db.refresh(db_file)
+
+    return {
+        "content_id": db_content.contentID,
+        "file_url": relative_url,
+        "title": title,
+    }
 
 @router.get("/{course_id}/groups", response_model=List[GroupOutput])
 def get_groups_by_course(course_id: int, db: Session = Depends(get_db)):
     
     course = db.query(model.Course).filter(model.Course.courseID == course_id).first()
-    
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-        
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    
     course_name = course.course_name
     
     groups_query = (

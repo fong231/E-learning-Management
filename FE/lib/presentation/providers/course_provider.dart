@@ -52,6 +52,21 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  Future<void> uploadCourseMaterialFile(int courseId, String filePath) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _courseRepository.uploadCourseMaterialFile(courseId, filePath);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> loadStudentCoursesAll([int? studentId]) async {
     _isLoading = true;
     notifyListeners();

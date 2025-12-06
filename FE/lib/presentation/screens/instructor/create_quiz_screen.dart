@@ -7,7 +7,9 @@ import '../../providers/course_provider.dart';
 import '../../providers/quiz_provider.dart';
 
 class CreateQuizScreen extends StatefulWidget {
-  const CreateQuizScreen({super.key});
+  const CreateQuizScreen({super.key, this.courseId});
+
+  final int? courseId;
 
   @override
   State<CreateQuizScreen> createState() => _CreateQuizScreenState();
@@ -19,13 +21,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
   final _descriptionController = TextEditingController();
   final _durationController = TextEditingController(text: '30');
   final _attemptsController = TextEditingController(text: '1');
-  
+
   int? _selectedCourseId;
   int? _selectedGroupId;
   DateTime? _startTime;
   DateTime? _endTime;
   bool _isLoading = false;
-  
+
   final List<QuestionItem> _questions = [];
 
   List<CourseModel> _courses = [];
@@ -55,13 +57,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (pickedDate != null && context.mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
-      
+
       if (pickedTime != null) {
         setState(() {
           final dateTime = DateTime(
@@ -101,13 +103,24 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
 
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
 
-    // todo call CourseProvider.loadSemesters() and CourseProvider.loadInstructorCoursesWithSemester(semesterId)
     await courseProvider.loadSemesters();
 
     if (courseProvider.semesters.isNotEmpty) {
       final SemesterModel semester = courseProvider.semesters.last;
       await courseProvider.loadInstructorCoursesWithSemester(semester.id);
       _courses = courseProvider.courses;
+
+      if (_courses.isNotEmpty) {
+        if (widget.courseId != null) {
+          _selectedCourseId = widget.courseId;
+        } else {
+          _selectedCourseId = _selectedCourseId ?? _courses.first.id;
+        }
+
+        if (_selectedCourseId != null) {
+          await _loadGroupsForCourse(_selectedCourseId!);
+        }
+      }
     } else {
       _courses = [];
     }
@@ -157,13 +170,19 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
       final createdQuiz = await quizProvider.createQuiz(quizData);
 
       for (final question in _questions) {
+        final options = question.options;
+        if (options.length < 4) {
+          continue;
+        }
+
         final questionData = {
-          'quiz_id': createdQuiz.id,
+          'quizID': createdQuiz.id,
           'question_text': question.questionText,
-          'question_type': 'multiple_choice',
+          'answer_1': options[0],
+          'answer_2': options[1],
+          'answer_3': options[2],
+          'answer_4': options[3],
           'level': question.level,
-          'points': question.points,
-          'options': question.options,
           'correct_answer': question.correctAnswer,
         };
 
@@ -176,11 +195,11 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Create quiz successfully!')),
       );
-      
+
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
@@ -188,18 +207,16 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create quiz: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to create quiz: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Quiz'),
-      ),
+      appBar: AppBar(title: const Text('Create Quiz')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -211,27 +228,27 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                 labelText: 'Course *',
                 prefixIcon: Icon(Icons.book),
               ),
+              isExpanded: true,
               items: [
                 for (final course in _courses)
-                  DropdownMenuItem(
-                    value: course.id,
-                    child: Text(course.name),
-                  ),
+                  DropdownMenuItem(value: course.id, child: Text(course.name)),
               ],
-              onChanged: (value) async {
-                setState(() {
-                  _selectedCourseId = value;
-                  _selectedGroupId = null;
-                  _groups = [];
-                });
+              onChanged: widget.courseId != null
+                  ? null
+                  : (value) async {
+                      setState(() {
+                        _selectedCourseId = value;
+                        _selectedGroupId = null;
+                        _groups = [];
+                      });
 
-                if (value != null) {
-                  await _loadGroupsForCourse(value);
-                  if (mounted) {
-                    setState(() {});
-                  }
-                }
-              },
+                      if (value != null) {
+                        await _loadGroupsForCourse(value);
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      }
+                    },
               validator: (value) {
                 if (value == null) {
                   return 'Please select a course';
@@ -246,6 +263,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                 labelText: 'Group *',
                 prefixIcon: Icon(Icons.group_work),
               ),
+              isExpanded: true,
               items: [
                 for (final group in _groups)
                   DropdownMenuItem(
@@ -257,12 +275,20 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                     ),
                   ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedGroupId = value;
-                });
-              },
+              onChanged: (_selectedCourseId == null || _groups.isEmpty)
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedGroupId = value;
+                      });
+                    },
               validator: (value) {
+                if (_selectedCourseId == null) {
+                  return 'Please select a course first';
+                }
+                if (_groups.isEmpty) {
+                  return 'No groups available for this course';
+                }
                 if (value == null) {
                   return 'Please select a group';
                 }
@@ -270,7 +296,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -285,7 +311,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -295,7 +321,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               maxLines: 3,
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -334,7 +360,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event),
@@ -348,7 +374,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               onTap: () => _selectDateTime(context, true),
             ),
             const Divider(),
-            
+
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available),
@@ -362,7 +388,7 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               onTap: () => _selectDateTime(context, false),
             ),
             const SizedBox(height: 24),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -378,16 +404,14 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             ..._questions.asMap().entries.map((entry) {
               final index = entry.key;
               final question = entry.value;
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  leading: CircleAvatar(
-                    child: Text('${index + 1}'),
-                  ),
+                  leading: CircleAvatar(child: Text('${index + 1}')),
                   title: Text(question.questionText),
                   subtitle: Text('Score: ${question.points}'),
                   trailing: IconButton(
@@ -401,9 +425,9 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                 ),
               );
             }).toList(),
-            
+
             const SizedBox(height: 32),
-            
+
             ElevatedButton(
               onPressed: _isLoading ? null : _saveQuiz,
               style: ElevatedButton.styleFrom(
@@ -478,17 +502,13 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _pointsController,
-              decoration: const InputDecoration(
-                labelText: 'Score',
-              ),
+              decoration: const InputDecoration(labelText: 'Score'),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedLevel,
-              decoration: const InputDecoration(
-                labelText: 'Level',
-              ),
+              decoration: const InputDecoration(labelText: 'Level'),
               items: const [
                 DropdownMenuItem(
                   value: AppConstants.levelEasy,
@@ -512,30 +532,22 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _optionAController,
-              decoration: const InputDecoration(
-                labelText: 'Option A',
-              ),
+              decoration: const InputDecoration(labelText: 'Option A'),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _optionBController,
-              decoration: const InputDecoration(
-                labelText: 'Option B',
-              ),
+              decoration: const InputDecoration(labelText: 'Option B'),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _optionCController,
-              decoration: const InputDecoration(
-                labelText: 'Option C',
-              ),
+              decoration: const InputDecoration(labelText: 'Option C'),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _optionDController,
-              decoration: const InputDecoration(
-                labelText: 'Option D',
-              ),
+              decoration: const InputDecoration(labelText: 'Option D'),
             ),
             const SizedBox(height: 16),
             Align(
@@ -622,7 +634,9 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
                 _optionCController.text,
                 _optionDController.text,
               ];
-              final correctAnswer = options[_correctOptionIndex.clamp(0, 3)];
+              const answerLetters = ['A', 'B', 'C', 'D'];
+              final correctIndex = _correctOptionIndex.clamp(0, 3);
+              final correctAnswer = answerLetters[correctIndex];
 
               widget.onAdd(
                 QuestionItem(
@@ -642,4 +656,3 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
     );
   }
 }
-

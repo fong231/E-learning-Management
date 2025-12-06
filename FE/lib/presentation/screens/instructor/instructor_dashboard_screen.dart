@@ -125,7 +125,6 @@ class _InstructorHomeTabState extends State<InstructorHomeTab> {
     final summary = instructorProvider.summary;
 
     setState(() {
-      print('summary: ${summary?.totalCourses}');
       chartData[0].value = summary?.totalCourses.toDouble() ?? 0;
       chartData[1].value = summary?.totalStudents.toDouble() ?? 0;
       chartData[2].value = summary?.totalGroups.toDouble() ?? 0;
@@ -408,29 +407,6 @@ class _InstructorHomeTabState extends State<InstructorHomeTab> {
                         ),
                       );
                     },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Recent Activities
-                  Text(
-                    'Recent Activities',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildActivityCard(
-                    context,
-                    icon: Icons.assignment_turned_in,
-                    title: 'Assignment Submitted',
-                    subtitle: '5 students have submitted their assignments',
-                    time: '1 hour ago',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActivityCard(
-                    context,
-                    icon: Icons.message,
-                    title: 'New Message',
-                    subtitle: 'Student 123456 has sent a message',
-                    time: '3 hours ago',
                   ),
                 ],
               ),

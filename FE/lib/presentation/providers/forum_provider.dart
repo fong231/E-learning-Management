@@ -12,16 +12,26 @@ class ForumProvider with ChangeNotifier {
   List<AnnouncementModel> _announcements = [];
   AnnouncementModel? _currentAnnouncement;
   List<CommentModel> _comments = [];
+  List<TopicFileModel> _topicFiles = [];
   bool _isLoading = false;
   String? _error;
 
   List<TopicModel> get topics => _topics;
+
   TopicModel? get currentTopic => _currentTopic;
+
   List<TopicChatModel> get chats => _chats;
+
   List<AnnouncementModel> get announcements => _announcements;
+
   AnnouncementModel? get currentAnnouncement => _currentAnnouncement;
+
   List<CommentModel> get comments => _comments;
+
+  List<TopicFileModel> get topicFiles => _topicFiles;
+
   bool get isLoading => _isLoading;
+
   String? get error => _error;
 
   // WORKING: GET /courses/{courseId}/topics
@@ -40,6 +50,42 @@ class ForumProvider with ChangeNotifier {
     }
   }
 
+  // Upload a file attached to a topic
+  Future<void> uploadTopicFile(int topicId, String filePath) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final uploaded = await _forumRepository.uploadTopicFile(
+        topicId,
+        filePath,
+      );
+      _topicFiles = [..._topicFiles, uploaded];
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Get files for a topic
+  Future<void> loadTopicFiles(int topicId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _topicFiles = await _forumRepository.getTopicFiles(topicId);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Helper: load topics for multiple courses (student view)
   Future<void> loadTopicsForCourses(List<int> courseIds) async {
     _isLoading = true;
@@ -49,7 +95,9 @@ class ForumProvider with ChangeNotifier {
       final List<TopicModel> all = [];
 
       for (final courseId in courseIds) {
-        final topicsForCourse = await _forumRepository.getCourseTopics(courseId);
+        final topicsForCourse = await _forumRepository.getCourseTopics(
+          courseId,
+        );
         all.addAll(topicsForCourse);
       }
 
@@ -208,7 +256,9 @@ class ForumProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _currentAnnouncement = await _forumRepository.getAnnouncementById(announcementId);
+      _currentAnnouncement = await _forumRepository.getAnnouncementById(
+        announcementId,
+      );
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -224,7 +274,9 @@ class ForumProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final created = await _forumRepository.createAnnouncement(announcementData);
+      final created = await _forumRepository.createAnnouncement(
+        announcementData,
+      );
       _announcements = [..._announcements, created];
       _error = null;
     } catch (e) {
@@ -236,13 +288,21 @@ class ForumProvider with ChangeNotifier {
   }
 
   // WORKING: PUT /announcements/{announcementId}
-  Future<void> updateAnnouncement(int announcementId, Map<String, dynamic> announcementData) async {
+  Future<void> updateAnnouncement(
+    int announcementId,
+    Map<String, dynamic> announcementData,
+  ) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final updated = await _forumRepository.updateAnnouncement(announcementId, announcementData);
-      _announcements = _announcements.map((a) => a.id == updated.id ? updated : a).toList();
+      final updated = await _forumRepository.updateAnnouncement(
+        announcementId,
+        announcementData,
+      );
+      _announcements = _announcements
+          .map((a) => a.id == updated.id ? updated : a)
+          .toList();
       if (_currentAnnouncement?.id == updated.id) {
         _currentAnnouncement = updated;
       }
@@ -262,7 +322,9 @@ class ForumProvider with ChangeNotifier {
 
     try {
       await _forumRepository.deleteAnnouncement(announcementId);
-      _announcements = _announcements.where((a) => a.id != announcementId).toList();
+      _announcements = _announcements
+          .where((a) => a.id != announcementId)
+          .toList();
       if (_currentAnnouncement?.id == announcementId) {
         _currentAnnouncement = null;
       }
@@ -281,7 +343,9 @@ class ForumProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _comments = await _forumRepository.getAnnouncementComments(announcementId);
+      _comments = await _forumRepository.getAnnouncementComments(
+        announcementId,
+      );
       _error = null;
     } catch (e) {
       _error = e.toString();

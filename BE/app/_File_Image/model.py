@@ -11,7 +11,8 @@ class FileImage(Base):
     
     path = Column(String(500), nullable=False)
     
-    upload_at = Column(DateTime)
+    uploaded_at = Column(DateTime)
+    uploaded_by = Column(Integer, ForeignKey('Customers.customerID', ondelete="CASCADE"), nullable=False)
     
     # relationship
     content = relationship("LearningContent", back_populates="resource")

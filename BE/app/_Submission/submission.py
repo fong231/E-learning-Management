@@ -47,7 +47,7 @@ def _serialize_submission(db: Session, sub: SubmissionModel.Submission) -> Submi
     )
 
 
-@router.post("/", response_model=SubmissionSchema.SubmissionRead, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create_submission(payload: SubmissionSchema.SubmissionCreate, db: Session = Depends(get_db)):
     # Ensure student exists
     student = (
@@ -70,10 +70,10 @@ def create_submission(payload: SubmissionSchema.SubmissionCreate, db: Session = 
     db.commit()
     db.refresh(db_submission)
 
-    return _serialize_submission(db, db_submission)
+    return {"submission": _serialize_submission(db, db_submission)}
 
 
-@router.put("/{submission_id}/grade", response_model=SubmissionSchema.SubmissionRead)
+@router.put("/{submission_id}/grade")
 def grade_submission(submission_id: int, payload: SubmissionSchema.SubmissionGradeUpdate, db: Session = Depends(get_db)):
     db_submission = (
         db.query(SubmissionModel.Submission)
@@ -91,4 +91,4 @@ def grade_submission(submission_id: int, payload: SubmissionSchema.SubmissionGra
     db.commit()
     db.refresh(db_submission)
 
-    return _serialize_submission(db, db_submission)
+    return {"submission": _serialize_submission(db, db_submission)}

@@ -7,6 +7,7 @@ import '../../../data/models/message_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/course_provider.dart';
 import '../../providers/message_provider.dart';
+import '../../../data/services/api_service.dart';
 import 'student_chat_screen.dart';
 
 class StudentMessagesScreen extends StatefulWidget {
@@ -17,6 +18,8 @@ class StudentMessagesScreen extends StatefulWidget {
 }
 
 class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
+  final Map<int, String?> _avatarCache = {};
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +39,36 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
 
     // Preload all courses the student participates in for instructor list
     await courseProvider.loadStudentCoursesAll(userId);
+  }
+
+  Future<void> _ensureAvatarLoaded(int userId, String fullName) async {
+    if (_avatarCache.containsKey(userId)) return;
+
+    try {
+      final api = ApiService();
+      final response = await api.get('/customers/$userId/profile');
+      final avatarPath = response['avatar'] as String?;
+
+      String? avatarUrl;
+      if (avatarPath != null && avatarPath.isNotEmpty) {
+        if (avatarPath.startsWith('https://ui-avatars.com')) {
+          avatarUrl = avatarPath;
+        } else {
+          avatarUrl = '${AppConstants.baseUrl}/uploads/$avatarPath';
+        }
+      } else {
+        final encoded = Uri.encodeFull(fullName);
+        avatarUrl =
+            'https://ui-avatars.com/api/?name=$encoded&background=random&color=fff&format=png';
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _avatarCache[userId] = avatarUrl;
+      });
+    } catch (_) {
+      // Ignore avatar load errors silently
+    }
   }
 
   @override
@@ -148,12 +181,31 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
                     !message.isRead && message.receiverId == currentUserId;
 
                 return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    child: Text(
-                      otherName.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(color: AppTheme.primaryColor),
-                    ),
+                  leading: Builder(
+                    builder: (context) {
+                      final avatarUrl = _avatarCache[otherUserId];
+                      if (avatarUrl == null) {
+                        _ensureAvatarLoaded(otherUserId, otherName);
+                      }
+
+                      return CircleAvatar(
+                        backgroundColor:
+                            AppTheme.primaryColor.withOpacity(0.1),
+                        backgroundImage: avatarUrl != null
+                            ? NetworkImage(avatarUrl)
+                            : null,
+                        child: avatarUrl == null
+                            ? Text(
+                                otherName
+                                    .substring(0, 1)
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppTheme.primaryColor,
+                                ),
+                              )
+                            : null,
+                      );
+                    },
                   ),
                   title: Text(otherName),
                   subtitle: Text(
@@ -201,10 +253,72 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('New message screen is under development'),
+        onPressed: () async {
+          final authProvider =
+              Provider.of<AuthProvider>(context, listen: false);
+          final courseProvider =
+              Provider.of<CourseProvider>(context, listen: false);
+
+          final userId = authProvider.userId;
+          if (userId == null) return;
+
+          final List<CourseModel> courses = courseProvider.courses;
+          final Map<int, String> instructors = {};
+          for (final c in courses) {
+            if (c.instructorId != 0) {
+              instructors[c.instructorId] =
+                  c.instructorName ?? 'Instructor';
+            }
+          }
+
+          if (instructors.isEmpty) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No instructors available to message'),
+                ),
+              );
+            }
+            return;
+          }
+
+          final selectedId = await showModalBottomSheet<int>(
+            context: context,
+            builder: (context) {
+              return SafeArea(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    const ListTile(
+                      title: Text('Start chat with instructor'),
+                    ),
+                    ...instructors.entries.map(
+                      (entry) => ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Text(entry.value),
+                        onTap: () {
+                          Navigator.of(context).pop(entry.key);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+
+          if (selectedId == null) return;
+
+          final instructorName = instructors[selectedId] ?? 'Instructor';
+
+          if (!context.mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => StudentChatScreen(
+                otherUserId: selectedId,
+                otherUserName: instructorName,
+                otherUserRole: AppConstants.roleInstructor,
+              ),
             ),
           );
         },

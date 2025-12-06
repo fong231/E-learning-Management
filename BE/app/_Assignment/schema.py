@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+
 from datetime import datetime
 from decimal import Decimal
 
@@ -16,9 +17,9 @@ class AssignmentBase(BaseModel):
     file_format: Optional[str] = None
     
 class AssignmentCreate(AssignmentBase):
-    contentID : int
-    groupID: int
-    pass
+    course_id: int
+    group_id: int
+    files_url: Optional[List[str]] = None
     
 class AssignmentUpdate(BaseModel):
     title : str
