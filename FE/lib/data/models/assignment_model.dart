@@ -1,4 +1,4 @@
-class AssignmentModel {
+class AssignmentModel { 
   final int id;
   final int? courseId;
   final String? courseName;
